@@ -1,4 +1,4 @@
-# personal-portfolio# Personal Portfolio
+# Personal Portfolio
 
 Welcome to my personal portfolio! This repository showcases my projects, skills, and experiences as a software engineer.
 
