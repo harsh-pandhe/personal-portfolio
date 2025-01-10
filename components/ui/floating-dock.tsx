@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { IconLayoutNavbarCollapse, IconHome, IconTerminal2, IconNewSection, IconExchange, IconBrandGithub, IconBrandX } from "@tabler/icons-react";
+import { IconLayoutNavbarCollapse } from "@tabler/icons-react";
 import { AnimatePresence, motion, MotionValue, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Link from "next/link";
 

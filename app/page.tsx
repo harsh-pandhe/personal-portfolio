@@ -1,5 +1,6 @@
 "use client";
-
+import { Logo } from "@/app/components/Logo";
+import { LogoIcon } from "@/app/components/LogoIcon";
 import React, { useState } from "react";
 import { FloatingDock } from "@/components/ui/floating-dock";
 import {
@@ -15,7 +16,6 @@ import {
   IconArrowLeft,
   IconBrandTabler,
   IconSettings,
-  IconUserBolt,
 } from "@tabler/icons-react";
 
 import { ShootingStars } from "@/components/ui/shooting-stars";
@@ -23,8 +23,6 @@ import { StarsBackground } from "@/components/ui/stars-background";
 import Projects from "@/app/components/projects";
 import Me from "@/app/components/me";
 import Contact from "@/app/components/contact";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { FlipWords } from "@/components/ui/flip-words";
 import { cn } from "@/lib/utils";
 
@@ -165,31 +163,31 @@ export default function Home() {
   );
 }
 
-export const Logo = () => {
-  return (
-    <Link
-      href="#"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
-    >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
-      >
-        Harsh Pandhe
-      </motion.span>
-    </Link>
-  );
-};
+// export const Logo: React.FC = () => {
+//   return (
+//     <Link
+//       href="#"
+//       className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+//     >
+//       <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+//       <motion.span
+//         initial={{ opacity: 0 }}
+//         animate={{ opacity: 1 }}
+//         className="font-medium text-black dark:text-white whitespace-pre"
+//       >
+//         Harsh Pandhe
+//       </motion.span>
+//     </Link>
+//   );
+// };
 
-export const LogoIcon = () => {
-  return (
-    <Link
-      href="#"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
-    >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-    </Link>
-  );
-};
+// export const LogoIcon: React.FC = () => {
+//   return (
+//     <Link
+//       href="#"
+//       className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+//     >
+//       <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+//     </Link>
+//   );
+// };
