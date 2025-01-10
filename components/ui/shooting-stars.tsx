@@ -41,6 +41,7 @@ const getRandomStartPoint = () => {
             return { x: 0, y: 0, angle: 45 };
     }
 };
+// ShootingStars component
 export const ShootingStars: React.FC<ShootingStarsProps> = ({
     minSpeed = 10,
     maxSpeed = 30,
@@ -118,6 +119,7 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
         <svg
             ref={svgRef}
             className={cn("w-full h-full absolute inset-0", className)}
+            style={{ zIndex: 20, pointerEvents: "none" }}
         >
             {star && (
                 <rect

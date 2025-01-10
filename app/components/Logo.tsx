@@ -1,10 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export const Logo = () => (
     <Link href="#" className="flex items-center space-x-2 text-black dark:text-white">
-        <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm" />
+        <Image
+            src="/logo.png"
+            alt="Logo"
+            width={24}
+            height={24}
+            className="rounded-full"
+        />
         <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
