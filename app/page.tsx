@@ -25,11 +25,12 @@ import Me from "@/app/components/me";
 import Contact from "@/app/components/contact";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { FlipWords } from "@/components/ui/flip-words";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [activePage, setActivePage] = useState("home");
+  const words = ["Namaste", "Hello", "Bonjour", "Hola", "Ciao", "Hallo", "Olá", "Konnichiwa"];
 
   const links = [
     {
@@ -133,7 +134,12 @@ export default function Home() {
       <div className="h-screen bg-neutral-900 w-full">
         <div className="h-full z-10 relative">
           {activePage === "home" && (
-            <h1 className="text-white text-center">Welcome to My Website!</h1>
+            <div className="h-[40rem] flex justify-center items-center px-4">
+              <div className="text-4xl mx-auto font-normal text-white dark:text-white">
+                <FlipWords words={words} /><br />
+                <h2>Work Under Progress</h2>
+              </div>
+            </div>
           )}
           {activePage === "projects" && <Projects />}
           {activePage === "me" && <Me />}
