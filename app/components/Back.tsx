@@ -1,29 +1,30 @@
 import Spline from "@splinetool/react-spline";
+import { FlipWords } from "@/components/ui/flip-words";
 import { ShootingStars } from "@/components/ui/shooting-stars";
 import { StarsBackground } from "@/components/ui/stars-background";
-import { FlipWords } from "@/components/ui/flip-words";
 
 export default function Back() {
-    const programmingLanguages = [
-        "JavaScript",
-        "Python",
-        "C",
-        "Java",
-        "C++",
-        "Rust",
-        "React",
-        "TypeScript",
-        "Node.js",
-        "Next.js",
-        "PHP",
-        "HTML",
-        "CSS",
-        "TailwindCSS",
-        "Sass",
-        "SQL",
-        "MongoDB",
-        "PostgreSQL",
-        "Firebase",
+    const words = [
+        "Harsh Pandhe",
+        "a JavaScript developer",
+        "a Python developer",
+        "a C developer",
+        "a Java developer",
+        "a C++ developer",
+        "a Rust developer",
+        "a React developer",
+        "a TypeScript developer",
+        "a Node.js developer",
+        "a Next.js developer",
+        "a PHP developer",
+        "a HTML developer",
+        "a CSS developer",
+        "a TailwindCSS developer",
+        "a Sass developer",
+        "a SQL developer",
+        "a MongoDB developer",
+        "a PostgreSQL developer",
+        "a Firebase developer",
     ];
 
     const hello = [
@@ -47,11 +48,8 @@ export default function Back() {
             <div className="absolute text-center top-7 md:text-4xl text-lg mx-auto font-normal text-white dark:text-white w-full">
                 <FlipWords words={hello} />
                 <br />
-                My name is Harsh Pandhe.
-                <br />
-                I am a <FlipWords words={programmingLanguages} />developer from India.
+                I am <FlipWords words={words} />
             </div>
-
             <StarsBackground className="absolute inset-0 z-10 h-full w-full" />
 
             <div className="relative z-20 h-full">

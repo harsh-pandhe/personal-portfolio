@@ -62,7 +62,6 @@ export default function Home() {
           href: link.href || "#",
           onClick: link.action,
         }))}
-
       />
     </main >
   );
