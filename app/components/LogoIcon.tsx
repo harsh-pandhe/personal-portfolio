@@ -4,8 +4,10 @@ import Link from "next/link";
 export const LogoIcon = () => (
     <Link
         href="#"
-        className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+        className="font-normal flex items-center text-sm py-1 relative z-20"
     >
-        <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+        <div className="h-6 w-6 rounded-lg bg-violet-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+            H
+        </div>
     </Link>
 );

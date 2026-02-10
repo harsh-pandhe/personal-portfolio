@@ -1,6 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState, useRef } from "react";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 interface ShootingStar {
     id: number;
@@ -53,10 +54,14 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
     starHeight = 1,
     className,
 }) => {
+    const prefersReducedMotion = usePrefersReducedMotion();
     const [star, setStar] = useState<ShootingStar | null>(null);
     const svgRef = useRef<SVGSVGElement>(null);
+    const timeoutRef = useRef<number | null>(null);
+    const lastFrameRef = useRef(0);
 
     useEffect(() => {
+        if (prefersReducedMotion) return;
         const createStar = () => {
             const { x, y, angle } = getRandomStartPoint();
             const newStar: ShootingStar = {
@@ -71,49 +76,65 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
             setStar(newStar);
 
             const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay;
-            setTimeout(createStar, randomDelay);
+            timeoutRef.current = window.setTimeout(createStar, randomDelay);
         };
 
         createStar();
 
-        return () => { };
-    }, [minSpeed, maxSpeed, minDelay, maxDelay]);
-
-    useEffect(() => {
-        const moveStar = () => {
-            if (star) {
-                setStar((prevStar) => {
-                    if (!prevStar) return null;
-                    const newX =
-                        prevStar.x +
-                        prevStar.speed * Math.cos((prevStar.angle * Math.PI) / 180);
-                    const newY =
-                        prevStar.y +
-                        prevStar.speed * Math.sin((prevStar.angle * Math.PI) / 180);
-                    const newDistance = prevStar.distance + prevStar.speed;
-                    const newScale = 1 + newDistance / 100;
-                    if (
-                        newX < -20 ||
-                        newX > window.innerWidth + 20 ||
-                        newY < -20 ||
-                        newY > window.innerHeight + 20
-                    ) {
-                        return null;
-                    }
-                    return {
-                        ...prevStar,
-                        x: newX,
-                        y: newY,
-                        distance: newDistance,
-                        scale: newScale,
-                    };
-                });
+        return () => {
+            if (timeoutRef.current !== null) {
+                window.clearTimeout(timeoutRef.current);
             }
         };
+    }, [minSpeed, maxSpeed, minDelay, maxDelay, prefersReducedMotion]);
 
-        const animationFrame = requestAnimationFrame(moveStar);
+    useEffect(() => {
+        if (prefersReducedMotion) return;
+        let animationFrame = 0;
+        const targetFrameMs = 1000 / 30;
+
+        const moveStar = (time: number) => {
+            if (time - lastFrameRef.current >= targetFrameMs) {
+                lastFrameRef.current = time;
+                if (star) {
+                    setStar((prevStar) => {
+                        if (!prevStar) return null;
+                        const newX =
+                            prevStar.x +
+                            prevStar.speed * Math.cos((prevStar.angle * Math.PI) / 180);
+                        const newY =
+                            prevStar.y +
+                            prevStar.speed * Math.sin((prevStar.angle * Math.PI) / 180);
+                        const newDistance = prevStar.distance + prevStar.speed;
+                        const newScale = 1 + newDistance / 100;
+                        if (
+                            newX < -20 ||
+                            newX > window.innerWidth + 20 ||
+                            newY < -20 ||
+                            newY > window.innerHeight + 20
+                        ) {
+                            return null;
+                        }
+                        return {
+                            ...prevStar,
+                            x: newX,
+                            y: newY,
+                            distance: newDistance,
+                            scale: newScale,
+                        };
+                    });
+                }
+            }
+            animationFrame = requestAnimationFrame(moveStar);
+        };
+
+        animationFrame = requestAnimationFrame(moveStar);
         return () => cancelAnimationFrame(animationFrame);
-    }, [star]);
+    }, [star, prefersReducedMotion]);
+
+    if (prefersReducedMotion) {
+        return null;
+    }
 
     return (
         <svg

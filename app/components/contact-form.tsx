@@ -1,42 +1,42 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { motion, AnimatePresence } from "framer-motion"
-import emailjs from 'emailjs-com'
-import { ButtonsCard } from '@/components/ui/tailwindcss-buttons'
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import emailjs from "emailjs-com";
 
 const formSchema = z.object({
-    name: z.string().min(2, {
-        message: "Name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-        message: "Please enter a valid email address.",
-    }),
-    message: z.string().min(10, {
-        message: "Message must be at least 10 characters.",
-    }),
-})
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z
+        .string()
+        .email({ message: "Please enter a valid email address." }),
+    message: z
+        .string()
+        .min(10, { message: "Message must be at least 10 characters." }),
+});
 
 export default function ContactForm() {
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [sent, setSent] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            email: "",
-            message: "",
-        },
-    })
+        defaultValues: { name: "", email: "", message: "" },
+    });
 
-    async function onSubmit(data: { name: string; email: string; message: string }) {
-        setIsSubmitting(true)
+    async function onSubmit(data: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
 
         const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
         const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
@@ -49,7 +49,7 @@ export default function ContactForm() {
         }
 
         try {
-            const result = await emailjs.send(
+            await emailjs.send(
                 serviceId,
                 templateId,
                 {
@@ -59,64 +59,58 @@ export default function ContactForm() {
                 },
                 publicKey
             );
-            console.log('Email sent successfully:', result);
-
-            window.alert("Message Sent! Thanks for reaching out. I'll get back to you soon!");
+            setSent(true);
+            form.reset();
+            setTimeout(() => setSent(false), 4000);
         } catch (error) {
-            console.error('Error sending email:', error);
+            console.error("Error sending email:", error);
         }
 
         setIsSubmitting(false);
-        form.reset();
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <AnimatePresence>
-                    {["name", "email", "message"].map((field) => (
-                        <motion.div key={field}>
-                            <FormField
-                                control={form.control}
-                                name={field as "name" | "email" | "message"}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-lg text-gray-800">
-                                            {field.name.charAt(0).toUpperCase() + field.name.slice(1)}
-                                        </FormLabel>
-                                        <FormControl>
-                                            {field.name === "message" ? (
-                                                <Textarea
-                                                    placeholder={`Your ${field.name}`}
-                                                    className="resize-none h-32 bg-white text-black border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                                                    {...field}
-                                                />
-                                            ) : (
-                                                <Input
-                                                    placeholder={`Your ${field.name}`}
-                                                    className="bg-white text-black border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                                                    {...field}
-                                                />
-                                            )}
-                                        </FormControl>
-                                        <FormMessage className="text-sm text-red-500" />
-                                    </FormItem>
-                                )}
-                            />
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                {(["name", "email", "message"] as const).map((fieldName) => (
+                    <FormField
+                        key={fieldName}
+                        control={form.control}
+                        name={fieldName}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-sm text-neutral-300 capitalize">
+                                    {fieldName}
+                                </FormLabel>
+                                <FormControl>
+                                    {fieldName === "message" ? (
+                                        <Textarea
+                                            placeholder={`Your ${fieldName}`}
+                                            className="resize-none h-28 bg-white/5 border-white/10 text-white placeholder:text-neutral-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                            {...field}
+                                        />
+                                    ) : (
+                                        <Input
+                                            placeholder={`Your ${fieldName}`}
+                                            className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                            {...field}
+                                        />
+                                    )}
+                                </FormControl>
+                                <FormMessage className="text-sm text-red-400" />
+                            </FormItem>
+                        )}
+                    />
+                ))}
 
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <ButtonsCard key="Send">
-                        <button
-                            disabled={isSubmitting}
-                            className="inline-flex h-12 w-full animate-shimmer items-center justify-center rounded-xl border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] px-6 font-medium text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
-                            {isSubmitting ? "Sending..." : "Send Message"}
-                        </button>
-                    </ButtonsCard>
-                </motion.div>
+                <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-11 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-sm font-medium text-white transition-all duration-300 shadow-lg shadow-violet-500/20"
+                >
+                    {isSubmitting ? "Sending..." : sent ? "Sent!" : "Send Message"}
+                </button>
             </form>
-        </Form >
-    )
+        </Form>
+    );
 }

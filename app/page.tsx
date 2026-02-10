@@ -1,68 +1,118 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback } from "react";
+import {
+  IconHome,
+  IconUser,
+  IconCode,
+  IconCamera,
+  IconMail,
+} from "@tabler/icons-react";
+import {
+  BookOpen,
+  BriefcaseBusiness,
+  MessageSquareQuote,
+  Clock,
+  Trophy,
+} from "lucide-react";
 import { FloatingDock } from "@/components/ui/floating-dock";
-import { IconBrandGithub, IconBrandLinkedin, IconHome, IconLetterH, IconPrompt, IconAffiliateFilled } from "@tabler/icons-react";
-import Back from "./components/Back";
-import Projects from "@/app/components/projects";
-import Me from "@/app/components/me";
-import Contact from "@/app/components/contact";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { Logo } from "@/app/components/Logo";
-import { LogoIcon } from "@/app/components/LogoIcon";
+import dynamic from "next/dynamic";
 
+const Back = dynamic(() => import("./components/Back"), { ssr: false });
+const Me = dynamic(() => import("@/app/components/me"));
+const Blog = dynamic(() => import("@/app/components/blog"));
+const Services = dynamic(() => import("@/app/components/services"));
+const Testimonials = dynamic(() => import("@/app/components/testimonials"));
+const Timeline = dynamic(() => import("@/app/components/timeline"));
+const Projects = dynamic(() => import("@/app/components/projects"));
+const Competitions = dynamic(() => import("@/app/components/competitions"));
+const Contact = dynamic(() => import("@/app/components/contact"));
+const Memories = dynamic(() => import("@/app/components/memories"));
+
+const sections = [
+  { id: "hero", title: "Hero", icon: IconHome },
+  { id: "about", title: "About", icon: IconUser },
+  { id: "services", title: "Services", icon: BriefcaseBusiness },
+  { id: "projects", title: "Projects", icon: IconCode },
+  { id: "competitions", title: "Competitions", icon: Trophy },
+  { id: "timeline", title: "Timeline", icon: Clock },
+  { id: "testimonials", title: "Testimonials", icon: MessageSquareQuote },
+  { id: "memories", title: "Memories", icon: IconCamera },
+  { id: "blog", title: "Blog", icon: BookOpen },
+  { id: "contact", title: "Contact", icon: IconMail },
+];
+
+
+/* ══════════════════════════════════ *
+ *          PAGE COMPONENT           *
+ * ══════════════════════════════════ */
 export default function Home() {
-  const [activePage, setActivePage] = useState("home");
-  const [open, setOpen] = useState(false);
+  /* ── smooth-scroll to section ── */
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
-  const links = [
-    { title: "Home", icon: <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />, action: () => setActivePage("home"), href: "#" },
-    { title: "Me", icon: <IconLetterH className="h-full w-full text-neutral-500 dark:text-neutral-300" />, action: () => setActivePage("me"), href: "#" },
-    { title: "Projects", icon: <IconPrompt className="h-full w-full text-neutral-500 dark:text-neutral-300" />, action: () => setActivePage("projects"), href: "#" },
-    { title: "Contact", icon: <IconAffiliateFilled className="h-full w-full text-neutral-500 dark:text-neutral-300" />, action: () => setActivePage("contact"), href: "#" },
-    { title: "LinkedIn", icon: <IconBrandLinkedin className="h-full w-full text-neutral-500 dark:text-neutral-300" />, href: "https://www.linkedin.com/in/harsh-pandhe-853a9121a/" },
-    { title: "GitHub", icon: <IconBrandGithub className="h-full w-full text-neutral-500 dark:text-neutral-300" />, href: "https://github.com/harsh-pandhe" },
-  ];
-
-  const items = [
-    { title: "Home", icon: <IconHome className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, action: () => { setActivePage("home"), setOpen(false); }, href: "#" },
-    { title: "Me", icon: <IconLetterH className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, action: () => { setActivePage("me"), setOpen(false); }, href: "#" },
-    { title: "Projects", icon: <IconPrompt className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, action: () => { setActivePage("projects"), setOpen(false); }, href: "#" },
-    { title: "Contact", icon: <IconAffiliateFilled className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, action: () => { setActivePage("contact"), setOpen(false) }, href: "#" },
-    { title: "LinkedIn", icon: <IconBrandLinkedin className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, href: "https://www.linkedin.com/in/harsh-pandhe-853a9121a/" },
-    { title: "GitHub", icon: <IconBrandGithub className="h-5 w-7 text-neutral-500 dark:text-neutral-300" />, href: "https://github.com/harsh-pandhe" },
-  ];
+  const dockItems = sections.map((section) => ({
+    title: section.title,
+    href: `#${section.id}`,
+    icon: (
+      <section.icon className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+    ),
+    onClick: () => scrollTo(section.id),
+  }));
 
   return (
-    <main className="relative h-screen bg-black">
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10 md:hidden">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              {items.map((link, idx) => (
-                <SidebarLink key={idx} link={link} setActivePage={setActivePage} />
-              ))}
-            </div>
-          </div>
-        </SidebarBody>
-      </Sidebar>
-
-      {activePage === "home" && <Back />}
-      {activePage === "projects" && <Projects />}
-      {activePage === "me" && <Me />}
-      {activePage === "contact" && <Contact />}
-
+    <main className="relative bg-[hsl(var(--background))]">
+      {/* ─── Floating Dock ─── */}
       <FloatingDock
-        mobileClassName="translate-y-20"
-        desktopClassName="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40"
-        items={links.map((link) => ({
-          title: link.title,
-          icon: link.icon,
-          href: link.href || "#",
-          onClick: link.action,
-        }))}
+        items={dockItems}
+        desktopClassName="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        mobileClassName="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
       />
-    </main >
+
+      {/* ─── Sections ─── */}
+      <div>
+        <section id="hero" className="min-h-screen">
+          <Back />
+        </section>
+
+        <section id="about" className="min-h-screen">
+          <Me />
+        </section>
+
+        <section id="services" className="min-h-screen">
+          <Services />
+        </section>
+
+        <section id="projects" className="min-h-screen">
+          <Projects />
+        </section>
+
+        <section id="competitions" className="min-h-screen">
+          <Competitions />
+        </section>
+
+        <section id="timeline" className="min-h-screen">
+          <Timeline />
+        </section>
+
+        <section id="testimonials" className="min-h-screen">
+          <Testimonials />
+        </section>
+
+        <section id="memories" className="min-h-screen">
+          <Memories />
+        </section>
+
+        <section id="blog" className="min-h-screen">
+          <Blog />
+        </section>
+
+        <section id="contact" className="min-h-screen">
+          <Contact />
+        </section>
+      </div>
+    </main>
   );
 }
+

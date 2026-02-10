@@ -1,5 +1,6 @@
-"use client"
+"use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 interface StarProps {
     x: number;
@@ -19,15 +20,17 @@ interface StarBackgroundProps {
 }
 
 export const StarsBackground: React.FC<StarBackgroundProps> = ({
-    starDensity = 0.001,
+    starDensity = 0.00035,
     allStarsTwinkle = true,
     twinkleProbability = 0.7,
     minTwinkleSpeed = 0.5,
     maxTwinkleSpeed = 1,
     className,
 }) => {
+    const prefersReducedMotion = usePrefersReducedMotion();
     const [stars, setStars] = useState<StarProps[]>([]);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const lastRenderRef = useRef(0);
 
     const generateStars = useCallback(
         (width: number, height: number): StarProps[] => {
@@ -74,13 +77,14 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
         updateStars();
 
         const resizeObserver = new ResizeObserver(updateStars);
-        if (canvasRef.current) {
-            resizeObserver.observe(canvasRef.current);
+        const currentCanvas = canvasRef.current;
+        if (currentCanvas) {
+            resizeObserver.observe(currentCanvas);
         }
 
         return () => {
-            if (canvasRef.current) {
-                resizeObserver.unobserve(canvasRef.current);
+            if (currentCanvas) {
+                resizeObserver.unobserve(currentCanvas);
             }
         };
     }, [generateStars]);
@@ -93,9 +97,12 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
         if (!ctx) return;
 
         let animationFrameId: number;
+        const targetFrameMs = 1000 / 30;
 
-        const render = () => {
+        const drawStars = (time: number) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const now = time * 0.001;
+
             stars.forEach((star) => {
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
@@ -104,20 +111,30 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
 
                 if (star.twinkleSpeed !== null) {
                     star.opacity =
-                        0.5 +
-                        Math.abs(Math.sin((Date.now() * 0.001) / star.twinkleSpeed) * 0.5);
+                        0.5 + Math.abs(Math.sin(now / star.twinkleSpeed) * 0.5);
                 }
             });
+        };
 
+        if (prefersReducedMotion) {
+            drawStars(performance.now());
+            return;
+        }
+
+        const render = (time: number) => {
+            if (time - lastRenderRef.current >= targetFrameMs) {
+                lastRenderRef.current = time;
+                drawStars(time);
+            }
             animationFrameId = requestAnimationFrame(render);
         };
 
-        render();
+        animationFrameId = requestAnimationFrame(render);
 
         return () => {
             cancelAnimationFrame(animationFrameId);
         };
-    }, [stars]);
+    }, [stars, prefersReducedMotion]);
 
     return (
         <canvas
