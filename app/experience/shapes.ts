@@ -193,3 +193,97 @@ export function helixShape(n: number): Float32Array {
   }
   return out;
 }
+
+// Quadcopter (X-frame, 4 rotor discs, body, LiDAR puck) — IRoC-U / Sovereign-X.
+export function droneShape(n: number): Float32Array {
+  const out = new Float32Array(n * 3);
+  const r = rand(21);
+  const arm = 2.1;
+  const motors = [
+    [arm, arm],
+    [-arm, arm],
+    [arm, -arm],
+    [-arm, -arm],
+  ];
+  for (let i = 0; i < n; i++) {
+    const k = r();
+    let x = 0,
+      y = 0,
+      z = 0;
+    if (k < 0.42) {
+      // rotor discs (rings)
+      const [mx, mz] = motors[i % 4];
+      const a = r() * Math.PI * 2;
+      const rad = 0.95 + (r() - 0.5) * 0.08;
+      x = mx + Math.cos(a) * rad;
+      z = mz + Math.sin(a) * rad;
+      y = 0.35 + (r() - 0.5) * 0.03;
+    } else if (k < 0.66) {
+      // arms
+      const [mx, mz] = motors[i % 4];
+      const t = r();
+      x = mx * t + (r() - 0.5) * 0.12;
+      z = mz * t + (r() - 0.5) * 0.12;
+      y = (r() - 0.5) * 0.1;
+    } else if (k < 0.74) {
+      // motor bells
+      const [mx, mz] = motors[i % 4];
+      const a = r() * Math.PI * 2;
+      x = mx + Math.cos(a) * 0.22;
+      z = mz + Math.sin(a) * 0.22;
+      y = r() * 0.35;
+    } else if (k < 0.92) {
+      // body box
+      x = (r() - 0.5) * 1.3;
+      y = (r() - 0.5) * 0.45;
+      z = (r() - 0.5) * 1.8;
+    } else {
+      // LiDAR puck on top
+      const a = r() * Math.PI * 2;
+      const rad = 0.38 * Math.sqrt(r());
+      x = Math.cos(a) * rad;
+      z = Math.sin(a) * rad;
+      y = 0.3 + r() * 0.35;
+    }
+    out[i * 3] = x * 0.95;
+    out[i * 3 + 1] = y + 0.2;
+    out[i * 3 + 2] = z * 0.95;
+  }
+  return out;
+}
+
+// Lattice cube of nodes and edges — the archive of everything built.
+export function latticeShape(n: number): Float32Array {
+  const out = new Float32Array(n * 3);
+  const r = rand(5);
+  const N = 4; // nodes per axis
+  const s = 3.6; // edge length
+  const step = s / (N - 1);
+  for (let i = 0; i < n; i++) {
+    const a = Math.floor(r() * N) * step - s / 2;
+    const b = Math.floor(r() * N) * step - s / 2;
+    const t = r() * s - s / 2;
+    const axis = i % 3;
+    const j = (r() - 0.5) * 0.04;
+    if (r() < 0.25) {
+      // node clusters
+      const c = [Math.floor(r() * N) * step - s / 2, Math.floor(r() * N) * step - s / 2, Math.floor(r() * N) * step - s / 2];
+      out[i * 3] = c[0] + (r() - 0.5) * 0.14;
+      out[i * 3 + 1] = c[1] + (r() - 0.5) * 0.14;
+      out[i * 3 + 2] = c[2] + (r() - 0.5) * 0.14;
+    } else if (axis === 0) {
+      out[i * 3] = t;
+      out[i * 3 + 1] = a + j;
+      out[i * 3 + 2] = b + j;
+    } else if (axis === 1) {
+      out[i * 3] = a + j;
+      out[i * 3 + 1] = t;
+      out[i * 3 + 2] = b + j;
+    } else {
+      out[i * 3] = a + j;
+      out[i * 3 + 1] = b + j;
+      out[i * 3 + 2] = t;
+    }
+  }
+  return out;
+}

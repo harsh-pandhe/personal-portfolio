@@ -188,9 +188,174 @@ export const projects: Project[] = [
 ];
 
 export const timeline = [
-  { year: "2021", text: "Diploma in Computer Engineering, SPM Polytechnic — First Class with Distinction; General Secretary." },
-  { year: "2024", text: "B.Tech Computer Science, SIT Lonavala. Published 'Collaborative Real-Time Code' (IRJMETS)." },
-  { year: "2025", text: "Head of Cybersecurity & Blockchain at IIC-SIT. SIH 2025 national winner." },
-  { year: "2026", text: "Doppelmayr intern, IRoC-U finalist, RoboRashtra runner-up, 6 SSRN papers, Lead Organizer of Project Morpheus." },
-  { year: "Nov 2026", text: "Singapore–India Hackathon Grand Finale, SMU." },
+  { year: "2021", text: "Diploma in Computer Engineering at SPM Polytechnic, Solapur. Elected General Secretary (Head Boy)." },
+  { year: "2024", text: "Diploma — First Class with Distinction. Joined B.Tech Computer Science at SIT Lonavala. Published 'Collaborative Real-Time Code' (IRJMETS)." },
+  { year: "2025", text: "#365DaysOfCode. Top 40 at PCU Ideathon. Head of Cybersecurity & Blockchain at IIC-SIT. Smart India Hackathon national winner in December." },
+  { year: "2026 H1", text: "Lead Organizer, Project Morpheus. RoboRashtra 1st Runner-Up. ISRO IRoC-U finalist. Software Development Intern at Doppelmayr India (Apr–Oct)." },
+  { year: "2026 H2", text: "Six SSRN papers on quant finance and multi-robot RL. MARS swarm testbed. Sovereign-X avionics. Selected for the Singapore–India Hackathon." },
+  { year: "Nov 2026", text: "Singapore–India Hackathon Grand Finale, Singapore Management University, 15–17 Nov." },
+];
+
+export const now = {
+  label: "Now",
+  text: "Preparing for the Singapore–India Hackathon Grand Finale (SMU, 15–17 Nov 2026), finishing B.Tech at SIT Lonavala, and pushing the MARS swarm and Taramandal drone-show stacks toward hardware.",
+};
+
+export const about = {
+  intro:
+    "I'm Harsh Ravindra Pandhe, a Computer Science undergraduate at SIT Lonavala who builds autonomous systems — drones that navigate without GPS, robot swarms that cover ground safely, and software that has to work outside the demo.",
+  body: [
+    "My path runs from a diploma in Solapur, through leading a six-person team to the Smart India Hackathon 2025 national title, to an engineering internship at Doppelmayr, the Austrian ropeway company.",
+    "I care about evidence. My trading system's best result is the ten upgrades I proved didn't work; half my SSRN papers report negative results; my LinkedIn posts are mostly bugs I shipped and how I caught them.",
+  ],
+  principles: [
+    { k: "Falsify first", v: "Every idea gets a walk-forward test, a baseline and a way to fail before it gets a slide." },
+    { k: "Ship to hardware", v: "Simulation is a step, not the result. FAST-LIO on a Livox, inference on a Teensy, PCBs that pass DRC." },
+    { k: "Write it down", v: "Papers, postmortems and 161 public posts — so the next person doesn't repeat my mistakes." },
+  ],
+};
+
+export type Role = {
+  org: string;
+  role: string;
+  period: string;
+  where: string;
+  points: string[];
+};
+
+export const experience: Role[] = [
+  {
+    org: "Doppelmayr India",
+    role: "Software Development Intern",
+    period: "Apr 2026 – Oct 2026",
+    where: "Austrian ropeway & cable-car MNC",
+    points: [
+      "Built RopeIQ, a ropeway alignment optimiser (GA, NSGA-II, PPO) validated against 12 real installations on 5 continents.",
+      "Shipped DoppelDash, an internal operations platform with a companion mobile app.",
+      "Worked to ISO 9001 process and WCAG AA accessibility requirements.",
+    ],
+  },
+  {
+    org: "IIC — SIT Lonavala",
+    role: "Web, Cybersecurity & Blockchain Head",
+    period: "Oct 2025 – present",
+    where: "Institution's Innovation Council, MoE",
+    points: [
+      "Lead campus tech initiatives across 8 departments and 500+ students.",
+      "Lead Organizer of Project Morpheus 2026 — a 24-hour national hackathon, 200+ participants, ₹2L+ prizes.",
+      "Mentored 70+ developers (SIT-ACM CODE2LAUNCH) and judged 50+ projects.",
+    ],
+  },
+  {
+    org: "ISRO IRoC-U 2026 · Team 10144",
+    role: "Automation & Navigation Lead",
+    period: "2026",
+    where: "ISRO Robotics Challenge — University",
+    points: [
+      "GPS-denied UAV: FAST-LIO SLAM on a Livox Mid-360, EKF2 + optical flow, PX4, ROS 2, Raspberry Pi 5.",
+      "Replaced MAVROS with direct MAVLink, separated 'brain' from 'reflexes', added an RC kill switch.",
+      "Built the Martian sandbox simulation worlds for Project ASCEND.",
+    ],
+  },
+  {
+    org: "Team Algo Sapiens",
+    role: "Team Lead",
+    period: "Sep – Dec 2025",
+    where: "Smart India Hackathon 2025",
+    points: [
+      "Led 6 engineers on Telhan Sathi (PS 25273, Ministry of Agriculture & Farmers Welfare).",
+      "National winner among 10,000+ teams at the Kolhapur Grand Finale — a first for SIT Lonavala.",
+    ],
+  },
+];
+
+export const education = [
+  {
+    school: "Sinhgad Institute of Technology, Lonavala",
+    degree: "B.Tech, Computer Science · Honours in Blockchain",
+    period: "2024 – 2027",
+    note: "Sem 5 SGPA 8.05 · O grades in Lab Practice I, CN & Security Lab and Seminar.",
+  },
+  {
+    school: "SPM Polytechnic, Solapur",
+    degree: "Diploma, Computer Engineering",
+    period: "2021 – 2024",
+    note: "First Class with Distinction · General Secretary (Head Boy).",
+  },
+];
+
+export const skills: { group: string; items: string[] }[] = [
+  { group: "Robotics & autonomy", items: ["ROS 2", "PX4", "ArduPilot", "MAVLink", "FAST-LIO", "Gazebo", "Isaac Sim", "EKF2"] },
+  { group: "ML & research", items: ["PyTorch", "MAPPO / MARL", "Control Barrier Functions", "XGBoost", "Walk-forward testing", "Computer vision"] },
+  { group: "Embedded & hardware", items: ["Teensy 4.1", "STM32H7", "ESP32", "Raspberry Pi 5", "KiCad", "DroneCAN"] },
+  { group: "Full-stack", items: ["TypeScript", "Next.js", "React", "Node / Express", "FastAPI", "MongoDB", "Prisma", "React Native"] },
+  { group: "Systems & security", items: ["Python", "C++", "Rust", "Docker", "Linux", "Solidity", "Network security"] },
+];
+
+export type ArchiveItem = {
+  name: string;
+  year: string;
+  kind: "Robotics" | "AI / ML" | "Full-stack" | "Quant" | "Hardware" | "Civic";
+  line: string;
+  href?: string;
+};
+
+export const archive: ArchiveItem[] = [
+  { name: "Sovereign-X", year: "2026", kind: "Hardware", line: "Custom 4-layer drone avionics — STM32H7, 4-in-1 DroneCAN ESC, RTK GNSS; KiCad automation, 0 DRC errors." },
+  { name: "Taramandal GCS + Studio", year: "2026", kind: "Robotics", line: "Ground control and choreography for drone light shows; spatial safety rings and auto-abort.", href: "https://github.com/harsh-pandhe/Taramandal-GCS" },
+  { name: "MARS", year: "2026", kind: "Robotics", line: "Multi-robot area coverage with MAPPO and CBF safety filters in ROS 2 Jazzy + Gazebo.", href: "https://github.com/harsh-pandhe/MARS" },
+  { name: "iroc-ascend-nav", year: "2026", kind: "Robotics", line: "GPS-denied navigation stack for ISRO IRoC-U; green end-to-end in simulation." },
+  { name: "RopeIQ", year: "2026", kind: "AI / ML", line: "Ropeway alignment from two coordinates: Eurocode checks, DXF/LandXML export, 3D twin, bill of materials. 157 tests." },
+  { name: "AlgoTrade", year: "2026", kind: "Quant", line: "Paper-trading daemon + falsification-driven research OS on point-in-time Nifty 500 data. 428 tests." },
+  { name: "NetGuard-ML", year: "2026", kind: "AI / ML", line: "Leakage-free intrusion detection on CIC-IDS2017 — why 99.8% accuracy claims collapse on real networks." },
+  { name: "airgapped-netops-ai", year: "2026", kind: "AI / ML", line: "Network operations assistant designed to run with no internet connection." },
+  { name: "Traffic surveillance", year: "2026", kind: "AI / ML", line: "Helmet compliance, wheel-count vehicle classification and a risk index from CCTV." },
+  { name: "terra-verify", year: "2026", kind: "Civic", line: "Construction progress from Sentinel-2 imagery — hectares changed plus a report." },
+  { name: "pod-transit", year: "2026", kind: "Civic", line: "Browser-based personal rapid transit simulator on real maps." },
+  { name: "City Companion", year: "2026", kind: "Civic", line: "Consent-first mobility telemetry with k-anonymous aggregates for planners." },
+  { name: "Harsh OS", year: "2026", kind: "AI / ML", line: "Local-first multi-agent layer for LinkedIn (Tampermonkey + Ollama) — no data leaves the machine." },
+  { name: "Aura", year: "2026", kind: "Full-stack", line: "Offline-first, self-hosted music app in React Native." },
+  { name: "Project Morpheus platform", year: "2026", kind: "Full-stack", line: "Registration, RBAC, atomic MongoDB hostel allocator and audit wizard for a national hackathon.", href: "https://projectmorpheus.in" },
+  { name: "AgriTrace", year: "2026", kind: "Civic", line: "Circular-economy agri-waste tracking for farmers, recycling agents and admins." },
+  { name: "Ather Co-Pilot", year: "2026", kind: "AI / ML", line: "Unified AI workspace with retrieval-augmented generation." },
+  { name: "KrishiPancham AI", year: "2026", kind: "AI / ML", line: "Panchang-aware agricultural companion built on FastAPI." },
+  { name: "Chakravyuh Bot", year: "2026", kind: "Hardware", line: "Line + maze solver with neural-net inference on a 600 MHz Teensy 4.1 — RoboRashtra 1st Runner-Up." },
+  { name: "Telhan Sathi", year: "2025", kind: "Civic", line: "Oilseed farming platform — crop advisories, IoT soil sensing, scheme integration. SIH 2025 winner." },
+  { name: "CityConnect", year: "2025", kind: "Civic", line: "Civic issue reporting rewarded with blockchain EcoCoins (Solidity + Django)." },
+  { name: "Kisan Micro-ERP", year: "2025", kind: "Full-stack", line: "Lightweight ERP for smallholder farmers." },
+  { name: "ExpenseTracker", year: "2025", kind: "Full-stack", line: "Personal finance tracker — 136 commits of steady iteration." },
+  { name: "ESP32-CAM series", year: "2025", kind: "Hardware", line: "Six-part build series on low-cost camera modules." },
+  { name: "Codex", year: "2024", kind: "Full-stack", line: "Real-time collaborative code editor; the basis of an IRJMETS paper." },
+];
+
+export const fieldNotes: { title: string; body: string; tag: string }[] = [
+  { tag: "UAV", title: "Never time.sleep() a drone", body: "Blocking sleeps starve the control loop. Command drones from state machines that check arming and mode on every tick." },
+  { tag: "UAV", title: "Brain vs reflexes", body: "Keep planning on the companion computer and safety on the flight controller. An RC kill switch beats any software failsafe." },
+  { tag: "UAV", title: "The LiDAR was upside down", body: "A Livox mounted upside down means every transform downstream is wrong. Write the frame math down before blaming FAST-LIO." },
+  { tag: "UAV", title: "I was wrong about LOITER", body: "ArduPilot maintainers corrected my post: the behaviour was right, my expectation wasn't. Corrections are part of the work." },
+  { tag: "Quant", title: "float('nan') is truthy", body: "One NaN check silently corrupted two days of paper-trading NAV. Audits found a stale feed and double-counting too: +50% was really under 2%." },
+  { tag: "Quant", title: "A Ferrari with no engine", body: "Three months and 20 phases of trading infrastructure taught me to find the edge before building the car." },
+  { tag: "ML", title: "99.8% doesn't survive the network", body: "Intrusion-detection benchmarks leak. Split by time and by host, and accuracy falls to something honest." },
+  { tag: "Swarms", title: "Greedy planners converge — badly", body: "Classical path planning breaks for swarms. Inject a hardware failure at step 100 and measure the recovery, not the happy path." },
+];
+
+export const openSource = [
+  { repo: "validatorjs/validator.js", pr: "#2683", href: "https://github.com/validatorjs/validator.js/pull/2683" },
+  { repo: "Textualize/rich", pr: "#4123", href: "https://github.com/Textualize/rich/pull/4123" },
+];
+
+export const certifications = [
+  "Certified Ethical Hacker Bootcamp — Zero To Mastery",
+  "Advanced Data Structures & Algorithms — Codedamn",
+  "Computer Networks Fundamentals — Udemy",
+  "Web Development Bootcamp 2025 — Udemy",
+  "Responsive Web Design — freeCodeCamp",
+  "Data Science 101 — IBM",
+];
+
+export const recognition = [
+  "Featured in Maval Maza for selection to Doppelmayr's software team.",
+  "Attended Bentley Systems Illuminate 2026, Mumbai.",
+  "Expert mentor & judge, SIT-ACM CODE2LAUNCH.",
+  "1,896 LinkedIn followers · 161 posts on engineering in public.",
 ];

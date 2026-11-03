@@ -19,6 +19,7 @@ export default {
 			},
 			keyframes: {
 				boot: { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } },
+				marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
 				meteor: {
 					"0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },
 					"70%": { opacity: "1" },
