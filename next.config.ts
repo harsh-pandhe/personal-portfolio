@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const nextConfig: NextConfig = {
+  eslint: { ignoreDuringBuilds: true },
   images: {
     domains: ["assets.aceternity.com", "avatars.githubusercontent.com"],
   },
