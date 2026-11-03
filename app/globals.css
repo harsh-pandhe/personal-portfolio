@@ -83,3 +83,12 @@
   color: #141414;
   font-weight: 600;
 }
+/* 3D hero orbit ring */
+@keyframes orbit-spin {
+  from { transform: rotateX(-14deg) rotateY(0deg); }
+  to { transform: rotateX(-14deg) rotateY(360deg); }
+}
+.orbit-ring { animation: orbit-spin 40s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring { animation: none; }
+}

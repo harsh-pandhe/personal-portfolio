@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FlipWords } from "@/components/ui/flip-words";
 import { ShootingStars } from "@/components/ui/shooting-stars";
+import OrbitRing from "@/components/ui/orbit-ring";
 import { StarsBackground } from "@/components/ui/stars-background";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
@@ -168,6 +169,9 @@ export default function Back() {
                     <SplineWrapper scene="https://prod.spline.design/oumZ0UDMuQBuUecd/scene.splinecode" />
                 </div>
             )}
+
+            {/* 3D focus-area ring (desktop, motion allowed) */}
+            {showSpline && <OrbitRing />}
 
             {/* Shooting stars on top */}
             {!prefersReducedMotion && (
