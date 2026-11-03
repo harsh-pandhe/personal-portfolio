@@ -91,15 +91,15 @@ export default function MemoriesGallery() {
         naturalSize.height || 520,
     ]);
 
-    const layerScale = [0, 1, 2].map((index) => {
-        const start = 0.3 + index * 0.05;
-        return useTransform(scrollYProgress, [0, start, 1], [0, 0, 1]);
-    });
+    const scale0 = useTransform(scrollYProgress, [0, 0.3, 1], [0, 0, 1]);
+    const scale1 = useTransform(scrollYProgress, [0, 0.35, 1], [0, 0, 1]);
+    const scale2 = useTransform(scrollYProgress, [0, 0.4, 1], [0, 0, 1]);
+    const layerScale = [scale0, scale1, scale2];
 
-    const layerOpacity = [0, 1, 2].map((index) => {
-        const start = 0.55 + index * 0.03;
-        return useTransform(scrollYProgress, [0, start, 1], [0, 0, 1]);
-    });
+    const opacity0 = useTransform(scrollYProgress, [0, 0.55, 1], [0, 0, 1]);
+    const opacity1 = useTransform(scrollYProgress, [0, 0.58, 1], [0, 0, 1]);
+    const opacity2 = useTransform(scrollYProgress, [0, 0.61, 1], [0, 0, 1]);
+    const layerOpacity = [opacity0, opacity1, opacity2];
 
     return (
         <div className="memories-scroll-wrap">

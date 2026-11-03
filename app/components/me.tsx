@@ -158,10 +158,10 @@ export default function Me() {
                 {/* GitHub Contribution Heatmap */}
                 <motion.div variants={fadeUp} className="mt-16">
                     <h2 className="text-2xl md:text-3xl font-bold text-center mb-3">
-                        2025 <span className="text-gradient">Contributions</span>
+                        2025 <span className="text-gradient">Activity</span>
                     </h2>
                     <p className="text-neutral-500 text-sm text-center mb-8">
-                        817+ contributions across 90+ repositories — consistency is the only cheat code.
+                        Illustrative activity pattern (not live GitHub data) — see my GitHub profile for the real graph.
                     </p>
                     <div className="glass rounded-2xl p-4 md:p-6 overflow-x-auto">
                         <Heatmap
@@ -176,7 +176,7 @@ export default function Me() {
                             gap={3}
                             daysOfTheWeek="MWF"
                             valueDisplayFunction={(value) =>
-                                `${value} contribution${value !== 1 ? "s" : ""}`
+                                `${value} commit${value !== 1 ? "s" : ""} (illustrative)`
                             }
                         />
                     </div>
