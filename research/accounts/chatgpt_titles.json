@@ -1,0 +1,4212 @@
+{
+ "source": "chatgpt.com",
+ "note": "titles only; personal/health/relationship/religion/identity-type titles filtered out",
+ "total_conversations": 1130,
+ "kept": 1051,
+ "titles": [
+  {
+   "date": "2026-10-29",
+   "title": "Build Dual LLM Chat"
+  },
+  {
+   "date": "2026-11-02",
+   "title": "Contact people"
+  },
+  {
+   "date": "2026-10-28",
+   "title": "Expressing confusion"
+  },
+  {
+   "date": "2026-11-01",
+   "title": "Build Custom Linux AI Buddy"
+  },
+  {
+   "date": "2026-10-29",
+   "title": "Hackathon Track Overview"
+  },
+  {
+   "date": "2026-10-28",
+   "title": "Find outfit nearby"
+  },
+  {
+   "date": "2026-10-25",
+   "title": "Set Includes Details"
+  },
+  {
+   "date": "2026-10-03",
+   "title": "Search Ambiguity Labs"
+  },
+  {
+   "date": "2026-10-24",
+   "title": "New Friends"
+  },
+  {
+   "date": "2026-10-27",
+   "title": "EVTOL"
+  },
+  {
+   "date": "2026-10-25",
+   "title": "Meeting Execution Plan"
+  },
+  {
+   "date": "2026-10-25",
+   "title": "Find Cheapest Price"
+  },
+  {
+   "date": "2026-10-25",
+   "title": "Find one8 coupons"
+  },
+  {
+   "date": "2026-10-15",
+   "title": "DoppelDash Launch Status"
+  },
+  {
+   "date": "2026-10-05",
+   "title": "GitHub Profile Updates"
+  },
+  {
+   "date": "2026-10-24",
+   "title": "Project Cost Estimate"
+  },
+  {
+   "date": "2026-10-23",
+   "title": "Release coordination prompt"
+  },
+  {
+   "date": "2026-10-23",
+   "title": "Project Brief Document"
+  },
+  {
+   "date": "2026-10-10",
+   "title": "Board Wiring Guide"
+  },
+  {
+   "date": "2026-10-16",
+   "title": "Casual Greeting Conversation"
+  },
+  {
+   "date": "2026-10-20",
+   "title": "Diagnose Nvidia Linux Detection"
+  },
+  {
+   "date": "2026-10-15",
+   "title": "Drone diagnostic prompts"
+  },
+  {
+   "date": "2026-10-17",
+   "title": "Video analysis request"
+  },
+  {
+   "date": "2026-10-17",
+   "title": "Chrome Extension Review"
+  },
+  {
+   "date": "2026-10-09",
+   "title": "Building Starlink India"
+  },
+  {
+   "date": "2026-10-15",
+   "title": "Hydro Cooled Bitcoin Mining"
+  },
+  {
+   "date": "2026-10-15",
+   "title": "Power Module Troubleshooting"
+  },
+  {
+   "date": "2026-09-23",
+   "title": "DoppelDash"
+  },
+  {
+   "date": "2026-10-11",
+   "title": "Company Setup Playbook"
+  },
+  {
+   "date": "2026-10-09",
+   "title": "Taramandal"
+  },
+  {
+   "date": "2026-10-10",
+   "title": "Project Overview"
+  },
+  {
+   "date": "2026-10-09",
+   "title": "Summarise hackathon email"
+  },
+  {
+   "date": "2026-10-09",
+   "title": "WhatsApp Tech Stack"
+  },
+  {
+   "date": "2026-10-08",
+   "title": "LED Circuit Wiring Guide"
+  },
+  {
+   "date": "2026-10-05",
+   "title": "Personality analysis"
+  },
+  {
+   "date": "2026-10-05",
+   "title": "AlgoTrade"
+  },
+  {
+   "date": "2026-09-12",
+   "title": "MARS"
+  },
+  {
+   "date": "2026-09-22",
+   "title": "Sachin"
+  },
+  {
+   "date": "2026-09-19",
+   "title": "Algo"
+  },
+  {
+   "date": "2026-09-24",
+   "title": "Mouna Banglore"
+  },
+  {
+   "date": "2026-09-19",
+   "title": "Potnis"
+  },
+  {
+   "date": "2026-09-29",
+   "title": "Terra"
+  },
+  {
+   "date": "2026-09-29",
+   "title": "Find Shareholder Perks"
+  },
+  {
+   "date": "2026-09-27",
+   "title": "Team combo"
+  },
+  {
+   "date": "2026-09-15",
+   "title": "Drone"
+  },
+  {
+   "date": "2026-09-24",
+   "title": "SIH Bussiness"
+  },
+  {
+   "date": "2026-09-23",
+   "title": "GATE OS Study Plan"
+  },
+  {
+   "date": "2026-09-23",
+   "title": "Drone Development Summary"
+  },
+  {
+   "date": "2026-09-22",
+   "title": "P&DS Roadmap"
+  },
+  {
+   "date": "2026-09-16",
+   "title": "Promotional Poster Design"
+  },
+  {
+   "date": "2026-09-16",
+   "title": "Potnis launch caption rewrite"
+  },
+  {
+   "date": "2026-09-14",
+   "title": "Banner enhancement request"
+  },
+  {
+   "date": "2026-09-14",
+   "title": "Create continuous app image"
+  },
+  {
+   "date": "2026-09-14",
+   "title": "Onboarding Art Direction"
+  },
+  {
+   "date": "2026-09-13",
+   "title": "Verification summary"
+  },
+  {
+   "date": "2026-09-12",
+   "title": "Critique and improvements"
+  },
+  {
+   "date": "2026-09-05",
+   "title": "SIH Problem Selection"
+  },
+  {
+   "date": "2026-09-04",
+   "title": "ATS And AI Plagiarism Report"
+  },
+  {
+   "date": "2026-09-04",
+   "title": "Railway Architecture Critique"
+  },
+  {
+   "date": "2026-09-02",
+   "title": "3D Blockchain Infographic"
+  },
+  {
+   "date": "2026-09-02",
+   "title": "Blockchain Chapters 1 And 2"
+  },
+  {
+   "date": "2026-09-01",
+   "title": "Summarize GPU Syllabus"
+  },
+  {
+   "date": "2026-08-30",
+   "title": "Critique For SSRN Publication"
+  },
+  {
+   "date": "2026-08-31",
+   "title": "Cyber Security Study Structure"
+  },
+  {
+   "date": "2026-08-30",
+   "title": "Fintech Backtesting Infographic"
+  },
+  {
+   "date": "2026-08-29",
+   "title": "Blockchain Study Roadmap"
+  },
+  {
+   "date": "2026-08-27",
+   "title": "Summarize ML Syllabus"
+  },
+  {
+   "date": "2026-08-25",
+   "title": "Summarize DAA Syllabus"
+  },
+  {
+   "date": "2026-08-24",
+   "title": "Modern Onboarding Design"
+  },
+  {
+   "date": "2026-08-24",
+   "title": "Modern Lambda Logo"
+  },
+  {
+   "date": "2026-08-21",
+   "title": "Meme Quote Design"
+  },
+  {
+   "date": "2026-08-05",
+   "title": "WT"
+  },
+  {
+   "date": "2026-08-19",
+   "title": "FleetCommand Strategy Review"
+  },
+  {
+   "date": "2026-08-19",
+   "title": "ADAS Platform Assessment"
+  },
+  {
+   "date": "2026-08-17",
+   "title": "Round 3 Pune Solapur List"
+  },
+  {
+   "date": "2026-08-16",
+   "title": "NetGuard-ML Infographic Design"
+  },
+  {
+   "date": "2026-08-04",
+   "title": "Baaki"
+  },
+  {
+   "date": "2026-08-12",
+   "title": "Team Structure and Workflow"
+  },
+  {
+   "date": "2026-08-07",
+   "title": "NYC Agent Pilot Analysis"
+  },
+  {
+   "date": "2026-08-06",
+   "title": "ISRO"
+  },
+  {
+   "date": "2026-08-04",
+   "title": "RopeIQ Engineering Platform Analysis"
+  },
+  {
+   "date": "2026-08-06",
+   "title": "Fuel Margdarshak"
+  },
+  {
+   "date": "2026-08-05",
+   "title": "Air-Gapped NetOps"
+  },
+  {
+   "date": "2026-08-06",
+   "title": "Verify Part 1 First"
+  },
+  {
+   "date": "2026-08-05",
+   "title": "App for Tax Compliance"
+  },
+  {
+   "date": "2026-08-06",
+   "title": "Uber for Construction Equipment"
+  },
+  {
+   "date": "2026-08-05",
+   "title": "NetOps AI Feedback"
+  },
+  {
+   "date": "2026-07-31",
+   "title": "PPT Redesign for AgriTrust"
+  },
+  {
+   "date": "2026-07-29",
+   "title": "Hackathon Idea Ranking"
+  },
+  {
+   "date": "2026-07-28",
+   "title": "Alpha-Orbit MVP Plan"
+  },
+  {
+   "date": "2026-07-27",
+   "title": "TERRA-VERIFY Technical Review"
+  },
+  {
+   "date": "2026-07-20",
+   "title": "AI Data Centre Infographic"
+  },
+  {
+   "date": "2026-07-10",
+   "title": "arXiv Critique Review"
+  },
+  {
+   "date": "2026-07-07",
+   "title": "Floor Plan Design"
+  },
+  {
+   "date": "2026-07-06",
+   "title": "Deck suggestions for 8009 trophies"
+  },
+  {
+   "date": "2026-07-01",
+   "title": "City Companion Traffic Study"
+  },
+  {
+   "date": "2026-07-01",
+   "title": "PPT on 13th Problem Statement"
+  },
+  {
+   "date": "2026-06-28",
+   "title": "Code Review and Issues"
+  },
+  {
+   "date": "2026-06-24",
+   "title": "Gap Map Update"
+  },
+  {
+   "date": "2026-06-22",
+   "title": "MAVROS vs PyMAVLink"
+  },
+  {
+   "date": "2026-06-18",
+   "title": "Approach and Methodology Draft"
+  },
+  {
+   "date": "2026-06-17",
+   "title": "Remake Image Request"
+  },
+  {
+   "date": "2026-06-15",
+   "title": "Blockchain Exam Preparation"
+  },
+  {
+   "date": "2026-06-09",
+   "title": "Chess LinkedIn Post"
+  },
+  {
+   "date": "2026-05-19",
+   "title": "Autonomous Ropeway Alignment"
+  },
+  {
+   "date": "2026-04-26",
+   "title": "Tony Stark Comparison"
+  },
+  {
+   "date": "2026-05-15",
+   "title": "Riddle About Death"
+  },
+  {
+   "date": "2026-05-07",
+   "title": "Markdown Post Formatting Guide"
+  },
+  {
+   "date": "2026-04-25",
+   "title": "Best CRM in 2026"
+  },
+  {
+   "date": "2026-04-23",
+   "title": "Greeting and Assistance"
+  },
+  {
+   "date": "2026-03-27",
+   "title": "Pixhawk 6C in Isaac Sim"
+  },
+  {
+   "date": "2026-03-18",
+   "title": "Hailo Driver Installation"
+  },
+  {
+   "date": "2026-03-18",
+   "title": "DW3000 Library Fix"
+  },
+  {
+   "date": "2026-03-17",
+   "title": "DW3210 CS Pin Issue"
+  },
+  {
+   "date": "2026-03-15",
+   "title": "CSV Column Fix"
+  },
+  {
+   "date": "2026-03-13",
+   "title": "Status Names List"
+  },
+  {
+   "date": "2026-03-09",
+   "title": "MAVLink Connection Status"
+  },
+  {
+   "date": "2026-02-16",
+   "title": "IMX500 and Coral TPU"
+  },
+  {
+   "date": "2026-03-08",
+   "title": "AI Brain for Autopilot"
+  },
+  {
+   "date": "2026-03-07",
+   "title": "Pixhawk Arming Issue"
+  },
+  {
+   "date": "2026-02-18",
+   "title": "ROS2 Installation on Debian"
+  },
+  {
+   "date": "2026-02-16",
+   "title": "Host Role Visibility Tips"
+  },
+  {
+   "date": "2026-02-09",
+   "title": "Total Calculation"
+  },
+  {
+   "date": "2026-02-08",
+   "title": "Presentation Improvements"
+  },
+  {
+   "date": "2026-02-04",
+   "title": "PX4 Safety I/O Issues"
+  },
+  {
+   "date": "2026-01-31",
+   "title": "Raspberry Pi Camera Check"
+  },
+  {
+   "date": "2026-02-01",
+   "title": "MazeBot Code Review"
+  },
+  {
+   "date": "2026-01-31",
+   "title": "Server Boot Analysis"
+  },
+  {
+   "date": "2026-01-31",
+   "title": "OpenCV Install Issue"
+  },
+  {
+   "date": "2026-01-31",
+   "title": "Investing ₹7k Options"
+  },
+  {
+   "date": "2026-01-30",
+   "title": "Line Maze Bot Setup"
+  },
+  {
+   "date": "2026-01-30",
+   "title": "Hardware Code Cross-Check"
+  },
+  {
+   "date": "2026-01-30",
+   "title": "Driver Drowsiness Detector Analysis"
+  },
+  {
+   "date": "2026-01-30",
+   "title": "Raspberry Pi Camera Issues"
+  },
+  {
+   "date": "2026-01-27",
+   "title": "Teensy RPLIDAR Testing"
+  },
+  {
+   "date": "2026-01-23",
+   "title": "Understanding Isaac Sim Joints"
+  },
+  {
+   "date": "2026-01-20",
+   "title": "Reel Theft Roasts"
+  },
+  {
+   "date": "2026-01-20",
+   "title": "Changes in v2.1 Report"
+  },
+  {
+   "date": "2026-01-19",
+   "title": "IR Sensor Data Analysis"
+  },
+  {
+   "date": "2026-01-19",
+   "title": "Proposal Feasibility Template"
+  },
+  {
+   "date": "2026-01-18",
+   "title": "RViz PointCloud2 Issue"
+  },
+  {
+   "date": "2026-01-18",
+   "title": "Isaac Sim matplotlib issue"
+  },
+  {
+   "date": "2026-01-18",
+   "title": "Project Milestones January 2026"
+  },
+  {
+   "date": "2026-01-17",
+   "title": "Ubuntu Downgrade Instructions"
+  },
+  {
+   "date": "2026-01-17",
+   "title": "Core Member Contribution Plan"
+  },
+  {
+   "date": "2026-01-17",
+   "title": "Teensy Installation Timeout Fixes"
+  },
+  {
+   "date": "2026-01-16",
+   "title": "Isaac Sim Wheel Rotation"
+  },
+  {
+   "date": "2026-01-16",
+   "title": "Sponsorship Email Draft"
+  },
+  {
+   "date": "2026-01-15",
+   "title": "CLEANUP"
+  },
+  {
+   "date": "2026-01-15",
+   "title": "Isaac Lab Installation Guide"
+  },
+  {
+   "date": "2026-01-15",
+   "title": "Extend Ubuntu Disk Space"
+  },
+  {
+   "date": "2026-01-15",
+   "title": "Isaac Sim Troubleshooting"
+  },
+  {
+   "date": "2026-01-14",
+   "title": "Carter V1 Robot Setup"
+  },
+  {
+   "date": "2026-01-14",
+   "title": "Laptop Recommendations for Research"
+  },
+  {
+   "date": "2026-01-11",
+   "title": "Imposters Bot Proposal"
+  },
+  {
+   "date": "2026-01-09",
+   "title": "Project AgriTrace Deliverables"
+  },
+  {
+   "date": "2026-01-08",
+   "title": "ASCEND Project Overview"
+  },
+  {
+   "date": "2026-01-08",
+   "title": "ASCEND Algorithm & Flight Logic"
+  },
+  {
+   "date": "2026-01-06",
+   "title": "Greeting exchange"
+  },
+  {
+   "date": "2026-01-04",
+   "title": "Kalpataru 2026 Tech Summary"
+  },
+  {
+   "date": "2026-01-03",
+   "title": "GitHub README Customization"
+  },
+  {
+   "date": "2026-01-01",
+   "title": "AgriTrace Connect Review"
+  },
+  {
+   "date": "2025-12-29",
+   "title": "Members without teams"
+  },
+  {
+   "date": "2025-12-28",
+   "title": "Course Outcomes Mapping"
+  },
+  {
+   "date": "2025-12-28",
+   "title": "Synchronization & File Systems"
+  },
+  {
+   "date": "2025-12-28",
+   "title": "Boys Details Extraction"
+  },
+  {
+   "date": "2025-12-27",
+   "title": "TurtleBot3 Simulation Setup"
+  },
+  {
+   "date": "2025-12-25",
+   "title": "Resume Comparison ATS Score"
+  },
+  {
+   "date": "2025-12-24",
+   "title": "Collaboration Proposal Update"
+  },
+  {
+   "date": "2025-12-24",
+   "title": "Progress Update Draft"
+  },
+  {
+   "date": "2025-12-24",
+   "title": "AgriTrace Project Update"
+  },
+  {
+   "date": "2025-12-23",
+   "title": "Edit Black Dress to Santa"
+  },
+  {
+   "date": "2025-12-22",
+   "title": "Blockchain unit summaries"
+  },
+  {
+   "date": "2025-12-20",
+   "title": "Image comparison assistance"
+  },
+  {
+   "date": "2025-12-20",
+   "title": "Edit image Kalptaru 26"
+  },
+  {
+   "date": "2025-12-17",
+   "title": "6-mark exam answers"
+  },
+  {
+   "date": "2025-12-18",
+   "title": "Unit 03–06 exam guide"
+  },
+  {
+   "date": "2025-12-17",
+   "title": "General loading scheme explanation"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "HTTP request and reply"
+  },
+  {
+   "date": "2025-12-16",
+   "title": "DHCP working and diagram"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "Distance Vector Routing"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "ATS-Optimized Resume Review"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "ATS resume feedback"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "Enhanced resume prompt"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "ATS score comparison and analysis"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "ATS resume optimization"
+  },
+  {
+   "date": "2025-12-15",
+   "title": "Everything about you"
+  },
+  {
+   "date": "2025-12-13",
+   "title": "GitHub README update"
+  },
+  {
+   "date": "2025-12-13",
+   "title": "Combine into one image"
+  },
+  {
+   "date": "2025-12-13",
+   "title": "CYK algorithm solution"
+  },
+  {
+   "date": "2025-12-13",
+   "title": "Solve query"
+  },
+  {
+   "date": "2025-12-13",
+   "title": "Theory of Computation exam solutions"
+  },
+  {
+   "date": "2025-12-12",
+   "title": "Computability theory and NP-Completeness"
+  },
+  {
+   "date": "2025-12-11",
+   "title": "ChatGPT Wrapped 2025"
+  },
+  {
+   "date": "2025-12-04",
+   "title": "Snake game improvement"
+  },
+  {
+   "date": "2025-11-29",
+   "title": "PDF creation and download"
+  },
+  {
+   "date": "2025-11-08",
+   "title": "HCI viva questions"
+  },
+  {
+   "date": "2025-11-04",
+   "title": "Kalptaru landing page design"
+  },
+  {
+   "date": "2025-10-22",
+   "title": "Quantum-enhanced decentralized science"
+  },
+  {
+   "date": "2025-10-17",
+   "title": "Quantum blockchain in DeSci"
+  },
+  {
+   "date": "2025-10-03",
+   "title": "PPT content plan"
+  },
+  {
+   "date": "2025-09-29",
+   "title": "Agri waste management MVP"
+  },
+  {
+   "date": "2025-09-25",
+   "title": "Camera angle description"
+  },
+  {
+   "date": "2025-09-16",
+   "title": "Codex Editor features"
+  },
+  {
+   "date": "2025-09-16",
+   "title": "Engaging README rewrite"
+  },
+  {
+   "date": "2025-09-15",
+   "title": "Blockchain quantum project ideas"
+  },
+  {
+   "date": "2025-09-11",
+   "title": "Fix zkSync verification error"
+  },
+  {
+   "date": "2025-09-05",
+   "title": "Smart waste segregation system"
+  },
+  {
+   "date": "2025-09-04",
+   "title": "Best problem statements"
+  },
+  {
+   "date": "2025-09-01",
+   "title": "Smart PDS overview"
+  },
+  {
+   "date": "2025-09-02",
+   "title": "LinkedIn caption write"
+  },
+  {
+   "date": "2025-08-30",
+   "title": "Python script tracking"
+  },
+  {
+   "date": "2025-08-25",
+   "title": "Style webpage with CSS"
+  },
+  {
+   "date": "2024-12-28",
+   "title": "Post"
+  },
+  {
+   "date": "2024-12-27",
+   "title": "Article"
+  },
+  {
+   "date": "2024-12-29",
+   "title": "Readme 2"
+  },
+  {
+   "date": "2024-12-30",
+   "title": "Weekly Post Ideas"
+  },
+  {
+   "date": "2024-12-10",
+   "title": "2025 Indian Festivals Calendar"
+  },
+  {
+   "date": "2024-11-22",
+   "title": "Ports Logistics System Overview"
+  },
+  {
+   "date": "2025-07-16",
+   "title": "Undo Git Commit"
+  },
+  {
+   "date": "2024-12-16",
+   "title": "Programming Basics Challenges Redesign"
+  },
+  {
+   "date": "2025-01-23",
+   "title": "Think and Grow Rich Insights"
+  },
+  {
+   "date": "2025-07-15",
+   "title": "CPGA Progress SPPU"
+  },
+  {
+   "date": "2025-07-01",
+   "title": "Vidyadaan Logo Design"
+  },
+  {
+   "date": "2025-06-21",
+   "title": "Quantum AI Blockchain Project"
+  },
+  {
+   "date": "2025-06-29",
+   "title": "Custom Blockchain Creation Steps"
+  },
+  {
+   "date": "2025-06-28",
+   "title": "Quantum PoW Blockchain API"
+  },
+  {
+   "date": "2025-06-22",
+   "title": "Super Smelter Fast Unload"
+  },
+  {
+   "date": "2025-06-21",
+   "title": "Blockchain Demo Summary"
+  },
+  {
+   "date": "2024-12-29",
+   "title": "100 Days Leetcode Challenge"
+  },
+  {
+   "date": "2024-12-16",
+   "title": "Java Development Roadmap Guide"
+  },
+  {
+   "date": "2025-06-18",
+   "title": "Durable STT Provider Implementation"
+  },
+  {
+   "date": "2025-06-14",
+   "title": "Colleges for CS OBC"
+  },
+  {
+   "date": "2025-05-31",
+   "title": "80386 Descriptor Format Explained"
+  },
+  {
+   "date": "2025-05-29",
+   "title": "Syllabus Summary CE 2nd Year"
+  },
+  {
+   "date": "2025-05-28",
+   "title": "LOC and FP Estimation"
+  },
+  {
+   "date": "2025-05-29",
+   "title": "Software Testing Overview"
+  },
+  {
+   "date": "2025-05-27",
+   "title": "Graph Algorithms Explanation"
+  },
+  {
+   "date": "2025-05-21",
+   "title": "Bulk Email Creation Guide"
+  },
+  {
+   "date": "2025-05-19",
+   "title": "Quantum Computing Projects"
+  },
+  {
+   "date": "2025-05-19",
+   "title": "Top Hackathon Projects Evaluation"
+  },
+  {
+   "date": "2025-05-19",
+   "title": "Hackathon Project Suggestions"
+  },
+  {
+   "date": "2025-01-12",
+   "title": "Docker Article Plan"
+  },
+  {
+   "date": "2024-12-13",
+   "title": "5 Day Series Plan"
+  },
+  {
+   "date": "2025-05-14",
+   "title": "All year fruits explained"
+  },
+  {
+   "date": "2025-05-14",
+   "title": "Hotel Booking System Review"
+  },
+  {
+   "date": "2025-05-11",
+   "title": "How Well She Knows Me"
+  },
+  {
+   "date": "2025-05-08",
+   "title": "The River and Flame"
+  },
+  {
+   "date": "2025-05-08",
+   "title": "Projectile Motion Overview"
+  },
+  {
+   "date": "2025-05-07",
+   "title": "Potentiometer Overview"
+  },
+  {
+   "date": "2025-05-06",
+   "title": "2 Truths 1 Lie Game"
+  },
+  {
+   "date": "2025-05-05",
+   "title": "Helping Aiden Reach Azzy"
+  },
+  {
+   "date": "2025-05-06",
+   "title": "80386 Processor Overview"
+  },
+  {
+   "date": "2025-05-05",
+   "title": "Probo meaning clarification"
+  },
+  {
+   "date": "2025-05-05",
+   "title": "Research Paper Patent Mentor"
+  },
+  {
+   "date": "2025-05-02",
+   "title": "Factorial in Python"
+  },
+  {
+   "date": "2025-05-01",
+   "title": "Thanks and Greetings"
+  },
+  {
+   "date": "2025-04-25",
+   "title": "Computer Engineering Project Help"
+  },
+  {
+   "date": "2025-04-24",
+   "title": "Speed Calculation for Distance"
+  },
+  {
+   "date": "2025-04-23",
+   "title": "Terror Extremism Clarification"
+  },
+  {
+   "date": "2025-04-23",
+   "title": "Conversation Summary Request"
+  },
+  {
+   "date": "2025-04-16",
+   "title": "Thanking family for wishes"
+  },
+  {
+   "date": "2025-04-15",
+   "title": "B+ Tree and Trie"
+  },
+  {
+   "date": "2025-04-06",
+   "title": "App failure explanation"
+  },
+  {
+   "date": "2025-04-15",
+   "title": "File Record Management"
+  },
+  {
+   "date": "2025-03-29",
+   "title": "OpenAI Rate Limit Error"
+  },
+  {
+   "date": "2025-03-25",
+   "title": "Web3 DeSci Publishing Platform"
+  },
+  {
+   "date": "2025-04-09",
+   "title": "Transportation System Study"
+  },
+  {
+   "date": "2025-04-09",
+   "title": "Dronacharya Eklavya Ethics Debate"
+  },
+  {
+   "date": "2025-04-09",
+   "title": "C++ Missing Code Fix"
+  },
+  {
+   "date": "2025-02-07",
+   "title": "Social Media Automation Guide"
+  },
+  {
+   "date": "2025-04-09",
+   "title": "Prisma DB Connection Issue"
+  },
+  {
+   "date": "2025-04-07",
+   "title": "Run Arduino App on Mac"
+  },
+  {
+   "date": "2025-04-05",
+   "title": "Hardhat Node Version Fix"
+  },
+  {
+   "date": "2025-04-03",
+   "title": "IPFS Upload and CSS Fixes"
+  },
+  {
+   "date": "2025-04-03",
+   "title": "Magical Ladder Solution"
+  },
+  {
+   "date": "2025-04-02",
+   "title": "Dividing cows with odd numbers"
+  },
+  {
+   "date": "2025-04-02",
+   "title": "Matchs over meaning"
+  },
+  {
+   "date": "2025-04-02",
+   "title": "IDEATHON Email Confirmation"
+  },
+  {
+   "date": "2025-04-01",
+   "title": "Phone Screen Sharing App"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "Web3 DeSci Publishing Platform"
+  },
+  {
+   "date": "2025-04-01",
+   "title": "DeSci Web3 Platform Pitch"
+  },
+  {
+   "date": "2025-03-30",
+   "title": "m++ behavior in languages"
+  },
+  {
+   "date": "2025-03-30",
+   "title": "Undefined behavior in expressions"
+  },
+  {
+   "date": "2025-03-30",
+   "title": "Ghibli Art Request"
+  },
+  {
+   "date": "2025-03-29",
+   "title": "DeSci Publishing Platform Ideas"
+  },
+  {
+   "date": "2025-03-30",
+   "title": "गुढीपाडवा शुभेच्छा संदेश"
+  },
+  {
+   "date": "2025-03-29",
+   "title": "Ghibli Style Cricket Scene"
+  },
+  {
+   "date": "2025-03-29",
+   "title": "AI Tasks for Plagiarism"
+  },
+  {
+   "date": "2025-03-29",
+   "title": "Grocery Price Comparison App"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "AI Paper Analysis Review"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "TypeScript Toast Errors"
+  },
+  {
+   "date": "2025-03-28",
+   "title": "Nasta aur Pani"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "Sanskrit aur prachin bhashaen"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "Gudi Padwa vs CNY"
+  },
+  {
+   "date": "2025-03-27",
+   "title": "Npm script execution error"
+  },
+  {
+   "date": "2025-03-24",
+   "title": "Blockchain Project Ideas"
+  },
+  {
+   "date": "2025-03-24",
+   "title": "Tourism Industry Innovation Ideas"
+  },
+  {
+   "date": "2025-03-24",
+   "title": "Firebase Tracking Map Setup"
+  },
+  {
+   "date": "2025-03-23",
+   "title": "Shipment tracking error debug"
+  },
+  {
+   "date": "2025-03-23",
+   "title": "Mumbai to Kedarnath Trip"
+  },
+  {
+   "date": "2025-03-23",
+   "title": "AI Solutions for Traditional Tasks"
+  },
+  {
+   "date": "2025-03-23",
+   "title": "AI Storytelling for Kids"
+  },
+  {
+   "date": "2025-03-22",
+   "title": "Call Game Ideas"
+  },
+  {
+   "date": "2025-03-22",
+   "title": "Introduction Request Summary"
+  },
+  {
+   "date": "2025-03-22",
+   "title": "Hackathon Group Names"
+  },
+  {
+   "date": "2025-03-22",
+   "title": "Innovation Project Themes"
+  },
+  {
+   "date": "2025-03-21",
+   "title": "Talking Points Agra"
+  },
+  {
+   "date": "2025-03-21",
+   "title": "User Dashboard Overview"
+  },
+  {
+   "date": "2025-03-21",
+   "title": "Admin Dashboard Overview"
+  },
+  {
+   "date": "2025-03-20",
+   "title": "Check GitHub Account Login"
+  },
+  {
+   "date": "2025-03-19",
+   "title": "Max Trophies Per Attack"
+  },
+  {
+   "date": "2025-03-18",
+   "title": "Conversation Start"
+  },
+  {
+   "date": "2025-03-18",
+   "title": "भारतीय संस्कृति पैक"
+  },
+  {
+   "date": "2025-03-17",
+   "title": "Legendary rank player count"
+  },
+  {
+   "date": "2025-03-17",
+   "title": "शिवजयंती 2025 तिथियाँ"
+  },
+  {
+   "date": "2025-03-15",
+   "title": "Helicopter to Mount Kailash"
+  },
+  {
+   "date": "2025-03-15",
+   "title": "Func as Non-Primitive Type"
+  },
+  {
+   "date": "2025-03-15",
+   "title": "Stack Pointer मराठीत"
+  },
+  {
+   "date": "2025-03-14",
+   "title": "Random Chat Questions"
+  },
+  {
+   "date": "2025-03-14",
+   "title": "Budget Kashmir Trip Plan"
+  },
+  {
+   "date": "2025-03-14",
+   "title": "रंगपंचमी सुधारणा स्पष्टीकरण"
+  },
+  {
+   "date": "2025-03-13",
+   "title": "Next.js Clerk Setup"
+  },
+  {
+   "date": "2025-03-13",
+   "title": "80386 Architecture and Instructions"
+  },
+  {
+   "date": "2025-03-12",
+   "title": "Grand Master V Estimate"
+  },
+  {
+   "date": "2025-03-12",
+   "title": "CBSE Percentage Calculation Help"
+  },
+  {
+   "date": "2025-03-12",
+   "title": "Neuron Efficiency vs Size"
+  },
+  {
+   "date": "2025-03-11",
+   "title": "Vijay Mallya Extradition Case"
+  },
+  {
+   "date": "2025-03-11",
+   "title": "England vs Pakistan Size"
+  },
+  {
+   "date": "2025-03-11",
+   "title": "Software Engineering Overview"
+  },
+  {
+   "date": "2025-03-11",
+   "title": "Hashing Techniques and Probing"
+  },
+  {
+   "date": "2025-03-08",
+   "title": "M3 Revision Plan"
+  },
+  {
+   "date": "2025-03-09",
+   "title": "Asking for Money Back"
+  },
+  {
+   "date": "2025-03-09",
+   "title": "Shortcut for P.I."
+  },
+  {
+   "date": "2025-03-09",
+   "title": "Negative exponent shortcut"
+  },
+  {
+   "date": "2025-03-08",
+   "title": "SAT Exam Inquiry"
+  },
+  {
+   "date": "2025-03-06",
+   "title": "Derivative of polynomial"
+  },
+  {
+   "date": "2025-03-05",
+   "title": "Asteroid Impact Probability"
+  },
+  {
+   "date": "2025-03-05",
+   "title": "Busy on a call"
+  },
+  {
+   "date": "2025-03-02",
+   "title": "Sci Eco Career Paths"
+  },
+  {
+   "date": "2025-02-28",
+   "title": "Green Circle Icon Help"
+  },
+  {
+   "date": "2025-02-28",
+   "title": "DTDC Working Explained"
+  },
+  {
+   "date": "2025-02-25",
+   "title": "Can you hear me"
+  },
+  {
+   "date": "2025-02-11",
+   "title": "Binary Tree Types Explained"
+  },
+  {
+   "date": "2025-02-11",
+   "title": "Hashing and Data Structures"
+  },
+  {
+   "date": "2025-02-05",
+   "title": "Code Optimization and Fixes"
+  },
+  {
+   "date": "2025-02-03",
+   "title": "AI Virtual Dressing Room"
+  },
+  {
+   "date": "2025-02-03",
+   "title": "Tree Terminologies Explained"
+  },
+  {
+   "date": "2025-01-31",
+   "title": "Elephant Inspiration Article"
+  },
+  {
+   "date": "2025-01-29",
+   "title": "Hashing and Hash Functions"
+  },
+  {
+   "date": "2025-01-28",
+   "title": "4-digit PIN combinations"
+  },
+  {
+   "date": "2025-01-27",
+   "title": "Harsh Pandhe Profile Summary"
+  },
+  {
+   "date": "2025-01-26",
+   "title": "React Bootcamp LinkedIn Post"
+  },
+  {
+   "date": "2025-01-23",
+   "title": "Mongoose connection error fix"
+  },
+  {
+   "date": "2025-01-23",
+   "title": "MongoDB Connection and Security"
+  },
+  {
+   "date": "2025-01-23",
+   "title": "GitHub SSH Setup Issues"
+  },
+  {
+   "date": "2025-01-21",
+   "title": "Automated Git Commit Scheduler"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "Payment Summary Table"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "BTech 2025 Project Ideas"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "Roast and React"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "AI Assistant App Idea"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "Docker Apps for 24/7"
+  },
+  {
+   "date": "2025-01-22",
+   "title": "Trip Budget Breakdown"
+  },
+  {
+   "date": "2025-01-21",
+   "title": "Rust Project Ideas"
+  },
+  {
+   "date": "2025-01-20",
+   "title": "Construction Bill Web App"
+  },
+  {
+   "date": "2025-01-20",
+   "title": "Node.js Webpack Error Fix"
+  },
+  {
+   "date": "2025-01-20",
+   "title": "Sum of Even Numbers"
+  },
+  {
+   "date": "2025-01-20",
+   "title": "Pune Trip Recap"
+  },
+  {
+   "date": "2025-01-18",
+   "title": "Places to Visit Pune"
+  },
+  {
+   "date": "2025-01-18",
+   "title": "Imagination Quote Request"
+  },
+  {
+   "date": "2025-01-17",
+   "title": "Automated Git Commit Scheduler"
+  },
+  {
+   "date": "2025-01-17",
+   "title": "Run Script 24/7"
+  },
+  {
+   "date": "2025-01-16",
+   "title": "Firebase services initialization fix"
+  },
+  {
+   "date": "2025-01-16",
+   "title": "Startup Problem Statements 2025"
+  },
+  {
+   "date": "2025-01-15",
+   "title": "Non-Gen Z vs Gen Z Moms"
+  },
+  {
+   "date": "2025-01-15",
+   "title": "MSVC linker not found"
+  },
+  {
+   "date": "2025-01-14",
+   "title": "GitHub Profile Setup"
+  },
+  {
+   "date": "2025-01-14",
+   "title": "Flask Module Not Found"
+  },
+  {
+   "date": "2025-01-14",
+   "title": "Minimal DFA for RE"
+  },
+  {
+   "date": "2025-01-14",
+   "title": "Functional JS Thumbnail Design"
+  },
+  {
+   "date": "2025-01-13",
+   "title": "WSL2 Mount Error Fix"
+  },
+  {
+   "date": "2025-01-13",
+   "title": "5V DC to AC Inverter"
+  },
+  {
+   "date": "2025-01-13",
+   "title": "Docker Demystified Feedback"
+  },
+  {
+   "date": "2025-01-12",
+   "title": "New chat"
+  },
+  {
+   "date": "2025-01-11",
+   "title": "Contact Form Animation"
+  },
+  {
+   "date": "2025-01-08",
+   "title": "React Spline Portfolio Guide"
+  },
+  {
+   "date": "2025-01-10",
+   "title": "Type Error Fix"
+  },
+  {
+   "date": "2025-01-08",
+   "title": "DFA for L1 Language"
+  },
+  {
+   "date": "2024-12-23",
+   "title": "Innovative Mental Health Chatbot Ideas"
+  },
+  {
+   "date": "2025-01-06",
+   "title": "Voice Assistant with ChatGPT"
+  },
+  {
+   "date": "2025-01-06",
+   "title": "Firebase Setup Guide"
+  },
+  {
+   "date": "2025-01-06",
+   "title": "Linux port scan fix"
+  },
+  {
+   "date": "2025-01-06",
+   "title": "Connect Wi-Fi Metasploitable"
+  },
+  {
+   "date": "2025-01-05",
+   "title": "Create React App Guide"
+  },
+  {
+   "date": "2025-01-06",
+   "title": "Longest Common Prefix Solution"
+  },
+  {
+   "date": "2025-01-05",
+   "title": "Firebase Next.js Setup"
+  },
+  {
+   "date": "2025-01-05",
+   "title": "ChatGPT for LeetCode Help"
+  },
+  {
+   "date": "2025-01-04",
+   "title": "Hackathon Tech Stack 2P"
+  },
+  {
+   "date": "2025-01-04",
+   "title": "AI for Global Challenges"
+  },
+  {
+   "date": "2025-01-04",
+   "title": "Chatbot Firebase MERN Integration"
+  },
+  {
+   "date": "2025-01-01",
+   "title": "Instagram Reels Quote"
+  },
+  {
+   "date": "2024-12-15",
+   "title": "LinkedIn Strategy for 2025"
+  },
+  {
+   "date": "2024-12-30",
+   "title": "Oliver Overcomes His Fear"
+  },
+  {
+   "date": "2024-12-29",
+   "title": "Book Summary"
+  },
+  {
+   "date": "2024-12-28",
+   "title": "Readme"
+  },
+  {
+   "date": "2024-12-27",
+   "title": "Creative Hello World"
+  },
+  {
+   "date": "2024-12-26",
+   "title": "Hackathon Team Names"
+  },
+  {
+   "date": "2024-12-25",
+   "title": "Ishq Aur Dini Bandhan"
+  },
+  {
+   "date": "2024-12-22",
+   "title": "Mental Health Chatbot Design"
+  },
+  {
+   "date": "2024-12-17",
+   "title": "Mental Health Chatbot Design"
+  },
+  {
+   "date": "2024-12-22",
+   "title": "App Name Suggestions"
+  },
+  {
+   "date": "2024-12-19",
+   "title": "Warehouse Management System Fix"
+  },
+  {
+   "date": "2024-12-15",
+   "title": "Financial Growth Plan India"
+  },
+  {
+   "date": "2024-12-15",
+   "title": "Remove Wi-Fi Device Terminal"
+  },
+  {
+   "date": "2024-12-12",
+   "title": "CSE IT Placement Protest"
+  },
+  {
+   "date": "2024-12-09",
+   "title": "Mental Health Chatbot Guide"
+  },
+  {
+   "date": "2024-12-07",
+   "title": "O Meri Laila Lyrics"
+  },
+  {
+   "date": "2024-12-06",
+   "title": "Hydrocarbons for 10th Grade"
+  },
+  {
+   "date": "2024-11-29",
+   "title": "Moonlit Kite Adventure"
+  },
+  {
+   "date": "2024-12-05",
+   "title": "Impel Down Arc Summary"
+  },
+  {
+   "date": "2024-12-05",
+   "title": "Laptop Charger Capacitor Heating"
+  },
+  {
+   "date": "2024-12-04",
+   "title": "Traduzione e riassunto"
+  },
+  {
+   "date": "2024-12-04",
+   "title": "Chemical reaction equation"
+  },
+  {
+   "date": "2024-12-04",
+   "title": "Route PC Audio to Phone"
+  },
+  {
+   "date": "2024-12-03",
+   "title": "Predictive Power of Disciplines"
+  },
+  {
+   "date": "2024-12-02",
+   "title": "Pure Virtual Function Vtable"
+  },
+  {
+   "date": "2024-12-01",
+   "title": "Spotify TUI Raspberry Pi Setup"
+  },
+  {
+   "date": "2024-11-30",
+   "title": "Install eDEX-UI Raspberry Pi"
+  },
+  {
+   "date": "2024-11-30",
+   "title": "Tech LinkedIn Post Ideas"
+  },
+  {
+   "date": "2024-11-30",
+   "title": "Hackathon Group Names"
+  },
+  {
+   "date": "2024-11-28",
+   "title": "Banyan Tree Story"
+  },
+  {
+   "date": "2024-11-26",
+   "title": "Counting and Combinatorics Concepts"
+  },
+  {
+   "date": "2024-11-26",
+   "title": "4-digit numbers greater than 4000"
+  },
+  {
+   "date": "2024-11-22",
+   "title": "PDF Table to Excel"
+  },
+  {
+   "date": "2024-11-21",
+   "title": "Mental Health Chatbot SaaS"
+  },
+  {
+   "date": "2024-11-18",
+   "title": "Discrete Mathematics Course Overview"
+  },
+  {
+   "date": "2024-11-15",
+   "title": "Searching and Sorting Concepts"
+  },
+  {
+   "date": "2024-11-15",
+   "title": "Time and Space Complexity"
+  },
+  {
+   "date": "2024-11-15",
+   "title": "E-Commerce App Features Overview"
+  },
+  {
+   "date": "2024-11-13",
+   "title": "Running Graphics in CodeBlocks"
+  },
+  {
+   "date": "2024-11-13",
+   "title": "C++ Container Classes Overview"
+  },
+  {
+   "date": "2024-11-11",
+   "title": "MERN E-commerce README Creation"
+  },
+  {
+   "date": "2024-11-11",
+   "title": "Env Setup for Server"
+  },
+  {
+   "date": "2024-11-11",
+   "title": "Payment Currency Issue"
+  },
+  {
+   "date": "2024-11-10",
+   "title": "Next.js SyntaxError Fix"
+  },
+  {
+   "date": "2024-11-10",
+   "title": "Next.js Turbopack Regex Error"
+  },
+  {
+   "date": "2024-11-09",
+   "title": "Next.js Regex Error Fix"
+  },
+  {
+   "date": "2024-11-09",
+   "title": "Next.js Regular Expression Error"
+  },
+  {
+   "date": "2024-11-08",
+   "title": "Binary Number Operations DLL"
+  },
+  {
+   "date": "2024-11-07",
+   "title": "Serendipitous Raven Meaning"
+  },
+  {
+   "date": "2024-11-04",
+   "title": "Data Mining Goals and Data"
+  },
+  {
+   "date": "2024-11-02",
+   "title": "Construction Billing System Summary"
+  },
+  {
+   "date": "2024-11-02",
+   "title": "Project Inquiry"
+  },
+  {
+   "date": "2024-11-02",
+   "title": "City identification request"
+  },
+  {
+   "date": "2024-11-02",
+   "title": "Text Generation Overview"
+  },
+  {
+   "date": "2024-10-31",
+   "title": "NPM Dependency Resolution Issue"
+  },
+  {
+   "date": "2024-10-31",
+   "title": "Next.js Hydration Error Fix"
+  },
+  {
+   "date": "2024-10-30",
+   "title": "Delancy Jokes Collection"
+  },
+  {
+   "date": "2024-10-30",
+   "title": "MOD-6 Counter Design 7490"
+  },
+  {
+   "date": "2024-10-30",
+   "title": "Binary Search Example Pseudocode"
+  },
+  {
+   "date": "2024-10-23",
+   "title": "Unusual Tech Post Ideas"
+  },
+  {
+   "date": "2024-10-28",
+   "title": "Playing Card Design Analysis"
+  },
+  {
+   "date": "2024-10-27",
+   "title": "Nginx SSL Certificate Issues"
+  },
+  {
+   "date": "2024-10-26",
+   "title": "Raspberry Pi Samba Setup"
+  },
+  {
+   "date": "2024-10-23",
+   "title": "Mental Health Chatbot Features"
+  },
+  {
+   "date": "2024-10-23",
+   "title": "Software Development Steps"
+  },
+  {
+   "date": "2024-10-23",
+   "title": "Iconic Poems Overview"
+  },
+  {
+   "date": "2024-10-22",
+   "title": "Turtle Heart Shape Code"
+  },
+  {
+   "date": "2024-10-21",
+   "title": "Npm dependency resolution error"
+  },
+  {
+   "date": "2024-10-18",
+   "title": "Engaging Quotes with Backgrounds"
+  },
+  {
+   "date": "2024-10-20",
+   "title": "Orientation and Relaxation Chat"
+  },
+  {
+   "date": "2024-10-20",
+   "title": "Mohabbat ki muskil rahein"
+  },
+  {
+   "date": "2024-10-19",
+   "title": "Safety Tech App Ideas"
+  },
+  {
+   "date": "2024-10-19",
+   "title": "Expense Tracking Summary"
+  },
+  {
+   "date": "2024-10-17",
+   "title": "Motivational Quotes Collection"
+  },
+  {
+   "date": "2024-10-17",
+   "title": "Tech Topics for Enthusiasts"
+  },
+  {
+   "date": "2024-10-17",
+   "title": "LinkedIn Page Improvement Help"
+  },
+  {
+   "date": "2024-10-16",
+   "title": "Understanding Arrays in Programming"
+  },
+  {
+   "date": "2024-10-14",
+   "title": "Port Forwarding Without Router"
+  },
+  {
+   "date": "2024-10-14",
+   "title": "True Length Calculation Assignment"
+  },
+  {
+   "date": "2024-10-12",
+   "title": "SSH Permission Denied Fix"
+  },
+  {
+   "date": "2024-10-12",
+   "title": "Investment Strategies Comparison"
+  },
+  {
+   "date": "2024-10-10",
+   "title": "C String Functions"
+  },
+  {
+   "date": "2024-10-09",
+   "title": "Graphics Primitives and Applications"
+  },
+  {
+   "date": "2024-10-09",
+   "title": "OOP Concepts Overview"
+  },
+  {
+   "date": "2024-10-08",
+   "title": "Algorithm Complexity and Structures"
+  },
+  {
+   "date": "2024-10-06",
+   "title": "Set Operations A and B"
+  },
+  {
+   "date": "2024-10-04",
+   "title": "Reasons Against Amazon Settlement"
+  },
+  {
+   "date": "2024-10-05",
+   "title": "Matching PFP Pick-Up Line"
+  },
+  {
+   "date": "2024-10-03",
+   "title": "Expense Tracker Development Guide"
+  },
+  {
+   "date": "2024-09-29",
+   "title": "Winter Arc Inquiry"
+  },
+  {
+   "date": "2024-09-28",
+   "title": "Mess Change Request Letter"
+  },
+  {
+   "date": "2024-09-26",
+   "title": "Money Calculation Summary"
+  },
+  {
+   "date": "2024-09-24",
+   "title": "Repo Name Suggestions C C++"
+  },
+  {
+   "date": "2024-09-23",
+   "title": "JavaScript Array Addition"
+  },
+  {
+   "date": "2024-07-29",
+   "title": "Java Inventory System Code"
+  },
+  {
+   "date": "2024-09-16",
+   "title": "Data Structures Course Summary"
+  },
+  {
+   "date": "2024-09-14",
+   "title": "Hostel Packing Checklist"
+  },
+  {
+   "date": "2024-09-14",
+   "title": "Toiletries and Essentials List"
+  },
+  {
+   "date": "2024-09-13",
+   "title": "Bun Crash Troubleshooting"
+  },
+  {
+   "date": "2024-09-11",
+   "title": "Creative Rhyming Fun"
+  },
+  {
+   "date": "2024-09-10",
+   "title": "DSE Fees Payment Inquiry"
+  },
+  {
+   "date": "2024-08-14",
+   "title": "Forming a Development Team"
+  },
+  {
+   "date": "2024-08-21",
+   "title": "Student Competition Concerns"
+  },
+  {
+   "date": "2024-08-16",
+   "title": "Engineering College Rankings"
+  },
+  {
+   "date": "2024-08-16",
+   "title": "Split Data in Excel"
+  },
+  {
+   "date": "2024-08-14",
+   "title": "Comprehensive Learning Path"
+  },
+  {
+   "date": "2024-08-14",
+   "title": "Project Matching Suggestions"
+  },
+  {
+   "date": "2024-07-29",
+   "title": "Quiz App Development Plan"
+  },
+  {
+   "date": "2024-07-30",
+   "title": "Fixing Nonlocal Variable Error"
+  },
+  {
+   "date": "2024-07-30",
+   "title": "Digital Clock Versions"
+  },
+  {
+   "date": "2024-07-29",
+   "title": "Python Media Player Tutorial"
+  },
+  {
+   "date": "2024-07-29",
+   "title": "URL Shortener Guide"
+  },
+  {
+   "date": "2024-07-28",
+   "title": "Patient Class Review"
+  },
+  {
+   "date": "2024-07-28",
+   "title": "HashMap Implementation and Validation"
+  },
+  {
+   "date": "2024-07-08",
+   "title": "Python, JS, Java, C++ Projects"
+  },
+  {
+   "date": "2024-07-18",
+   "title": "GATE 2025 Exam Details"
+  },
+  {
+   "date": "2024-07-17",
+   "title": "Build Kanban Board React"
+  },
+  {
+   "date": "2024-04-12",
+   "title": "Startup Presentation Guide"
+  },
+  {
+   "date": "2024-07-08",
+   "title": "Win Mac & iPad Strategy"
+  },
+  {
+   "date": "2024-07-01",
+   "title": "Comparing Educational Institution Types"
+  },
+  {
+   "date": "2024-07-03",
+   "title": "Learn Skills for Web3"
+  },
+  {
+   "date": "2024-07-01",
+   "title": "Future Career Path Suggestions"
+  },
+  {
+   "date": "2024-06-25",
+   "title": "Instagram Posting Schedule"
+  },
+  {
+   "date": "2024-06-22",
+   "title": "Busy Schedule with IIT Meetup"
+  },
+  {
+   "date": "2024-06-20",
+   "title": "Safely Access Array Elements"
+  },
+  {
+   "date": "2024-06-16",
+   "title": "Lively Connections"
+  },
+  {
+   "date": "2024-06-15",
+   "title": "CEO Path: Science, Commerce, Arts"
+  },
+  {
+   "date": "2024-05-23",
+   "title": "Rang Bhavan Solapur Hub."
+  },
+  {
+   "date": "2024-06-08",
+   "title": "Top 10 Future Skills"
+  },
+  {
+   "date": "2024-06-06",
+   "title": "Mean, Percentile, Probability, Covariance"
+  },
+  {
+   "date": "2024-06-06",
+   "title": "Covariance Calculation Needed"
+  },
+  {
+   "date": "2024-05-30",
+   "title": "Python Script: Clip YouTube"
+  },
+  {
+   "date": "2024-05-27",
+   "title": "Counting Letters and Numbers"
+  },
+  {
+   "date": "2024-05-25",
+   "title": "React Component Enhancements"
+  },
+  {
+   "date": "2024-05-25",
+   "title": "Next.js Project Template"
+  },
+  {
+   "date": "2024-05-24",
+   "title": "Male Likely Name Suman"
+  },
+  {
+   "date": "2024-05-24",
+   "title": "SaaS Dashboard Requested"
+  },
+  {
+   "date": "2024-05-23",
+   "title": "Stock Market India Roadmap"
+  },
+  {
+   "date": "2024-05-22",
+   "title": "PHP: Basics and Syntax"
+  },
+  {
+   "date": "2024-05-19",
+   "title": "Hero Parallax Navbar Update"
+  },
+  {
+   "date": "2024-05-16",
+   "title": "DNA to RNA Converter"
+  },
+  {
+   "date": "2024-05-14",
+   "title": "Helpful Summary: Title."
+  },
+  {
+   "date": "2024-05-14",
+   "title": "Wonderful Sunrise Revelation"
+  },
+  {
+   "date": "2024-05-12",
+   "title": "Solapur to Goa Petrol: Cost & Consumption"
+  },
+  {
+   "date": "2024-05-10",
+   "title": "Config error in Git."
+  },
+  {
+   "date": "2024-05-01",
+   "title": "Android Development Curriculum"
+  },
+  {
+   "date": "2024-05-07",
+   "title": "Argentina Football Team Triumph"
+  },
+  {
+   "date": "2024-05-06",
+   "title": "Sustainable Design Exploration"
+  },
+  {
+   "date": "2024-05-01",
+   "title": "Study Schedule Android Exams"
+  },
+  {
+   "date": "2024-04-24",
+   "title": "Tribonacci Recursion Optimization"
+  },
+  {
+   "date": "2024-04-23",
+   "title": "Android Development Study Plan"
+  },
+  {
+   "date": "2024-04-17",
+   "title": "Canvas Component for Code"
+  },
+  {
+   "date": "2024-04-14",
+   "title": "Collab Code Editor & Execution"
+  },
+  {
+   "date": "2024-04-15",
+   "title": "Next.js Collaborative Code Editor"
+  },
+  {
+   "date": "2024-04-14",
+   "title": "Next.js Paje Konversion"
+  },
+  {
+   "date": "2024-04-14",
+   "title": "Create Reels Download Website"
+  },
+  {
+   "date": "2024-04-14",
+   "title": "Insta Reels Downloader Project"
+  },
+  {
+   "date": "2024-04-13",
+   "title": "PHP Basic Programs"
+  },
+  {
+   "date": "2024-04-09",
+   "title": "Steve's Entrepreneurial Achievements"
+  },
+  {
+   "date": "2024-04-07",
+   "title": "PHP Comparison Operators: Examples"
+  },
+  {
+   "date": "2024-03-05",
+   "title": "Code Editor Home Page."
+  },
+  {
+   "date": "2024-04-03",
+   "title": "Execute PHP Program Now!"
+  },
+  {
+   "date": "2024-03-30",
+   "title": "Invitation Email Template"
+  },
+  {
+   "date": "2024-04-01",
+   "title": "Management Principles in Industry."
+  },
+  {
+   "date": "2024-04-01",
+   "title": "Create GoodNews App Assistance"
+  },
+  {
+   "date": "2024-03-27",
+   "title": "Email Security Best Practices."
+  },
+  {
+   "date": "2024-03-27",
+   "title": "Connect Arduino to Create"
+  },
+  {
+   "date": "2024-03-25",
+   "title": "Data Conversion Functions"
+  },
+  {
+   "date": "2024-03-25",
+   "title": "MCQ Test Setup"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Redis Connection Error Troubleshoot"
+  },
+  {
+   "date": "2024-03-24",
+   "title": "Competitive Pricing Analysis Guide"
+  },
+  {
+   "date": "2024-03-24",
+   "title": "Task Manager Web App"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Internal Error: File Missing"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Troubleshoot Judge0 Connection Issue"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Team Combinations: Criteria Explained"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Create JSON file."
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Optimize Team Combination Generation"
+  },
+  {
+   "date": "2024-03-23",
+   "title": "Cricket Players Data Study"
+  },
+  {
+   "date": "2024-03-22",
+   "title": "Deploy Judge0 with Docker."
+  },
+  {
+   "date": "2024-03-20",
+   "title": "Democracy's Majority Deserve Results"
+  },
+  {
+   "date": "2024-03-15",
+   "title": "Gratitude for Project Contributors"
+  },
+  {
+   "date": "2024-03-15",
+   "title": "Java Meme Generator Model"
+  },
+  {
+   "date": "2024-03-15",
+   "title": "Editor Development Roadmap"
+  },
+  {
+   "date": "2024-03-10",
+   "title": "Authentication Logic and Routing"
+  },
+  {
+   "date": "2024-03-07",
+   "title": "Traditional Dress Day Celebration"
+  },
+  {
+   "date": "2024-03-07",
+   "title": "Blood Donation Success Event"
+  },
+  {
+   "date": "2024-03-03",
+   "title": "Use pcsnerul.in email."
+  },
+  {
+   "date": "2024-02-28",
+   "title": "Sponsorship Request for Project"
+  },
+  {
+   "date": "2024-02-27",
+   "title": "Todo Remove Button Fix"
+  },
+  {
+   "date": "2024-02-27",
+   "title": "Lab Editor and Networking Issues"
+  },
+  {
+   "date": "2024-02-27",
+   "title": "CORS Policy Violation Fix"
+  },
+  {
+   "date": "2024-02-27",
+   "title": "Server Error Handling"
+  },
+  {
+   "date": "2024-02-27",
+   "title": "Python code request."
+  },
+  {
+   "date": "2024-02-26",
+   "title": "Collab Code Editor Summary"
+  },
+  {
+   "date": "2024-02-25",
+   "title": "Simple Calculator Android Project"
+  },
+  {
+   "date": "2024-02-24",
+   "title": "Basic PHP Task Manager"
+  },
+  {
+   "date": "2024-02-24",
+   "title": "Run PHP Project Guide"
+  },
+  {
+   "date": "2024-02-24",
+   "title": "Micro-Project CO Integration."
+  },
+  {
+   "date": "2024-02-23",
+   "title": "Easy Project Ideas"
+  },
+  {
+   "date": "2024-02-23",
+   "title": "Environmental Awareness Survey"
+  },
+  {
+   "date": "2024-02-23",
+   "title": "Greening Tree Care"
+  },
+  {
+   "date": "2024-02-23",
+   "title": "Green College, Clean Campus"
+  },
+  {
+   "date": "2024-02-22",
+   "title": "Green College Initiative"
+  },
+  {
+   "date": "2024-02-22",
+   "title": "Green College Future Plans"
+  },
+  {
+   "date": "2024-02-15",
+   "title": "Innovative Science Models"
+  },
+  {
+   "date": "2024-02-15",
+   "title": "Better Stapler Design"
+  },
+  {
+   "date": "2024-02-13",
+   "title": "To-Do List Web App"
+  },
+  {
+   "date": "2024-02-11",
+   "title": "Management Models Discussed"
+  },
+  {
+   "date": "2024-02-10",
+   "title": "Android SDK Setup Troubleshoot"
+  },
+  {
+   "date": "2024-02-10",
+   "title": "Python Micro-Projects Guidelines"
+  },
+  {
+   "date": "2024-02-08",
+   "title": "Liste traînable React."
+  },
+  {
+   "date": "2024-02-08",
+   "title": "JavaScript Language Registration"
+  },
+  {
+   "date": "2024-02-05",
+   "title": "Fixing Code Issues"
+  },
+  {
+   "date": "2024-02-05",
+   "title": "Collab Code Editor: Next.js, React, Socket.io"
+  },
+  {
+   "date": "2024-02-03",
+   "title": "Avoid illegal websites"
+  },
+  {
+   "date": "2024-02-01",
+   "title": "Bootstrap Code Editor"
+  },
+  {
+   "date": "2024-01-31",
+   "title": "Python Environment Missing Error"
+  },
+  {
+   "date": "2024-01-31",
+   "title": "Collab Code Editor Promo"
+  },
+  {
+   "date": "2024-01-31",
+   "title": "Collaborative Code Editor Project"
+  },
+  {
+   "date": "2024-01-31",
+   "title": "Collab Code Editor Overview"
+  },
+  {
+   "date": "2024-01-30",
+   "title": "Collab Code Editor Revolution"
+  },
+  {
+   "date": "2024-01-30",
+   "title": "Collab Code Editor Project"
+  },
+  {
+   "date": "2024-01-30",
+   "title": "Read Binary File"
+  },
+  {
+   "date": "2024-01-29",
+   "title": "No country kills pets."
+  },
+  {
+   "date": "2024-01-27",
+   "title": "Microsoft Community Discord Intro"
+  },
+  {
+   "date": "2024-01-27",
+   "title": "Food Expenses in India"
+  },
+  {
+   "date": "2024-01-26",
+   "title": "WebChatGPT"
+  },
+  {
+   "date": "2024-01-26",
+   "title": "HTML Structure with Styles"
+  },
+  {
+   "date": "2024-01-25",
+   "title": "AI Roadmap for Beginners"
+  },
+  {
+   "date": "2024-01-24",
+   "title": "Style Quote App Material-UI"
+  },
+  {
+   "date": "2024-01-24",
+   "title": "To-Do List App HTML"
+  },
+  {
+   "date": "2024-01-24",
+   "title": "To-Do App HTML Summary"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "HTML JS CSS ToDo App"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "To-Do App Setup Tips"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "Todo List App Overview"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "To-Do List App Creation"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "JS To-Do App Skills"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "JS To-Do List Project"
+  },
+  {
+   "date": "2024-01-23",
+   "title": "Green College Competition Update"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Login System HTML Code"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Login System Overview"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Calculator Webpage Creation"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "HTML CSS JS Calculator"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Simple Calculator with math.js"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Calculator Web Page"
+  },
+  {
+   "date": "2024-01-22",
+   "title": "Calculator HTML CSS"
+  },
+  {
+   "date": "2024-01-21",
+   "title": "New Beginnings Quotes"
+  },
+  {
+   "date": "2024-01-21",
+   "title": "Simple Time Display WebApp"
+  },
+  {
+   "date": "2024-01-20",
+   "title": "Web App Development Tips"
+  },
+  {
+   "date": "2024-01-20",
+   "title": "AI Analyzes Computer Screenshot"
+  },
+  {
+   "date": "2024-01-19",
+   "title": "HTML with Bootstrap styling."
+  },
+  {
+   "date": "2024-01-19",
+   "title": "Project Sponsorship Granted"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Python ML Full Course"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Download YouTube Video Script"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Download Selenium with pip"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Chemical banter on socials."
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Color Generator Web Page"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Tidied HTML Code"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Styles and Responsiveness Tips"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Color Generator: HTML, CSS, JS"
+  },
+  {
+   "date": "2024-01-18",
+   "title": "Ngrok Abuse Prevention Instructions"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "Tic Tac Toe Login"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "Tic Tac Toe Game"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "REST API: Waiter Analogy"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "Trim Prefixes, Excel Editing"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "Pandas for Excel Files"
+  },
+  {
+   "date": "2024-01-17",
+   "title": "Read Excel with Python"
+  },
+  {
+   "date": "2024-01-16",
+   "title": "TLS Client Setup Errors"
+  },
+  {
+   "date": "2024-01-16",
+   "title": "3D Website with Three.js"
+  },
+  {
+   "date": "2024-01-15",
+   "title": "Weather API Integration"
+  },
+  {
+   "date": "2024-01-15",
+   "title": "Weather App Customization"
+  },
+  {
+   "date": "2024-01-14",
+   "title": "Secure Networking Libraries"
+  },
+  {
+   "date": "2024-01-07",
+   "title": "Charlie's Request Summary"
+  },
+  {
+   "date": "2024-01-09",
+   "title": "Styling Tips Needed!"
+  },
+  {
+   "date": "2024-01-07",
+   "title": "Retirement Fund Options"
+  },
+  {
+   "date": "2024-01-04",
+   "title": "Environmental Survey for College"
+  },
+  {
+   "date": "2024-01-04",
+   "title": "Waste Mgmt Workshop"
+  },
+  {
+   "date": "2024-01-03",
+   "title": "MERN Stack Overview"
+  },
+  {
+   "date": "2024-01-03",
+   "title": "Watch film, infinitive clause."
+  },
+  {
+   "date": "2024-01-03",
+   "title": "New chat"
+  },
+  {
+   "date": "2024-01-03",
+   "title": "Green College Initiative"
+  },
+  {
+   "date": "2024-01-03",
+   "title": "React Exercise List Fix"
+  },
+  {
+   "date": "2024-01-02",
+   "title": "React Router Bootstrap Setup"
+  },
+  {
+   "date": "2024-01-02",
+   "title": "Express Server with MongoDB"
+  },
+  {
+   "date": "2024-01-01",
+   "title": "Learning App Development Guide"
+  },
+  {
+   "date": "2024-01-01",
+   "title": "React Router Authentication Setup"
+  },
+  {
+   "date": "2024-01-01",
+   "title": "Code Study Assistance"
+  },
+  {
+   "date": "2023-12-31",
+   "title": "React Router Test App"
+  },
+  {
+   "date": "2023-12-31",
+   "title": "React App Setup Guide"
+  },
+  {
+   "date": "2023-12-31",
+   "title": "React Router Protected Route"
+  },
+  {
+   "date": "2023-12-31",
+   "title": "Basic React Setup"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "Firestore Users Structure"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "Assisted Suicide Bioethics"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "Firebase Configuration and Initialization"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "React Firebase Sign-In Feedback"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "React Firebase Auth Setup"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "Firebase SDK Setup Guide"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "Firestore Data Fetching Update"
+  },
+  {
+   "date": "2023-12-30",
+   "title": "React Firebase Project"
+  },
+  {
+   "date": "2023-12-29",
+   "title": "Enable feature on device."
+  },
+  {
+   "date": "2023-12-28",
+   "title": "Sinew E-Waste Template"
+  },
+  {
+   "date": "2023-12-27",
+   "title": "Genetic Factors in Homosexuality"
+  },
+  {
+   "date": "2023-12-24",
+   "title": "Stock Market Tools"
+  },
+  {
+   "date": "2023-12-23",
+   "title": "Enhance GitHub Profile"
+  },
+  {
+   "date": "2023-12-19",
+   "title": "Connection Issue: Check Network"
+  },
+  {
+   "date": "2023-12-18",
+   "title": "Testing Basics and Methods"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Testing Levels & Types"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Testing Fundamentals & Unit"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Testing Workshop Day 1"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Software Testing Basics Plan"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Software Testing Basics"
+  },
+  {
+   "date": "2023-12-16",
+   "title": "Testing Consequences: Financial, Reputation, User"
+  },
+  {
+   "date": "2023-12-15",
+   "title": "Java Calculator: Addition Result"
+  },
+  {
+   "date": "2023-12-15",
+   "title": "High Competition for Seats"
+  },
+  {
+   "date": "2023-12-15",
+   "title": "CS Master's Syllabus Overview"
+  },
+  {
+   "date": "2023-12-15",
+   "title": "Test Cases for Systems"
+  },
+  {
+   "date": "2023-12-12",
+   "title": "TCP and UDP Essentials"
+  },
+  {
+   "date": "2023-12-12",
+   "title": "UDP Characteristics & Applications"
+  },
+  {
+   "date": "2023-12-12",
+   "title": "Routing Protocols Overview"
+  },
+  {
+   "date": "2023-12-11",
+   "title": "Telnet: Remote Access Protocol"
+  },
+  {
+   "date": "2023-12-11",
+   "title": "Application Layer Protocols Overview"
+  },
+  {
+   "date": "2023-12-11",
+   "title": "FTP and Email Protocols"
+  },
+  {
+   "date": "2023-12-10",
+   "title": "Study Material Summary"
+  },
+  {
+   "date": "2023-12-06",
+   "title": "Fix Java Main Class"
+  },
+  {
+   "date": "2023-12-03",
+   "title": "Intentions, Happenings, Gratitude, Actions"
+  },
+  {
+   "date": "2023-12-03",
+   "title": "Height Conversion Bug Fix"
+  },
+  {
+   "date": "2023-12-02",
+   "title": "Fault Detection Technologies"
+  },
+  {
+   "date": "2023-11-30",
+   "title": "Study Strategy for Success"
+  },
+  {
+   "date": "2023-11-29",
+   "title": "Moon Mission: Longer Route"
+  },
+  {
+   "date": "2023-11-28",
+   "title": "Washing Machine Motor Control"
+  },
+  {
+   "date": "2023-11-28",
+   "title": "PLC Motor Control Program"
+  },
+  {
+   "date": "2023-11-27",
+   "title": "Space Book Recommendations"
+  },
+  {
+   "date": "2023-11-27",
+   "title": "Code Cleanup Assistance"
+  },
+  {
+   "date": "2023-11-26",
+   "title": "Service Analogies for Understanding"
+  },
+  {
+   "date": "2023-11-26",
+   "title": "OS Services & Tools"
+  },
+  {
+   "date": "2023-11-26",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-11-25",
+   "title": "Smart Greenhouse IoT System"
+  },
+  {
+   "date": "2023-11-25",
+   "title": "Joining Attributes in ER"
+  },
+  {
+   "date": "2023-11-25",
+   "title": "Join Attributes Using SQL"
+  },
+  {
+   "date": "2023-11-25",
+   "title": "Chandrayaan-3 Development Update"
+  },
+  {
+   "date": "2023-11-24",
+   "title": "Collab Code ER Diagram"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "Database Schema Review"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "DBML Syntax Correction"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "Collab Code Editors"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "Replit ER Diagram"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "Database Schema Simplification"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "CBSE 9 Geo Climate"
+  },
+  {
+   "date": "2023-11-23",
+   "title": "DFD Development and Collaboration"
+  },
+  {
+   "date": "2023-11-21",
+   "title": "Responsive Website Design"
+  },
+  {
+   "date": "2023-11-21",
+   "title": "Display Date & Time"
+  },
+  {
+   "date": "2023-11-20",
+   "title": "Coding Collaboration in Real-Time"
+  },
+  {
+   "date": "2023-11-18",
+   "title": "Collab Code Editor Team."
+  },
+  {
+   "date": "2023-11-17",
+   "title": "Discounted Beginner Banner Deal"
+  },
+  {
+   "date": "2023-11-13",
+   "title": "Advanced Computer Network COs"
+  },
+  {
+   "date": "2023-11-12",
+   "title": "Visually Appealing DFDs"
+  },
+  {
+   "date": "2023-11-12",
+   "title": "PERT Transition, DFD Development"
+  },
+  {
+   "date": "2023-11-10",
+   "title": "Project Planning with Advisor"
+  },
+  {
+   "date": "2023-11-10",
+   "title": "PERT TE Time Estimates"
+  },
+  {
+   "date": "2023-11-09",
+   "title": "Hex to Bin Conversion"
+  },
+  {
+   "date": "2023-11-09",
+   "title": "Collab Code Editor Overview"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Collab Editor Dev Plan"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Task Management Models"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Collab Code Editors Overview"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Python Gantt with Dependencies"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Help Requested, Assistance Offered"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-11-08",
+   "title": "Code Editor DFD Model"
+  },
+  {
+   "date": "2023-11-07",
+   "title": "UDP Header Data Extraction"
+  },
+  {
+   "date": "2023-11-07",
+   "title": "Task Management Structure"
+  },
+  {
+   "date": "2023-11-07",
+   "title": "Gantt Chart Using Python"
+  },
+  {
+   "date": "2023-11-07",
+   "title": "Table Creation Assistance"
+  },
+  {
+   "date": "2023-11-07",
+   "title": "Trio WhatsApp Names"
+  },
+  {
+   "date": "2023-11-05",
+   "title": "Coding Collaboration Tools"
+  },
+  {
+   "date": "2023-11-06",
+   "title": "PERT Chart Python Code"
+  },
+  {
+   "date": "2023-11-06",
+   "title": "Code Issue: Format Fix"
+  },
+  {
+   "date": "2023-11-05",
+   "title": "Test Plan Importance"
+  },
+  {
+   "date": "2023-11-05",
+   "title": "Collab Code Editor Plan"
+  },
+  {
+   "date": "2023-11-05",
+   "title": "Code Together: Better Ideas"
+  },
+  {
+   "date": "2023-11-05",
+   "title": "Admission Form Test Cases"
+  },
+  {
+   "date": "2023-11-04",
+   "title": "Code Editor Use Cases"
+  },
+  {
+   "date": "2023-11-04",
+   "title": "Mobility & Tech Stack"
+  },
+  {
+   "date": "2023-11-04",
+   "title": "Vision & Scalability Plan."
+  },
+  {
+   "date": "2023-11-04",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-11-04",
+   "title": "Project Selection Discussion"
+  },
+  {
+   "date": "2023-11-04",
+   "title": "Firebase Functionality Overview"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "Collab Code Editor Tips"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "Project Proposal PPT Content"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "ICMP in Packet Tracer"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "Mail Server Setup Guide"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "Water Quality Solutions"
+  },
+  {
+   "date": "2023-11-02",
+   "title": "Water Filtration Unit Insights"
+  },
+  {
+   "date": "2023-11-01",
+   "title": "Railway Reservation System Database"
+  },
+  {
+   "date": "2023-10-31",
+   "title": "Java Advanced Topics MSBTE"
+  },
+  {
+   "date": "2023-10-30",
+   "title": "IIT Bombay Lateral Entry"
+  },
+  {
+   "date": "2023-10-29",
+   "title": "SSH Configuration Example Packet."
+  },
+  {
+   "date": "2023-10-29",
+   "title": "Java Text Editor Explanation"
+  },
+  {
+   "date": "2023-10-29",
+   "title": "SSH Configuración en Packet Tracer"
+  },
+  {
+   "date": "2023-10-29",
+   "title": "Connect Remote Machine SSH"
+  },
+  {
+   "date": "2023-10-28",
+   "title": "Tabel Data Kesalahan Pelajar"
+  },
+  {
+   "date": "2023-10-28",
+   "title": "Student DB Project Solution"
+  },
+  {
+   "date": "2023-10-28",
+   "title": "Shell Script Help Guide"
+  },
+  {
+   "date": "2023-10-28",
+   "title": "Linux Command Help Guide"
+  },
+  {
+   "date": "2023-10-28",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-10-27",
+   "title": "C Graphics with SDL"
+  },
+  {
+   "date": "2023-10-27",
+   "title": "DNS: Internet Naming System"
+  },
+  {
+   "date": "2023-10-26",
+   "title": "Test Process Steps"
+  },
+  {
+   "date": "2023-10-24",
+   "title": "Scheduling Algorithms: SJF, FCFS, Priority"
+  },
+  {
+   "date": "2023-10-24",
+   "title": "Scheduling: Preemptive vs Non-Preemptive"
+  },
+  {
+   "date": "2023-10-24",
+   "title": "Page Faults in Algorithms: 4"
+  },
+  {
+   "date": "2023-10-24",
+   "title": "Understanding and Preventing Deadlock"
+  },
+  {
+   "date": "2023-10-24",
+   "title": "C program: Pendulum clock draw"
+  },
+  {
+   "date": "2023-10-23",
+   "title": "OS Services Explained"
+  },
+  {
+   "date": "2023-10-23",
+   "title": "Test Cases for Flight Reservation"
+  },
+  {
+   "date": "2023-10-23",
+   "title": "Book IndiGo Flights Online"
+  },
+  {
+   "date": "2023-10-20",
+   "title": "Web Dev Bootcamp Guide"
+  },
+  {
+   "date": "2023-10-20",
+   "title": "Amazon Test Cases Passed"
+  },
+  {
+   "date": "2023-10-19",
+   "title": "Crear Resumen de Currículum"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "Household Water Report"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "Linux Command Help Script"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "Linux Commands Help Guide"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "ACN"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "OS Services and Functions"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "Environment Segments: Key Components"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "Strong Junior Bond Pic"
+  },
+  {
+   "date": "2023-10-18",
+   "title": "JDBC Database Connection Code"
+  },
+  {
+   "date": "2023-10-17",
+   "title": "YouTube Must-Watch Playlists"
+  },
+  {
+   "date": "2023-10-17",
+   "title": "JDBC Insert with ODBC"
+  },
+  {
+   "date": "2023-10-17",
+   "title": "Weekend Artist Quotes"
+  },
+  {
+   "date": "2023-10-16",
+   "title": "Jogar Genshin Impact"
+  },
+  {
+   "date": "2023-10-16",
+   "title": "Flamingo Impersonation Joke"
+  },
+  {
+   "date": "2023-10-16",
+   "title": "Android Studio IDE"
+  },
+  {
+   "date": "2023-10-13",
+   "title": "Android Developer Skills: Learn!"
+  },
+  {
+   "date": "2023-10-12",
+   "title": "Future CS Master with Skills"
+  },
+  {
+   "date": "2023-10-12",
+   "title": "App & Android Friendly Tips"
+  },
+  {
+   "date": "2023-10-12",
+   "title": "Descargar videos de YouTube."
+  },
+  {
+   "date": "2023-10-11",
+   "title": "GSoC Program Overview"
+  },
+  {
+   "date": "2023-10-11",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-10-10",
+   "title": "Employee Record Management System"
+  },
+  {
+   "date": "2023-10-10",
+   "title": "Download YouTube Playlist with Python"
+  },
+  {
+   "date": "2023-10-10",
+   "title": "Online IDE: Replit"
+  },
+  {
+   "date": "2023-10-10",
+   "title": "React Bootcamp Day 1"
+  },
+  {
+   "date": "2023-10-09",
+   "title": "Extended React Bootcamp Schedule"
+  },
+  {
+   "date": "2023-10-09",
+   "title": "React Bootcamp: Day 1"
+  },
+  {
+   "date": "2023-10-08",
+   "title": "Balancing Financial Regulation and Growth"
+  },
+  {
+   "date": "2023-10-07",
+   "title": "Create React App: Components"
+  },
+  {
+   "date": "2023-10-07",
+   "title": "Balancing Regulation and Growth"
+  },
+  {
+   "date": "2023-10-07",
+   "title": "Micro-Project Suggestions for COs"
+  },
+  {
+   "date": "2023-10-07",
+   "title": "Micro-Project Suggestions for Students"
+  },
+  {
+   "date": "2023-10-07",
+   "title": "Network Micro-Projects for Students"
+  },
+  {
+   "date": "2023-10-06",
+   "title": "Gmail Login Test Results"
+  },
+  {
+   "date": "2023-10-06",
+   "title": "Format HTML Code Properly"
+  },
+  {
+   "date": "2023-10-06",
+   "title": "HTML/CSS Beginner Project Ideas"
+  },
+  {
+   "date": "2023-10-05",
+   "title": "Série gerada com consulta."
+  },
+  {
+   "date": "2023-10-05",
+   "title": "Code Editor Dashboard Overview"
+  },
+  {
+   "date": "2023-10-05",
+   "title": "Capstone Project Types"
+  },
+  {
+   "date": "2023-10-02",
+   "title": "Environmental Microproject Topics CO5I"
+  },
+  {
+   "date": "2023-10-04",
+   "title": "Maharashtra Biodiversity: Deccan South"
+  },
+  {
+   "date": "2023-10-04",
+   "title": "Gratitude for Cyber Security"
+  },
+  {
+   "date": "2023-09-21",
+   "title": "Morning Sunshine Thoughts 💭🌞"
+  },
+  {
+   "date": "2023-09-25",
+   "title": "Confusing Laughter, No Meaning"
+  },
+  {
+   "date": "2023-09-25",
+   "title": "Always There for You"
+  },
+  {
+   "date": "2023-09-25",
+   "title": "Unique Good Morning Message"
+  },
+  {
+   "date": "2023-09-15",
+   "title": "Dentistry and Yoga Fusion"
+  },
+  {
+   "date": "2023-09-14",
+   "title": "Be the Best"
+  },
+  {
+   "date": "2023-09-02",
+   "title": "Wear College Uniform Required"
+  },
+  {
+   "date": "2023-09-01",
+   "title": "Characteristics of the Rich"
+  },
+  {
+   "date": "2023-08-31",
+   "title": "Letter to Teacher"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Effective Networking: Grow Opportunities"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Long-Term Wealth Building"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Skill Boost for Earnings"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Realistic Financial Goal Setting"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Smart Investing: Reduce Risks"
+  },
+  {
+   "date": "2023-08-30",
+   "title": "Becoming Wealthy: Steps"
+  },
+  {
+   "date": "2023-08-29",
+   "title": "Join Green Initiative! 🌍🌿"
+  },
+  {
+   "date": "2023-08-27",
+   "title": "Cheerful Morning Greeting"
+  },
+  {
+   "date": "2023-08-26",
+   "title": "HTML/CSS Project Ideas"
+  },
+  {
+   "date": "2023-08-26",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-08-25",
+   "title": "Concatenating Strings in C++"
+  },
+  {
+   "date": "2023-08-24",
+   "title": "GitHub Bio Sample"
+  },
+  {
+   "date": "2023-08-23",
+   "title": "Successful Tree Planting Event"
+  },
+  {
+   "date": "2023-08-20",
+   "title": "Network Layer IP Addressing"
+  },
+  {
+   "date": "2023-08-21",
+   "title": "Redefining Variable Error"
+  },
+  {
+   "date": "2023-08-20",
+   "title": "New Chat Games"
+  },
+  {
+   "date": "2023-08-20",
+   "title": "Bus Service Improvement"
+  },
+  {
+   "date": "2023-08-09",
+   "title": "Gmail Login Test Cases"
+  },
+  {
+   "date": "2023-08-10",
+   "title": "Company Name: Dashway Services"
+  },
+  {
+   "date": "2023-08-19",
+   "title": "Equation Adventures Unite"
+  },
+  {
+   "date": "2023-08-18",
+   "title": "Creating OS with Python"
+  },
+  {
+   "date": "2023-08-18",
+   "title": "Bus Tracking App Guide"
+  },
+  {
+   "date": "2023-08-18",
+   "title": "Create Personal VPN Server"
+  },
+  {
+   "date": "2023-08-18",
+   "title": "Summarizing Text with Bullets"
+  },
+  {
+   "date": "2023-08-17",
+   "title": "Understanding ADHD in Simple Language"
+  },
+  {
+   "date": "2023-08-17",
+   "title": "Solar Energy for Irrigation"
+  },
+  {
+   "date": "2023-07-25",
+   "title": "Collab Code Editor Req"
+  },
+  {
+   "date": "2023-08-17",
+   "title": "Teacher Bus Management Portal"
+  },
+  {
+   "date": "2023-08-17",
+   "title": "VPN: Digital Ninjas Unite!"
+  },
+  {
+   "date": "2023-08-15",
+   "title": "Green Initiative Activities 🌍"
+  },
+  {
+   "date": "2023-08-15",
+   "title": "Pokémon FR/LG Soundtrack Details"
+  },
+  {
+   "date": "2023-08-14",
+   "title": "Masters Programs 2023"
+  },
+  {
+   "date": "2023-08-13",
+   "title": "Fitness Website: Goals & Services"
+  },
+  {
+   "date": "2023-08-13",
+   "title": "HTML Webpage Layout Demo"
+  },
+  {
+   "date": "2023-08-13",
+   "title": "Fitness Website Sitemap"
+  },
+  {
+   "date": "2023-08-04",
+   "title": "Random Word: Serendipity"
+  },
+  {
+   "date": "2023-08-12",
+   "title": "Eco-Friendly Living Guide"
+  },
+  {
+   "date": "2023-08-01",
+   "title": "Stats: Views, Feed, Likes."
+  },
+  {
+   "date": "2023-08-11",
+   "title": "Pomodoro Technique Overview"
+  },
+  {
+   "date": "2023-08-11",
+   "title": "Remote PC Connection"
+  },
+  {
+   "date": "2023-08-11",
+   "title": "Collaborative Android Git Project"
+  },
+  {
+   "date": "2023-08-09",
+   "title": "Env. Studies Info"
+  },
+  {
+   "date": "2023-08-08",
+   "title": "Tree Plantation & Poster Slogans"
+  },
+  {
+   "date": "2023-08-08",
+   "title": "Bus Tracking System: Web & Android"
+  },
+  {
+   "date": "2023-08-08",
+   "title": "Innovate to Save Nature."
+  },
+  {
+   "date": "2023-08-07",
+   "title": "Collaborative Android Project"
+  },
+  {
+   "date": "2023-08-07",
+   "title": "College Green Initiatives."
+  },
+  {
+   "date": "2023-08-06",
+   "title": "Bus Management System App"
+  },
+  {
+   "date": "2023-08-05",
+   "title": "Enviro Club College Projects."
+  },
+  {
+   "date": "2023-07-25",
+   "title": "InfoStack 5th Anniversary Fiesta"
+  },
+  {
+   "date": "2023-08-03",
+   "title": "Travel Planner Project Presentation."
+  },
+  {
+   "date": "2023-08-02",
+   "title": "2D Game Ideas"
+  },
+  {
+   "date": "2023-07-30",
+   "title": "Learn Aseprite Basics"
+  },
+  {
+   "date": "2023-07-28",
+   "title": "Rick Steves Tours 🌍"
+  },
+  {
+   "date": "2023-07-28",
+   "title": "Collab Code Editors Analysis."
+  },
+  {
+   "date": "2023-07-25",
+   "title": "Mixed Team Project"
+  },
+  {
+   "date": "2023-07-24",
+   "title": "Web Dev Project Ideas"
+  },
+  {
+   "date": "2023-07-21",
+   "title": "InstaClone with Android Studio"
+  },
+  {
+   "date": "2023-07-23",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-07-22",
+   "title": "Static Travel Planner App"
+  },
+  {
+   "date": "2023-07-22",
+   "title": "5 Majestic Mountains"
+  },
+  {
+   "date": "2023-07-20",
+   "title": "Smart Home Automation System"
+  },
+  {
+   "date": "2023-07-20",
+   "title": "Android ListView Example"
+  },
+  {
+   "date": "2023-07-18",
+   "title": "Code Correction"
+  },
+  {
+   "date": "2023-07-17",
+   "title": "Instagram Clone Presentation"
+  },
+  {
+   "date": "2023-07-17",
+   "title": "Cover Letter Template"
+  },
+  {
+   "date": "2023-07-16",
+   "title": "Android Travel Planner Presentation"
+  },
+  {
+   "date": "2023-07-14",
+   "title": "5-Year Industrial Training Celebration"
+  },
+  {
+   "date": "2023-07-13",
+   "title": "Laptop Battery Life: Troubleshooting"
+  },
+  {
+   "date": "2023-07-12",
+   "title": "Chat Games with GF"
+  },
+  {
+   "date": "2023-07-09",
+   "title": "Create Public User Ledger"
+  },
+  {
+   "date": "2023-06-29",
+   "title": "Instagram Posting Frequency: Education"
+  },
+  {
+   "date": "2023-07-03",
+   "title": "Automated AI YouTube Channel"
+  },
+  {
+   "date": "2023-06-30",
+   "title": "Niche Definition"
+  },
+  {
+   "date": "2023-06-30",
+   "title": "Dandruff Remedy: Natural Homemade"
+  },
+  {
+   "date": "2023-06-28",
+   "title": "Drone for Aerial Photography"
+  },
+  {
+   "date": "2023-06-26",
+   "title": "SRS for Social Media"
+  },
+  {
+   "date": "2023-06-26",
+   "title": "ಕನ್ನಡ: ನೀನು ನನ್ನನ್ನು ಪ್ರೀತಿಸುತ್ತೀಯಾ?"
+  },
+  {
+   "date": "2023-06-25",
+   "title": "Instagram Growth Tips"
+  },
+  {
+   "date": "2023-06-25",
+   "title": "Google Free Certificates"
+  },
+  {
+   "date": "2023-06-25",
+   "title": "Trading Bot with Upstox API"
+  },
+  {
+   "date": "2023-06-24",
+   "title": "First 1K Subscribers Guide"
+  },
+  {
+   "date": "2023-06-23",
+   "title": "Travel Planner Android App"
+  },
+  {
+   "date": "2023-06-23",
+   "title": "Capital Punishment Debate"
+  },
+  {
+   "date": "2023-06-18",
+   "title": "App Dev Ideas"
+  },
+  {
+   "date": "2023-06-17",
+   "title": "Difisil Pou Ggn Tradiksyon"
+  },
+  {
+   "date": "2023-06-17",
+   "title": "Success Journey"
+  },
+  {
+   "date": "2023-06-13",
+   "title": "Coding Chat Groups"
+  },
+  {
+   "date": "2023-06-11",
+   "title": "Truth & Dare Questions"
+  },
+  {
+   "date": "2023-06-11",
+   "title": "Lose, Find, Embrace, New"
+  },
+  {
+   "date": "2023-06-09",
+   "title": "Tetris Disappearing Act"
+  },
+  {
+   "date": "2023-06-08",
+   "title": "Men Redefining Masculinity"
+  },
+  {
+   "date": "2023-06-07",
+   "title": "Download YT Playlist with Python"
+  },
+  {
+   "date": "2023-06-07",
+   "title": "Study Hard, Hustle Harder!"
+  },
+  {
+   "date": "2023-06-04",
+   "title": "Educational Daily YouTube Channel"
+  },
+  {
+   "date": "2023-06-01",
+   "title": "Finding Missing Items"
+  },
+  {
+   "date": "2023-05-31",
+   "title": "Computer Virus Overview"
+  },
+  {
+   "date": "2023-05-30",
+   "title": "Computer Virus: Unmasking Threats"
+  },
+  {
+   "date": "2023-05-25",
+   "title": "Retail Billing Software"
+  },
+  {
+   "date": "2023-05-23",
+   "title": "Software Selling Ideas"
+  },
+  {
+   "date": "2023-04-24",
+   "title": "Vector Methods Comparison"
+  },
+  {
+   "date": "2023-05-17",
+   "title": "Java: Truly Object-Oriented"
+  },
+  {
+   "date": "2023-05-17",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-05-12",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-05-16",
+   "title": "प्यार में इंतजार क्यों?"
+  },
+  {
+   "date": "2023-05-12",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-05-11",
+   "title": "Fitness Management System"
+  },
+  {
+   "date": "2023-05-11",
+   "title": "Perfect Sleep Tips."
+  },
+  {
+   "date": "2023-05-10",
+   "title": "Identifying Microprocessor Pins."
+  },
+  {
+   "date": "2023-05-10",
+   "title": "Java Hangman game"
+  },
+  {
+   "date": "2023-05-09",
+   "title": "Java Logical Operators Program"
+  },
+  {
+   "date": "2023-05-08",
+   "title": "Title: Summarize request and response."
+  },
+  {
+   "date": "2023-05-05",
+   "title": "Learning Web Dev in a Month"
+  },
+  {
+   "date": "2023-05-03",
+   "title": "Snake Game in VB.NET."
+  },
+  {
+   "date": "2023-05-03",
+   "title": "Interface Area Calculation."
+  },
+  {
+   "date": "2023-05-03",
+   "title": "Rest. Mgmt. System"
+  },
+  {
+   "date": "2023-05-03",
+   "title": "VB.NET Snake Game."
+  },
+  {
+   "date": "2023-05-02",
+   "title": "Employee Management Test Cases"
+  },
+  {
+   "date": "2023-05-01",
+   "title": "Job quote summary."
+  },
+  {
+   "date": "2023-04-27",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-04-26",
+   "title": "Multiply 16-bit signed numbers."
+  },
+  {
+   "date": "2023-04-24",
+   "title": "Java Inheritance Example."
+  },
+  {
+   "date": "2023-04-25",
+   "title": "Java try-catch syntax"
+  },
+  {
+   "date": "2023-04-24",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-04-24",
+   "title": "Restaurant table management."
+  },
+  {
+   "date": "2023-04-23",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-04-18",
+   "title": "FTP file transfer protocol."
+  },
+  {
+   "date": "2023-04-17",
+   "title": "4x4 Matrix Inverse"
+  },
+  {
+   "date": "2023-04-15",
+   "title": "Sanskrit: Purva Meanings."
+  },
+  {
+   "date": "2023-04-12",
+   "title": "HTML Block-Level Elements."
+  },
+  {
+   "date": "2023-04-11",
+   "title": "Request for Quote."
+  },
+  {
+   "date": "2023-04-09",
+   "title": "Create your future."
+  },
+  {
+   "date": "2023-04-08",
+   "title": "Starting conversations tips."
+  },
+  {
+   "date": "2023-04-05",
+   "title": "No Perfect Male Personality."
+  },
+  {
+   "date": "2023-04-07",
+   "title": "Illegal Backdoor Request"
+  },
+  {
+   "date": "2023-04-07",
+   "title": "Python Screen Sharing with PyAutoGUI"
+  },
+  {
+   "date": "2023-04-06",
+   "title": "VB.net Snake Game"
+  },
+  {
+   "date": "2023-04-05",
+   "title": "Hotel Management System using VB.NET"
+  },
+  {
+   "date": "2023-04-01",
+   "title": "Web Dev Roadmap."
+  },
+  {
+   "date": "2023-04-01",
+   "title": "Rest. Mgmt. DFD."
+  },
+  {
+   "date": "2023-03-29",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-03-30",
+   "title": "Rest. Mgmt. Decision Table"
+  },
+  {
+   "date": "2023-03-29",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-03-25",
+   "title": "Restaurant Management System"
+  },
+  {
+   "date": "2023-03-23",
+   "title": "Hotel System Requirements Model"
+  },
+  {
+   "date": "2023-03-20",
+   "title": "RPA Benefits for Business"
+  },
+  {
+   "date": "2023-03-19",
+   "title": "Ather vs Activa."
+  },
+  {
+   "date": "2023-03-15",
+   "title": "Coaxial Cable Overview."
+  },
+  {
+   "date": "2023-03-15",
+   "title": "Network Topologies: Types"
+  },
+  {
+   "date": "2023-03-15",
+   "title": "Twisting for reducing EMI."
+  },
+  {
+   "date": "2023-03-15",
+   "title": "Network Benefits."
+  },
+  {
+   "date": "2023-03-14",
+   "title": "Types of constructors."
+  },
+  {
+   "date": "2023-03-12",
+   "title": "Blockchain and Cybersecurity."
+  },
+  {
+   "date": "2023-03-12",
+   "title": "Unethical Phone Control Tool"
+  },
+  {
+   "date": "2023-03-12",
+   "title": "No Phone Hacking!"
+  },
+  {
+   "date": "2023-03-10",
+   "title": "Blockchain and Cybersecurity."
+  },
+  {
+   "date": "2023-03-10",
+   "title": "Spotify playlist downloader with Python."
+  },
+  {
+   "date": "2023-03-10",
+   "title": "New chat"
+  },
+  {
+   "date": "2023-03-09",
+   "title": "Casting Explanation."
+  },
+  {
+   "date": "2023-03-09",
+   "title": "Hotel Management System."
+  },
+  {
+   "date": "2023-03-08",
+   "title": "8086 Queue Explanation."
+  },
+  {
+   "date": "2023-03-06",
+   "title": "Data Mining Presentation."
+  },
+  {
+   "date": "2023-03-06",
+   "title": "Restaurant Management System"
+  },
+  {
+   "date": "2023-03-04",
+   "title": "Low and High Programming."
+  },
+  {
+   "date": "2023-03-04",
+   "title": "Restaurant Management System"
+  },
+  {
+   "date": "2023-03-02",
+   "title": "IoT for Kids"
+  },
+  {
+   "date": "2023-02-28",
+   "title": "AI for problem-solving."
+  },
+  {
+   "date": "2023-02-26",
+   "title": "AI Presentation Tips."
+  },
+  {
+   "date": "2023-02-26",
+   "title": "Mobile Grocery App Development."
+  },
+  {
+   "date": "2023-01-15",
+   "title": "Measures of Equal Angles."
+  },
+  {
+   "date": "2023-01-14",
+   "title": "Rhombus side length calculation"
+  },
+  {
+   "date": "2023-01-14",
+   "title": "Population Increase Rate Calculation"
+  },
+  {
+   "date": "2023-01-07",
+   "title": "AI Long Shot Taken"
+  },
+  {
+   "date": "2023-01-06",
+   "title": "DML Commands in SQL"
+  },
+  {
+   "date": "2023-01-05",
+   "title": "DBMS Recovery Techniques"
+  },
+  {
+   "date": "2023-01-05",
+   "title": "DBMS Normalization Explanation"
+  },
+  {
+   "date": "2023-01-05",
+   "title": "MSBTE DBMS Exam Notes"
+  },
+  {
+   "date": "2023-01-05",
+   "title": "PL/SQL Curly Braces Steps"
+  },
+  {
+   "date": "2023-01-02",
+   "title": "AI Writing Content On Demand"
+  },
+  {
+   "date": "2022-12-29",
+   "title": "New chat"
+  },
+  {
+   "date": "2022-12-29",
+   "title": "Operator Precedence C++"
+  }
+ ]
+}
