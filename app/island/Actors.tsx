@@ -1,12 +1,12 @@
 "use client";
 
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { Html, useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { heightAt, ISLAND_EDGE } from "./terrain";
-import { getUI, setUI, TOUR, world } from "./store";
+import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
+import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { zoneById, zonePos, ZONES } from "./zones";
 import { droneShape, globeShape, helixShape, ringsShape, textShape } from "../experience/shapes";
 
@@ -69,13 +69,27 @@ export function Player() {
       if (k.has("a") || k.has("arrowleft")) fx -= 1;
       if (k.has("d") || k.has("arrowright")) fx += 1;
     }
-    const moving = fx !== 0 || fz !== 0;
-    const run = k.has("shift");
-    if (moving) {
-      // move relative to the camera's heading
+    let dx = 0,
+      dz = 0;
+    let run = k.has("shift");
+    if (fx !== 0 || fz !== 0) {
+      // keys win over click-to-walk; move relative to the camera's heading
+      world.target = null;
       const yaw = world.camYaw;
-      const dx = fx * Math.cos(yaw) + fz * Math.sin(yaw);
-      const dz = -fx * Math.sin(yaw) + fz * Math.cos(yaw);
+      dx = fx * Math.cos(yaw) + fz * Math.sin(yaw);
+      dz = -fx * Math.sin(yaw) + fz * Math.cos(yaw);
+    } else if (world.target && ui.mode === "explore" && !ui.open) {
+      dx = world.target.x - p.x;
+      dz = world.target.z - p.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 0.35) {
+        world.target = null;
+        dx = dz = 0;
+      } else if (dist > 10) run = true;
+    }
+    const moving = dx !== 0 || dz !== 0;
+    p.speed = moving ? (run ? 2 : 1) : 0;
+    if (moving) {
       const len = Math.hypot(dx, dz) || 1;
       const sp = (run ? 9 : 4.6) * dt;
       let nx = p.x + (dx / len) * sp,
@@ -258,6 +272,8 @@ export function LightShow() {
       holder.current.rotation.y = Math.atan2(camera.position.x, camera.position.z);
     }
     if (!shapes.current || !geo.current || !mat.current) return;
+    mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
+    if (world.night < 0.02) return; // invisible by day: skip the work
     const t = clock.elapsedTime;
     const S = shapes.current;
     const per = 7;
@@ -281,7 +297,6 @@ export function LightShow() {
     }
     geo.current.attributes.position.needsUpdate = true;
     geo.current.attributes.color.needsUpdate = true;
-    mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
   });
   return (
     <points ref={holder} scale={5} frustumCulled={false}>
@@ -291,5 +306,224 @@ export function LightShow() {
       </bufferGeometry>
       <pointsMaterial ref={mat} size={0.13} vertexColors transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
+  );
+}
+
+/* ---------------- click-to-walk target marker ---------------- */
+export function TargetMarker() {
+  const ref = useRef<THREE.Mesh>(null);
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#22d36b", transparent: true, opacity: 0, depthWrite: false }), []);
+  useFrame(({ clock }) => {
+    const t = world.target;
+    if (!ref.current) return;
+    if (!t) {
+      mat.opacity = Math.max(0, mat.opacity - 0.08);
+      return;
+    }
+    ref.current.position.set(t.x, heightAt(t.x, t.z) + 0.06, t.z);
+    const k = (clock.elapsedTime * 1.4) % 1;
+    ref.current.scale.setScalar(0.6 + k * 0.6);
+    mat.opacity = 0.9 * (1 - k);
+  });
+  return (
+    <mesh ref={ref} rotation-x={-Math.PI / 2} material={mat}>
+      <ringGeometry args={[0.55, 0.75, 32]} />
+    </mesh>
+  );
+}
+
+/* ---------------- dust puffs while running ---------------- */
+export function Dust() {
+  const N = 24;
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const life = useMemo(() => new Float32Array(N), []);
+  const pos = useMemo(() => Array.from({ length: N }, () => new THREE.Vector3()), []);
+  const acc = useRef(0);
+  const next = useRef(0);
+  const m = useMemo(() => new THREE.Matrix4(), []);
+  useFrame((_, dt) => {
+    const p = world.player;
+    acc.current += dt;
+    if (p.speed > 0 && acc.current > (p.speed > 1 ? 0.07 : 0.16)) {
+      acc.current = 0;
+      const i = next.current++ % N;
+      life[i] = 1;
+      pos[i].set(p.x + (Math.random() - 0.5) * 0.3, heightAt(p.x, p.z) + 0.1, p.z + (Math.random() - 0.5) * 0.3);
+    }
+    if (!ref.current) return;
+    for (let i = 0; i < N; i++) {
+      life[i] = Math.max(0, life[i] - dt * 1.6);
+      const l = life[i];
+      const sc = l > 0 ? (1.2 - l) * 0.35 : 0;
+      pos[i].y += dt * 0.25;
+      m.makeScale(sc, sc, sc).setPosition(pos[i]);
+      ref.current.setMatrixAt(i, m);
+    }
+    ref.current.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, N]} frustumCulled={false}>
+      <icosahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial color="#efe6d2" roughness={1} transparent opacity={0.65} depthWrite={false} />
+    </instancedMesh>
+  );
+}
+
+/* ---------------- teammates: robots at the zones who talk when you come close ---------------- */
+const TEAM: { zone: (typeof ZONES)[number]["id"]; tint: string; anim: string; line: string; side: number }[] = [
+  { zone: "arena", tint: "#f5b301", anim: "Dance", line: "Team Algo Sapiens! 10,000+ teams and we still took SIH 2025.", side: 1 },
+  { zone: "marsyard", tint: "#ff5a36", anim: "Idle", line: "No GPS on Mars. FAST-LIO and a Livox Mid-360 keep us honest.", side: 1 },
+  { zone: "swarm", tint: "#12f0c0", anim: "ThumbsUp", line: "My safety halo stops me bumping the others. Mostly.", side: 1 },
+  { zone: "ropeway", tint: "#e5322d", anim: "Wave", line: "Two coordinates in, a ropeway out. Ask me about RopeIQ.", side: 1 },
+  { zone: "trading", tint: "#00b37e", anim: "No", line: "Ten upgrades tested, ten rejected. Plain momentum stays.", side: 1 },
+  { zone: "morpheus", tint: "#19e36b", anim: "Yes", line: "Red pill or blue pill? Registrations close at midnight.", side: 1 },
+  { zone: "library", tint: "#00d2ff", anim: "Sitting", line: "Half these papers say what didn't work. That's the point.", side: 1 },
+];
+
+function Teammate({ t }: { t: (typeof TEAM)[number] }) {
+  const group = useRef<THREE.Group>(null);
+  const { scene, animations } = useGLTF(ROBOT, false, true);
+  const model = useMemo(() => {
+    const c = skClone(scene);
+    const tint = new THREE.Color(t.tint);
+    c.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = true;
+      const mats = (Array.isArray(m.material) ? m.material : [m.material]).map((mm) => {
+        const n = (mm as THREE.MeshStandardMaterial).clone();
+        // recolour the body panels ("Main"), keep the grey joints and black visor
+        if (n.name === "Main") n.color.copy(tint);
+        return n;
+      });
+      m.material = Array.isArray(m.material) ? mats : mats[0];
+    });
+    return c;
+  }, [scene, t.tint]);
+  const { actions } = useAnimations(animations, group);
+  const [near, setNear] = useState(false);
+  const z = zoneById[t.zone];
+  const [zx, zz] = zonePos(z);
+  const inward = new THREE.Vector2(-zx, -zz).normalize();
+  const px = zx + inward.x * 6.5 + inward.y * 4 * t.side;
+  const pz = zz + inward.y * 6.5 - inward.x * 4 * t.side;
+  const baseYaw = Math.atan2(-px, -pz); // face the island centre
+  useEffect(() => {
+    const a = actions[t.anim] ?? actions["Idle"];
+    a?.reset().fadeIn(0.3).play();
+    return () => {
+      a?.fadeOut(0.2);
+    };
+  }, [actions, t.anim]);
+  useFrame((_, dt) => {
+    if (!group.current) return;
+    const p = world.player;
+    const d = Math.hypot(p.x - px, p.z - pz);
+    const isNear = getUI().mode === "explore" && !getUI().open && d < 6;
+    if (isNear !== near) {
+      setNear(isNear);
+      const wave = actions["Wave"];
+      if (isNear && wave) {
+        wave.reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.2).play();
+        wave.clampWhenFinished = false;
+      }
+    }
+    // turn to face the player when they come close
+    const want = isNear ? Math.atan2(p.x - px, p.z - pz) : baseYaw;
+    let dd = want - group.current.rotation.y;
+    dd = Math.atan2(Math.sin(dd), Math.cos(dd));
+    group.current.rotation.y += dd * Math.min(dt * 4, 1);
+  });
+  return (
+    <group ref={group} position={[px, heightAt(px, pz), pz]} rotation-y={baseYaw}>
+      <primitive object={model} scale={0.36} />
+      {near && (
+        <Html position={[0, 2.35, 0]} center zIndexRange={[25, 0]} style={{ pointerEvents: "none" }}>
+          <div className="relative w-56 origin-bottom animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] rounded-2xl bg-white px-3.5 py-2.5 text-[13px] font-medium leading-snug text-neutral-900 shadow-xl">
+            <span className="mb-0.5 block font-mono text-[10px] uppercase tracking-wider" style={{ color: t.tint }}>
+              {z.name}
+            </span>
+            {t.line}
+            <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+export function Teammates() {
+  return (
+    <>
+      {TEAM.map((t) => (
+        <Teammate key={t.zone} t={t} />
+      ))}
+    </>
+  );
+}
+
+/* ---------------- five hidden medals ---------------- */
+export const MEDALS = [
+  { name: "Smart India Hackathon 2025", note: "National Winner · ₹1,50,000", at: () => [9, -45] as [number, number] },
+  { name: "ISRO IRoC-U 2026", note: "Finalist · Team 10144", at: () => ridgeTop() },
+  { name: "RoboRashtra 2026", note: "1st Runner-Up · Chakravyuh", at: () => [44, -16] as [number, number] },
+  { name: "Singapore–India Hackathon 2026", note: "Selected for the Grand Finale at SMU", at: () => [Math.cos(1.66) * 50, Math.sin(1.66) * 50] as [number, number] },
+  { name: "PCU Ideathon 2.0", note: "Top 40 of 500+ teams", at: () => [Math.cos(3.45) * 49, Math.sin(3.45) * 49] as [number, number] },
+];
+
+function loadMedals(): number[] {
+  try {
+    const v = JSON.parse(localStorage.getItem("hp-medals") || "[]");
+    return Array.isArray(v) ? v.filter((n) => typeof n === "number") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function Medals() {
+  const ui = useUI();
+  const refs = useRef<(THREE.Group | null)[]>([]);
+  const gold = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f5b301", metalness: 1, roughness: 0.2, emissive: "#7a5200", emissiveIntensity: 0.4 }), []);
+  const ribbon = useMemo(() => new THREE.MeshStandardMaterial({ color: "#2d5bff", roughness: 0.6 }), []);
+  const spots = useMemo(() => MEDALS.map((m) => m.at()), []);
+  useEffect(() => {
+    const saved = loadMedals();
+    if (saved.length) setUI({ medals: saved });
+  }, []);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    const p = world.player;
+    const found = getUI().medals;
+    spots.forEach(([x, z], i) => {
+      const g = refs.current[i];
+      if (!g) return;
+      g.rotation.y = t * 1.6 + i;
+      gold.emissiveIntensity = 0.4 + Math.sin(t * 3) * 0.25 + world.night * 1.2;
+      g.position.y = heightAt(x, z) + 1.1 + Math.sin(t * 2 + i) * 0.15;
+      if (getUI().mode === "explore" && !found.includes(i) && Math.hypot(p.x - x, p.z - z) < 1.8) {
+        const next = [...found, i];
+        setUI({ medals: next });
+        try {
+          localStorage.setItem("hp-medals", JSON.stringify(next));
+        } catch {}
+        toast(`Medal ${next.length} of ${MEDALS.length} · ${MEDALS[i].name}`, next.length === MEDALS.length ? "All five found. That's the whole mission log." : MEDALS[i].note);
+      }
+    });
+  });
+  return (
+    <>
+      {spots.map(([x, z], i) =>
+        ui.medals.includes(i) ? null : (
+          <group key={i} ref={(el) => (refs.current[i] = el)} position={[x, heightAt(x, z) + 1.1, z]}>
+            <mesh material={gold} castShadow rotation-x={Math.PI / 2}>
+              <cylinderGeometry args={[0.42, 0.42, 0.09, 28]} />
+            </mesh>
+            <mesh material={ribbon} position={[0, 0.62, 0]}>
+              <boxGeometry args={[0.32, 0.55, 0.04]} />
+            </mesh>
+          </group>
+        )
+      )}
+    </>
   );
 }

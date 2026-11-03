@@ -1,12 +1,14 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Environment, Lightformer, useProgress } from "@react-three/drei";
+import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { Suspense, useEffect, useState } from "react";
-import { Clouds, Flowers, Lights, Mountains, Sea, SkyDome, Terrain, Trees } from "./Env";
+import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
-import { CameraRig, LightShow, Player } from "./Actors";
+import Decor from "./Decor";
+import { CameraRig, Dust, LightShow, MEDALS, Medals, Player, TargetMarker, Teammates } from "./Actors";
 import { getUI, setUI, TOUR, useUI, world } from "./store";
+import { Help, Minimap, Toast } from "./Hud";
 import { zoneById, zonePos, ZONES, type Block, type ZoneId } from "./zones";
 import { profile } from "@/lib/achievements";
 
@@ -14,15 +16,19 @@ import { profile } from "@/lib/achievements";
 const LITE = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
 
 function Scene() {
+  // start crisp, step down if the frame rate drops
+  const [dpr, setDpr] = useState(LITE ? 0.75 : 1.5);
   return (
     <Canvas
       shadows={!LITE}
-      dpr={LITE ? 0.75 : [1, 2]}
+      dpr={dpr}
       camera={{ fov: 40, near: 0.1, far: 900, position: [70, 60, 90] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       style={{ position: "fixed", inset: 0 }}
       onPointerMissed={() => (document.body.style.cursor = "")}
     >
+      <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(0.8, d - 0.25))} onIncline={() => setDpr((d) => Math.min(LITE ? 0.75 : 1.75, d + 0.25))} flipflops={4} />
+      <AdaptiveDpr pixelated={false} />
       <fog attach="fog" args={["#cdeeff", 110, 330]} />
       <SkyDome />
       <Lights />
@@ -38,9 +44,17 @@ function Scene() {
         <Terrain />
         <Trees />
         <Flowers />
+        {!LITE && <Grass />}
+        <Shore />
+        <Birds />
         <Clouds />
         <Landmarks />
+        <Decor />
+        <Teammates />
+        <Medals />
         <Player />
+        <Dust />
+        <TargetMarker />
         <LightShow />
       </Suspense>
       <CameraRig />
@@ -181,6 +195,24 @@ function Panel() {
       )}
 
       <div className="flex-1" />
+
+      <div className="mb-2 flex items-center justify-between rounded-[16px] bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/75">
+        <span className="flex items-center gap-2.5">
+          <span className="flex gap-1">
+            {MEDALS.map((m, i) => (
+              <span
+                key={m.name}
+                title={ui.medals.includes(i) ? m.name : "Hidden somewhere on the island"}
+                className={`h-3 w-3 rounded-full border transition-colors ${ui.medals.includes(i) ? "border-[#f5b301] bg-[#f5b301] shadow-[0_0_8px_#f5b301]" : "border-white/30"}`}
+              />
+            ))}
+          </span>
+          {ui.medals.length === MEDALS.length ? "All medals found" : `${ui.medals.length} of ${MEDALS.length} medals found`}
+        </span>
+        <button onClick={() => setUI({ help: true })} className="rounded-md border border-white/20 px-1.5 font-mono text-[10px] text-white/80 hover:bg-white/10">
+          ?
+        </button>
+      </div>
 
       <button
         onClick={() => setUI({ night: !ui.night })}
@@ -438,11 +470,26 @@ function Drawer() {
             <BlockView key={i} b={b} accent={z.accent} />
           ))}
         </div>
-        {z.id !== "home" && (
-          <button onClick={() => travel(z.id)} className="mt-10 rounded-full bg-[#22d36b] px-6 py-3 text-[14px] font-semibold text-[#06240f] hover:bg-[#2be277]">
+        <div className="mt-10 flex items-center gap-2">
+          <button onClick={() => travel(z.id)} className="rounded-full bg-[#22d36b] px-6 py-3 text-[14px] font-semibold text-[#06240f] hover:bg-[#2be277]">
             Walk to {z.name} →
           </button>
-        )}
+          {(() => {
+            const i = ZONES.findIndex((q) => q.id === z.id);
+            const prev = ZONES[(i - 1 + ZONES.length) % ZONES.length],
+              next = ZONES[(i + 1) % ZONES.length];
+            return (
+              <div className="ml-auto flex gap-2">
+                <button onClick={() => setUI({ open: prev.id })} className="rounded-full border border-white/20 px-4 py-3 text-[13px] text-white/75 hover:bg-white/10">
+                  ← {prev.name}
+                </button>
+                <button onClick={() => setUI({ open: next.id })} className="rounded-full border border-white/20 px-4 py-3 text-[13px] text-white/75 hover:bg-white/10">
+                  {next.name} →
+                </button>
+              </div>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
@@ -473,8 +520,10 @@ export default function Island() {
       if ((e.target as HTMLElement)?.tagName === "INPUT") return;
       const ui = getUI();
       const k = e.key.toLowerCase();
-      if (k === "escape") {
-        if (ui.open) setUI({ open: null });
+      if (k === "?" || (k === "/" && e.shiftKey)) setUI({ help: !ui.help });
+      else if (k === "escape") {
+        if (ui.help) setUI({ help: false });
+        else if (ui.open) setUI({ open: null });
         else if (ui.mode !== "intro") setUI({ mode: "intro" });
       } else if (k === "e" && ui.mode === "explore" && ui.near) setUI({ open: ui.open ? null : ui.near });
       else if (k === "l") setUI({ night: !ui.night });
@@ -501,6 +550,9 @@ export default function Island() {
       <TourCard />
       <Corner />
       <Drawer />
+      <Minimap />
+      <Toast />
+      <Help />
       <Loader />
     </div>
   );

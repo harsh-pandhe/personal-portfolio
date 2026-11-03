@@ -13,6 +13,7 @@ export const world = {
   camPitch: 0.42,
   camDist: 11,
   dragging: false,
+  target: null as null | { x: number; z: number }, // click-to-walk destination
 };
 
 /** UI state shared between the canvas and the DOM overlay. */
@@ -23,9 +24,17 @@ type UI = {
   tour: number; // index into TOUR
   night: boolean;
   loaded: boolean;
+  medals: number[]; // indices of found medals
+  toast: { id: number; title: string; body?: string } | null;
+  help: boolean;
 };
 
-let ui: UI = { mode: "intro", near: null, open: null, tour: 0, night: false, loaded: false };
+let ui: UI = { mode: "intro", near: null, open: null, tour: 0, night: false, loaded: false, medals: [], toast: null, help: false };
+
+let toastId = 0;
+export function toast(title: string, body?: string) {
+  setUI({ toast: { id: ++toastId, title, body } });
+}
 const subs = new Set<() => void>();
 
 export function setUI(patch: Partial<UI>) {
