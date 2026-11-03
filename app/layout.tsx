@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import LoaderOverlay from "./components/loader-overlay";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Harsh Pandhe | SIH'25 Winner · Full-Stack & Web3 Developer",
+  title: "Harsh Pandhe | Autonomous Systems & Research",
   description:
     "Portfolio of Harsh Pandhe — SIH 2025 National Winner, Head of Cybersecurity & Blockchain @ IIC-SIT, Full-Stack & Web3 Developer building distributed systems, embedded AI, and blockchain solutions.",
   keywords: [
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Harsh Pandhe" }],
   openGraph: {
-    title: "Harsh Pandhe | SIH'25 Winner · Full-Stack & Web3 Developer",
+    title: "Harsh Pandhe | Autonomous Systems & Research",
     description:
       "SIH 2025 National Winner · Head of Cybersecurity & Blockchain @ IIC-SIT · Building distributed systems & blockchain solutions.",
     type: "website",
@@ -39,9 +38,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans`}>
-        <LoaderOverlay />
         {children}
       </body>
     </html>
