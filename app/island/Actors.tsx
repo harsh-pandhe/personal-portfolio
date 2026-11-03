@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
-import { zoneById, zonePos, ZONES } from "./zones";
+import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 import { droneShape, globeShape, helixShape, ringsShape, textShape } from "../experience/shapes";
 
 const ROBOT = "/models/robot.glb";
@@ -268,11 +268,12 @@ export function LightShow() {
     // keep the show over the sea on the far side of the island from the camera
     if (holder.current) {
       const l = Math.hypot(camera.position.x, camera.position.z) || 1;
-      holder.current.position.set((-camera.position.x / l) * 85, 30, (-camera.position.z / l) * 85);
+      holder.current.position.set((-camera.position.x / l) * 85, 36, (-camera.position.z / l) * 85);
       holder.current.rotation.y = Math.atan2(camera.position.x, camera.position.z);
     }
     if (!shapes.current || !geo.current || !mat.current) return;
     mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
+    if (holder.current) holder.current.renderOrder = 10;
     if (world.night < 0.02) return; // invisible by day: skip the work
     const t = clock.elapsedTime;
     const S = shapes.current;
@@ -369,23 +370,107 @@ export function Dust() {
   );
 }
 
-/* ---------------- teammates: robots at the zones who talk when you come close ---------------- */
-const TEAM: { zone: (typeof ZONES)[number]["id"]; tint: string; anim: string; line: string; side: number }[] = [
-  { zone: "arena", tint: "#f5b301", anim: "Dance", line: "Team Algo Sapiens! 10,000+ teams and we still took SIH 2025.", side: 1 },
-  { zone: "marsyard", tint: "#ff5a36", anim: "Idle", line: "No GPS on Mars. FAST-LIO and a Livox Mid-360 keep us honest.", side: 1 },
-  { zone: "swarm", tint: "#12f0c0", anim: "ThumbsUp", line: "My safety halo stops me bumping the others. Mostly.", side: 1 },
-  { zone: "ropeway", tint: "#e5322d", anim: "Wave", line: "Two coordinates in, a ropeway out. Ask me about RopeIQ.", side: 1 },
-  { zone: "trading", tint: "#00b37e", anim: "No", line: "Ten upgrades tested, ten rejected. Plain momentum stays.", side: 1 },
-  { zone: "morpheus", tint: "#19e36b", anim: "Yes", line: "Red pill or blue pill? Registrations close at midnight.", side: 1 },
-  { zone: "library", tint: "#00d2ff", anim: "Sitting", line: "Half these papers say what didn't work. That's the point.", side: 1 },
+/* ---------------- villagers: robots with roles who think out loud, ask, wave back and topple ---------------- */
+type Villager = {
+  key: string;
+  zone: ZoneId;
+  role: string;
+  tint: string;
+  anim: string;
+  side: number;
+  thoughts: string[];
+  ask: string;
+  walker?: { r: number; speed: number; phase: number };
+};
+
+const VILLAGERS: Villager[] = [
+  {
+    key: "arena", zone: "arena", role: "Hackathon teammate", tint: "#f5b301", anim: "Dance", side: 1,
+    thoughts: ["10,000+ teams. We still took it.", "The pitch was scripted to the minute.", "Field Nigrani kept our hardware teammate on board.", "Next stop: Singapore, 15–17 Nov."],
+    ask: "Want the story of how a rejected idea became a national win?",
+  },
+  {
+    key: "mars", zone: "marsyard", role: "Flight-test engineer", tint: "#ff5a36", anim: "Idle", side: 1,
+    thoughts: ["No GPS on Mars. LiDAR it is.", "Who mounted the Livox upside down?", "RC kill switch armed. Always.", "MAVROS out, direct MAVLink in."],
+    ask: "Fancy a look at how the drone flies without GPS?",
+  },
+  {
+    key: "swarm", zone: "swarm", role: "Swarm researcher", tint: "#12f0c0", anim: "ThumbsUp", side: 1,
+    thoughts: ["Greedy robots all chase the same cell.", "Safety filter on. Competence… pending.", "Failure injected at step 100. Recovering.", "Fix the baseline before you blame it."],
+    ask: "Three papers came out of this field. Want the short version?",
+  },
+  {
+    key: "rope", zone: "ropeway", role: "Ropeway engineer", tint: "#e5322d", anim: "Wave", side: 1,
+    thoughts: ["Two points in, an alignment out.", "Checked against 12 real lines.", "Eurocode says the sag is fine.", "Cabin 3 is running a bit warm."],
+    ask: "Ask me what Harsh built at Doppelmayr?",
+  },
+  {
+    key: "trade", zone: "trading", role: "Quant researcher", tint: "#00b37e", anim: "No", side: 1,
+    thoughts: ["HRP? Rejected.", "XGBoost? Rejected.", "float('nan') is truthy. Ouch.", "Sixty days of paper trading first."],
+    ask: "Want to see the ten ideas that didn't survive?",
+  },
+  {
+    key: "morph", zone: "morpheus", role: "Hackathon organiser", tint: "#19e36b", anim: "Yes", side: 1,
+    thoughts: ["Red pill or blue pill?", "Room 304's fan works now. It's logged.", "No double bookings. Atomic commits.", "200+ hackers, 24 hours, zero sleep."],
+    ask: "Curious how we ran a national hackathon's hostels?",
+  },
+  {
+    key: "lib", zone: "library", role: "Librarian", tint: "#00d2ff", anim: "Sitting", side: 1,
+    thoughts: ["Half these papers say what didn't work.", "803 views and counting.", "Negative results are results.", "Shh. Someone's reading about CBFs."],
+    ask: "Shall I pull the six SSRN papers for you?",
+  },
+  {
+    key: "w1", zone: "workshop", role: "Courier bot", tint: "#7a4dff", anim: "Walking", side: 1,
+    walker: { r: 22.4, speed: 0.045, phase: 0 },
+    thoughts: ["Delivering crates to the Workshop.", "25 builds and counting.", "Left at the roundabout, then straight."],
+    ask: "Lost? The Workshop has everything else he's built.",
+  },
+  {
+    key: "w2", zone: "hq", role: "Campus guide", tint: "#2d5bff", anim: "Walking", side: 1,
+    walker: { r: 19.6, speed: -0.04, phase: 2.4 },
+    thoughts: ["Mission Control is at the centre.", "Press T for the guided tour.", "Five medals are hidden out here."],
+    ask: "First time on the island? Mission Control has the whole story.",
+  },
+  {
+    key: "w3", zone: "home", role: "Night owl", tint: "#ff7ac6", anim: "Walking", side: 1,
+    walker: { r: 23.6, speed: 0.035, phase: 4.1 },
+    thoughts: ["Press L. The drone show is worth it.", "The lighthouse turns on at night.", "Home's the pink-roofed one."],
+    ask: "Want to get in touch with Harsh? Home has a message form.",
+  },
 ];
 
-function Teammate({ t }: { t: (typeof TEAM)[number] }) {
+function Bubble({ kind, z, text, onOpen }: { kind: "think" | "ask"; z: Zone; text: string; onOpen?: () => void }) {
+  if (kind === "think")
+    return (
+      <div className="relative animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-medium text-neutral-800 shadow-lg backdrop-blur">
+        {text}
+        <span className="absolute -bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-white/90" />
+        <span className="absolute -bottom-[14px] left-[calc(50%+6px)] h-1.5 w-1.5 rounded-full bg-white/90" />
+      </div>
+    );
+  return (
+    <div className="relative w-60 origin-bottom animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] rounded-2xl bg-white px-3.5 py-3 text-[13px] font-medium leading-snug text-neutral-900 shadow-xl">
+      <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider" style={{ color: z.accent }}>
+        {z.name}
+      </span>
+      {text}
+      <span className="mt-2 flex items-center gap-2">
+        <button onClick={onOpen} className="pointer-events-auto rounded-full bg-neutral-900 px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-black">
+          Show me ↗
+        </button>
+        <span className="font-mono text-[10px] text-neutral-400">F to wave</span>
+      </span>
+      <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
+    </div>
+  );
+}
+
+function VillagerBot({ v }: { v: Villager }) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(ROBOT, false, true);
   const model = useMemo(() => {
     const c = skClone(scene);
-    const tint = new THREE.Color(t.tint);
+    const tint = new THREE.Color(v.tint);
     c.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
@@ -399,52 +484,110 @@ function Teammate({ t }: { t: (typeof TEAM)[number] }) {
       m.material = Array.isArray(m.material) ? mats : mats[0];
     });
     return c;
-  }, [scene, t.tint]);
+  }, [scene, v.tint]);
   const { actions } = useAnimations(animations, group);
-  const [near, setNear] = useState(false);
-  const z = zoneById[t.zone];
-  const [zx, zz] = zonePos(z);
-  const inward = new THREE.Vector2(-zx, -zz).normalize();
-  const px = zx + inward.x * 6.5 + inward.y * 4 * t.side;
-  const pz = zz + inward.y * 6.5 - inward.x * 4 * t.side;
-  const baseYaw = Math.atan2(-px, -pz); // face the island centre
+  const [band, setBand] = useState<"far" | "think" | "ask">("far");
+  const [thought, setThought] = useState(0);
+  const z = zoneById[v.zone];
+  const home = useMemo(() => {
+    const [zx, zz] = zonePos(z);
+    const inward = new THREE.Vector2(-zx, -zz).normalize();
+    const px = zx + inward.x * 6.5 + inward.y * 4 * v.side;
+    const pz = zz + inward.y * 6.5 - inward.x * 4 * v.side;
+    return { x: px, z: pz, yaw: Math.atan2(-px, -pz) };
+  }, [z, v.side]);
+  const pos = useRef({ x: home.x, z: home.z });
+  const state = useRef({ base: v.anim, busyUntil: 0, current: "" });
+
+  const play = (name: string, once = false) => {
+    const a = actions[name];
+    if (!a) return;
+    const prev = state.current.current ? actions[state.current.current] : null;
+    a.reset();
+    if (once) {
+      a.setLoop(THREE.LoopOnce, 1);
+      a.clampWhenFinished = true;
+    } else a.setLoop(THREE.LoopRepeat, Infinity);
+    a.fadeIn(0.25).play();
+    if (prev && prev !== a) prev.fadeOut(0.25);
+    state.current.current = name;
+  };
+
   useEffect(() => {
-    const a = actions[t.anim] ?? actions["Idle"];
-    a?.reset().fadeIn(0.3).play();
-    return () => {
-      a?.fadeOut(0.2);
-    };
-  }, [actions, t.anim]);
-  useFrame((_, dt) => {
-    if (!group.current) return;
-    const p = world.player;
-    const d = Math.hypot(p.x - px, p.z - pz);
-    const isNear = getUI().mode === "explore" && !getUI().open && d < 6;
-    if (isNear !== near) {
-      setNear(isNear);
-      const wave = actions["Wave"];
-      if (isNear && wave) {
-        wave.reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.2).play();
-        wave.clampWhenFinished = false;
+    play(v.anim);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actions]);
+
+  // cycle what they're thinking about
+  useEffect(() => {
+    const t = setInterval(() => setThought((n) => (n + 1) % v.thoughts.length), 4200 + v.key.length * 300);
+    return () => clearInterval(t);
+  }, [v.thoughts.length, v.key]);
+
+  // wave back when the player waves nearby
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "f" || getUI().mode !== "explore") return;
+      const p = world.player;
+      if (Math.hypot(p.x - pos.current.x, p.z - pos.current.z) < 10) {
+        setTimeout(() => {
+          play("Wave", true);
+          state.current.busyUntil = performance.now() + 1700;
+        }, 250);
       }
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actions]);
+
+  useFrame(({ clock }, dt) => {
+    const g = group.current;
+    if (!g) return;
+    const now = performance.now();
+    const p = world.player;
+    const busy = now < state.current.busyUntil;
+    // walkers stroll around the ring road
+    if (v.walker && !busy && band !== "ask") {
+      const a = clock.elapsedTime * v.walker.speed + v.walker.phase;
+      pos.current.x = Math.cos(a) * v.walker.r;
+      pos.current.z = Math.sin(a) * v.walker.r;
+      g.rotation.y = Math.atan2(-Math.sin(a) * Math.sign(v.walker.speed), Math.cos(a) * Math.sign(v.walker.speed));
+    }
+    g.position.set(pos.current.x, heightAt(pos.current.x, pos.current.z), pos.current.z);
+    const d = Math.hypot(p.x - pos.current.x, p.z - pos.current.z);
+    const explore = getUI().mode === "explore" && !getUI().open;
+    const nb = !explore ? "far" : d < 5.5 ? "ask" : d < 16 ? "think" : "far";
+    if (nb !== band) setBand(nb);
+    // run into them and they topple over, then get back up
+    if (explore && d < 0.95 && p.speed > 0 && !busy) {
+      play("Death", true);
+      state.current.busyUntil = now + 2600;
+      const k = 1.3 / (d || 1);
+      p.x = pos.current.x + (p.x - pos.current.x) * k;
+      p.z = pos.current.z + (p.z - pos.current.z) * k;
+      toast(`Oops, you bumped the ${v.role.toLowerCase()}`, "They'll be fine.");
+    }
+    if (!busy && state.current.current !== (band === "ask" && v.walker ? "Idle" : v.anim) && (state.current.current === "Death" || state.current.current === "Wave" || v.walker)) {
+      play(band === "ask" && v.walker ? "Idle" : v.anim);
     }
     // turn to face the player when they come close
-    const want = isNear ? Math.atan2(p.x - px, p.z - pz) : baseYaw;
-    let dd = want - group.current.rotation.y;
-    dd = Math.atan2(Math.sin(dd), Math.cos(dd));
-    group.current.rotation.y += dd * Math.min(dt * 4, 1);
+    if (!busy && (nb === "ask" || !v.walker)) {
+      const want = nb === "ask" ? Math.atan2(p.x - pos.current.x, p.z - pos.current.z) : home.yaw;
+      let dd = want - g.rotation.y;
+      dd = Math.atan2(Math.sin(dd), Math.cos(dd));
+      g.rotation.y += dd * Math.min(dt * 4, 1);
+    }
   });
+
   return (
-    <group ref={group} position={[px, heightAt(px, pz), pz]} rotation-y={baseYaw}>
+    <group ref={group} position={[home.x, heightAt(home.x, home.z), home.z]} rotation-y={home.yaw}>
       <primitive object={model} scale={0.36} />
-      {near && (
-        <Html position={[0, 2.35, 0]} center zIndexRange={[25, 0]} style={{ pointerEvents: "none" }}>
-          <div className="relative w-56 origin-bottom animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] rounded-2xl bg-white px-3.5 py-2.5 text-[13px] font-medium leading-snug text-neutral-900 shadow-xl">
-            <span className="mb-0.5 block font-mono text-[10px] uppercase tracking-wider" style={{ color: t.tint }}>
-              {z.name}
-            </span>
-            {t.line}
-            <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
+      {band !== "far" && (
+        <Html position={[0, 2.35, 0]} center zIndexRange={[25, 0]} style={{ pointerEvents: band === "ask" ? "auto" : "none" }}>
+          <div className="flex flex-col items-center">
+            {band === "ask" && <span className="mb-1 rounded-full bg-neutral-900/80 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-white/80">{v.role}</span>}
+            <Bubble kind={band === "ask" ? "ask" : "think"} z={z} text={band === "ask" ? v.ask : v.thoughts[thought]} onOpen={() => setUI({ open: v.zone })} />
           </div>
         </Html>
       )}
@@ -455,8 +598,8 @@ function Teammate({ t }: { t: (typeof TEAM)[number] }) {
 export function Teammates() {
   return (
     <>
-      {TEAM.map((t) => (
-        <Teammate key={t.zone} t={t} />
+      {VILLAGERS.map((v) => (
+        <VillagerBot key={v.key} v={v} />
       ))}
     </>
   );

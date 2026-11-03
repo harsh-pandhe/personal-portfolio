@@ -288,29 +288,54 @@ export function Lights() {
   );
 }
 
-/* ---------------- distant mountains on the horizon ---------------- */
+/* ---------------- distant mountain ranges: three layers, low enough to keep the sky clear ---------------- */
 export function Mountains() {
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#a9cbe0", roughness: 1, flatShading: true }), []);
-  const day = useMemo(() => new THREE.Color("#a9cbe0"), []);
-  const night = useMemo(() => new THREE.Color("#141a33"), []);
+  const layers = useMemo(
+    () => [
+      { d: 205, h: [10, 20], day: "#9cc7dc", night: "#1a2244", n: 30, seed: 77 },
+      { d: 250, h: [16, 30], day: "#b4d4e6", night: "#141b38", n: 26, seed: 78 },
+      { d: 300, h: [22, 40], day: "#c9e1ee", night: "#10162e", n: 22, seed: 79 },
+    ],
+    []
+  );
+  const mats = useMemo(
+    () => layers.map((l) => ({ m: new THREE.MeshStandardMaterial({ color: l.day, roughness: 1, flatShading: true }), day: new THREE.Color(l.day), night: new THREE.Color(l.night) })),
+    [layers]
+  );
+  const snow = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9, flatShading: true }), []);
+  const snowNight = useMemo(() => new THREE.Color("#3a4470"), []);
+  const white = useMemo(() => new THREE.Color("#ffffff"), []);
   useFrame(() => {
-    mat.color.copy(day).lerp(night, world.night);
+    mats.forEach((q) => q.m.color.copy(q.day).lerp(q.night, world.night));
+    snow.color.copy(white).lerp(snowNight, world.night);
   });
-  const peaks = useMemo(() => {
-    const r = rng(77);
-    return Array.from({ length: 26 }, (_, i) => {
-      const a = (i / 26) * Math.PI * 2 + r() * 0.15;
-      const d = 210 + r() * 60;
-      const h = 30 + r() * 45;
-      return { p: [Math.cos(a) * d, h / 2 - 4, Math.sin(a) * d] as [number, number, number], h, w: 28 + r() * 30 };
-    });
-  }, []);
+  const peaks = useMemo(
+    () =>
+      layers.flatMap((l, li) => {
+        const r = rng(l.seed);
+        return Array.from({ length: l.n }, (_, i) => {
+          const a = (i / l.n) * Math.PI * 2 + r() * 0.12 + li * 0.07;
+          const d = l.d + r() * 25;
+          const h = l.h[0] + r() * (l.h[1] - l.h[0]);
+          const w = h * (1.4 + r() * 0.8);
+          return { li, x: Math.cos(a) * d, z: Math.sin(a) * d, h, w, rot: r() * Math.PI };
+        });
+      }),
+    [layers]
+  );
   return (
     <group>
       {peaks.map((q, i) => (
-        <mesh key={i} position={q.p} material={mat}>
-          <coneGeometry args={[q.w, q.h, 5]} />
-        </mesh>
+        <group key={i} position={[q.x, -3, q.z]} rotation-y={q.rot}>
+          <mesh position={[0, q.h / 2, 0]} material={mats[q.li].m}>
+            <coneGeometry args={[q.w, q.h, 6]} />
+          </mesh>
+          {q.h > 24 && (
+            <mesh position={[0, q.h * 0.86, 0]} material={snow}>
+              <coneGeometry args={[q.w * 0.295, q.h * 0.28, 6]} />
+            </mesh>
+          )}
+        </group>
       ))}
     </group>
   );

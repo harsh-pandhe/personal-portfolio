@@ -38,7 +38,7 @@ function RoadDashes() {
       const a = (i / N) * Math.PI * 2;
       const x = Math.cos(a) * ROAD_R,
         z = Math.sin(a) * ROAD_R;
-      out.push([x, heightAt(x, z) + 0.03, z, -a, 0.12, 0.02, 0.55]);
+      out.push([x, heightAt(x, z) + 0.1, z, -a, 0.12, 0.02, 0.55]);
     }
     return out;
   }, []);

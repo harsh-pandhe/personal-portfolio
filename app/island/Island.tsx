@@ -6,10 +6,13 @@ import { Suspense, useEffect, useState } from "react";
 import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
 import Decor from "./Decor";
+import Paths from "./Paths";
+import Extras from "./Extras";
 import { CameraRig, Dust, LightShow, MEDALS, Medals, Player, TargetMarker, Teammates } from "./Actors";
-import { getUI, setUI, TOUR, useUI, world } from "./store";
+import { getUI, setUI, travel, TOUR, useUI } from "./store";
 import { Help, Minimap, Toast } from "./Hud";
-import { zoneById, zonePos, ZONES, type Block, type ZoneId } from "./zones";
+import CaseStudy from "./CaseStudy";
+import { zoneById, ZONES } from "./zones";
 import { profile } from "@/lib/achievements";
 
 /* ---------------- 3D scene ---------------- */
@@ -50,6 +53,8 @@ function Scene() {
         <Clouds />
         <Landmarks />
         <Decor />
+        <Paths />
+        <Extras />
         <Teammates />
         <Medals />
         <Player />
@@ -255,17 +260,6 @@ function Panel() {
   );
 }
 
-function travel(id: ZoneId) {
-  const z = zoneById[id];
-  const [x, zz] = zonePos(z);
-  // stand on the HQ side of the zone, facing it
-  const k = z.radius ? (z.radius - 9) / z.radius : 0;
-  world.player.x = z.radius ? x * k : 0;
-  world.player.z = z.radius ? zz * k : 10;
-  world.player.yaw = Math.atan2(x - world.player.x, zz - world.player.z) || Math.PI;
-  world.camYaw = world.player.yaw + Math.PI;
-  setUI({ mode: "explore", open: null });
-}
 
 /* ---------------- hero headline (overview) ---------------- */
 function Hero() {
@@ -365,136 +359,6 @@ function TourCard() {
   );
 }
 
-/* ---------------- case-study drawer ---------------- */
-function BlockView({ b, accent }: { b: Block; accent: string }) {
-  if (b.kind === "lead") return <p className="text-[17px] leading-relaxed text-white/75">{b.text}</p>;
-  if (b.kind === "stats")
-    return (
-      <div className="grid grid-cols-2 gap-2">
-        {b.items.map((s) => (
-          <div key={s.k} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <div className="text-[36px] font-semibold leading-none tracking-[-0.05em]" style={{ color: accent }}>
-              {s.v}
-            </div>
-            <div className="mt-2 text-[13px] text-white/55">{s.k}</div>
-          </div>
-        ))}
-      </div>
-    );
-  if (b.kind === "tags")
-    return (
-      <div>
-        {b.title && <h4 className="mb-2 font-mono text-[11px] uppercase tracking-wider text-white/40">{b.title}</h4>}
-        <div className="flex flex-wrap gap-1.5">
-          {b.items.map((t) => (
-            <span key={t} className="rounded-full border border-white/15 px-3 py-1 text-[13px] text-white/75">
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-    );
-  if (b.kind === "notes")
-    return (
-      <div className="grid grid-cols-2 gap-2">
-        {b.items.map((n) => (
-          <div key={n.t} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            {n.tag && <div className="mb-1 font-mono text-[10px] uppercase tracking-wider" style={{ color: accent }}>{n.tag}</div>}
-            <div className="text-[15px] font-semibold tracking-[-0.01em]">{n.t}</div>
-            <div className="mt-1 text-[13px] leading-relaxed text-white/55">{n.s}</div>
-          </div>
-        ))}
-      </div>
-    );
-  return (
-    <div>
-      {b.title && <h4 className="mb-2 font-mono text-[11px] uppercase tracking-wider text-white/40">{b.title}</h4>}
-      <ul className="divide-y divide-white/10 border-y border-white/10">
-        {b.items.map((it) => {
-          const body = (
-            <div className="group flex items-start justify-between gap-6 py-3.5">
-              <div>
-                <div className="text-[16px] font-semibold leading-snug tracking-[-0.015em] group-hover:underline">{it.t}</div>
-                {it.s && <div className="mt-1 text-[13.5px] leading-relaxed text-white/55">{it.s}</div>}
-                {it.meta && <div className="mt-1.5 font-mono text-[11px] uppercase tracking-wide text-white/35">{it.meta}</div>}
-              </div>
-              {it.href && <span className="mt-0.5 text-white/40 group-hover:text-white">↗</span>}
-            </div>
-          );
-          return (
-            <li key={it.t}>
-              {it.href ? (
-                <a href={it.href} target="_blank" rel="noreferrer">
-                  {body}
-                </a>
-              ) : (
-                body
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function Drawer() {
-  const ui = useUI();
-  const [last, setLast] = useState<ZoneId>("hq");
-  useEffect(() => {
-    if (ui.open) setLast(ui.open);
-  }, [ui.open]);
-  const z = zoneById[ui.open ?? last];
-  const on = !!ui.open;
-  return (
-    <div
-      className={`fixed bottom-[18px] right-[18px] top-[18px] z-40 w-[620px] overflow-hidden rounded-[30px] border border-white/10 bg-[#121417]/[0.9] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
-        on ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-[110%] opacity-0"
-      }`}
-    >
-      <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${z.accent}, #00d2ff, #12f0c0)` }} />
-      <div className="h-full overflow-y-auto px-9 pb-24 pt-7 [scrollbar-width:thin]">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: z.accent }}>
-            {z.team}
-          </span>
-          <button onClick={() => setUI({ open: null })} className="rounded-full border border-white/20 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-white/70 hover:bg-white/10">
-            Esc · close
-          </button>
-        </div>
-        <h2 className="mt-6 text-[64px] font-semibold leading-[0.9] tracking-[-0.06em]">{z.name}</h2>
-        <p className="mt-4 text-[26px] font-medium leading-[1.1] tracking-[-0.035em] text-white/90">{z.headline}</p>
-        <p className="mt-4 text-[15.5px] leading-relaxed text-white/60">{z.blurb}</p>
-        <div className="mt-8 flex flex-col gap-8">
-          {z.blocks.map((b, i) => (
-            <BlockView key={i} b={b} accent={z.accent} />
-          ))}
-        </div>
-        <div className="mt-10 flex items-center gap-2">
-          <button onClick={() => travel(z.id)} className="rounded-full bg-[#22d36b] px-6 py-3 text-[14px] font-semibold text-[#06240f] hover:bg-[#2be277]">
-            Walk to {z.name} →
-          </button>
-          {(() => {
-            const i = ZONES.findIndex((q) => q.id === z.id);
-            const prev = ZONES[(i - 1 + ZONES.length) % ZONES.length],
-              next = ZONES[(i + 1) % ZONES.length];
-            return (
-              <div className="ml-auto flex gap-2">
-                <button onClick={() => setUI({ open: prev.id })} className="rounded-full border border-white/20 px-4 py-3 text-[13px] text-white/75 hover:bg-white/10">
-                  ← {prev.name}
-                </button>
-                <button onClick={() => setUI({ open: next.id })} className="rounded-full border border-white/20 px-4 py-3 text-[13px] text-white/75 hover:bg-white/10">
-                  {next.name} →
-                </button>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ---------------- top-right: contact pill ---------------- */
 function Corner() {
   const ui = useUI();
@@ -549,7 +413,7 @@ export default function Island() {
       <Prompt />
       <TourCard />
       <Corner />
-      <Drawer />
+      <CaseStudy />
       <Minimap />
       <Toast />
       <Help />

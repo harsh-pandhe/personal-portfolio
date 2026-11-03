@@ -25,6 +25,7 @@ export default {
 			keyframes: {
 				boot: { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } },
 				grow: { from: { width: "0%" }, to: { width: "100%" } },
+				rise: { from: { transform: "translateY(40%)", opacity: "0" }, to: { transform: "translateY(0)", opacity: "1" } },
 				pop: { from: { transform: "scale(.6) translateY(8px)", opacity: "0" }, to: { transform: "scale(1)", opacity: "1" } },
 				marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
 				meteor: {

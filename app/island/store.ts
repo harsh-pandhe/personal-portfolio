@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { ZoneId } from "./zones";
+import { zoneById, zonePos, type ZoneId } from "./zones";
 
 export type Mode = "intro" | "explore" | "tour";
 
@@ -65,3 +65,16 @@ export function useUI() {
 }
 
 export const TOUR: ZoneId[] = ["hq", "arena", "marsyard", "swarm", "ropeway", "trading", "workshop", "library", "morpheus", "home"];
+
+/** Put the player at a zone's approach, facing it, and switch to walking. */
+export function travel(id: ZoneId) {
+  const z = zoneById[id];
+  const [x, zz] = zonePos(z);
+  const k = z.radius ? (z.radius - 9) / z.radius : 0;
+  world.player.x = z.radius ? x * k : 0;
+  world.player.z = z.radius ? zz * k : 10;
+  world.player.yaw = Math.atan2(x - world.player.x, zz - world.player.z) || Math.PI;
+  world.camYaw = world.player.yaw + Math.PI;
+  world.target = null;
+  setUI({ mode: "explore", open: null });
+}
