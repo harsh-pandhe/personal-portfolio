@@ -12,6 +12,11 @@ export default {
 	],
 	theme: {
 		extend: {
+			fontFamily: {
+				sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+				serif: ["var(--font-serif)", "Georgia", "serif"],
+				mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+			},
 			animation: {
 				"meteor-effect": "meteor 5s linear infinite",
 				shimmer: "shimmer 2s linear infinite",
@@ -19,6 +24,7 @@ export default {
 			},
 			keyframes: {
 				boot: { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } },
+				grow: { from: { width: "0%" }, to: { width: "100%" } },
 				marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
 				meteor: {
 					"0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },

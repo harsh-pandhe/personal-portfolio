@@ -87,7 +87,7 @@ export function Reveal({
     <As
       ref={ref as React.Ref<never>}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-[900ms] ease-[cubic-bezier(.2,.7,.2,1)] ${
+      className={`transition-all [transition-duration:900ms] [transition-timing-function:cubic-bezier(.2,.7,.2,1)] ${
         shown ? "translate-y-0 opacity-100 blur-0" : "translate-y-8 opacity-0 blur-[2px]"
       } ${className}`}
     >
@@ -121,7 +121,7 @@ export function SplitHeading({ text, className = "" }: { text: string; className
       {text.split(" ").map((w, i) => (
         <span key={i} aria-hidden className="inline-block overflow-hidden pb-1 align-bottom">
           <span
-            className="inline-block transition-transform duration-[900ms] ease-[cubic-bezier(.2,.7,.2,1)]"
+            className="inline-block transition-transform [transition-duration:900ms] [transition-timing-function:cubic-bezier(.2,.7,.2,1)]"
             style={{ transform: shown ? "translateY(0)" : "translateY(110%)", transitionDelay: `${i * 45}ms` }}
           >
             {w}&nbsp;

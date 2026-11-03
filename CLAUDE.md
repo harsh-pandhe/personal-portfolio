@@ -1,6 +1,6 @@
 # Project context for Claude (local and cloud sessions)
 
-This repo is Harsh Pandhe's portfolio (Next.js 15, React 19, React Three Fiber). The scroll-driven 3D "swarm" experience lives in `app/experience/`; all site content comes from `lib/achievements.ts`.
+This repo is Harsh Pandhe's portfolio (Next.js 15, React 19, React Three Fiber). The home page is "Mission Island", a walkable 3D island in `app/island/` (zones and their copy in `app/island/zones.ts`, built from `lib/achievements.ts`). 3D models live in `public/models/` (see CREDITS.md there). The older scroll-driven swarm page in `app/experience/` is no longer rendered; only `shapes.ts` is still used (by the night drone show). Desktop-first; `?lite` drops shadows and resolution.
 
 `research/` holds everything collected about Harsh (2026-11-04). Start with `research/README.md`:
 - `research/01_dossier.md` — profile, education, achievements, projects
