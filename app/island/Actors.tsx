@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
+import { AMBIENT_POS } from "./Show";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 
 const ROBOT = "/models/robot.glb";
@@ -199,10 +200,18 @@ export function CameraRig() {
       tmp2.set(...world.shot.look);
       ease = 1 - Math.pow(0.25, dt);
     } else if (ui.mode === "intro") {
-      const a = t * 0.035 + 0.6;
-      tmp.set(Math.sin(a) * 104, 58, Math.cos(a) * 104);
-      // aim past the centre so the island sits in the upper right, clear of the panel and headline
-      tmp2.set(Math.sin(a - 0.5) * -10, -14 + 26 * world.night, Math.cos(a - 0.5) * -10); // tilt up at night for the show
+      if (world.night > 0.5) {
+        // night: hold a view across the island toward the fixed drone show over the northern sea,
+        // drifting a little instead of orbiting away from it
+        const a = Math.sin(t * 0.05) * 0.28;
+        tmp.set(Math.sin(a) * 96, 34, Math.cos(a) * 96);
+        tmp2.set(AMBIENT_POS.x * 0.15, 24, AMBIENT_POS.z * 0.6);
+      } else {
+        const a = t * 0.035 + 0.6;
+        tmp.set(Math.sin(a) * 104, 58, Math.cos(a) * 104);
+        // aim past the centre so the island sits in the upper right, clear of the panel and headline
+        tmp2.set(Math.sin(a - 0.5) * -10, -14, Math.cos(a - 0.5) * -10);
+      }
       ease = 1 - Math.pow(0.3, dt);
     } else if (ui.mode === "tour" || ui.open) {
       const id = ui.mode === "tour" ? TOUR[ui.tour] : ui.open!;

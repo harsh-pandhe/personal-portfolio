@@ -4,27 +4,127 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getUI, world } from "./store";
-import { droneShape, globeShape, helixShape, ringsShape, rocketShape, textShape, trophyShape } from "./shapes";
+import { droneShape, globeShape, rocketShape, ropewayShape, textShape, trophyShape } from "./shapes";
 import { sfx } from "./audio";
 
-const N = 1600;
+const N = 1400;
 
 /** The gala programme: each formation holds for one step while its caption shows. */
 export const GALA_STEPS: { key: string; caption: string; sub: string; color: string }[] = [
-  { key: "name", caption: "Harsh Pandhe", sub: "Welcome to the gala on Mission Island", color: "#00d2ff" },
+  { key: "hp", caption: "Harsh Pandhe", sub: "Welcome to the gala on Mission Island", color: "#00d2ff" },
   { key: "trophy", caption: "SIH 2025 · National Winner", sub: "10,000+ teams · Team Algo Sapiens · Telhan Sathi", color: "#ffd23f" },
   { key: "drone", caption: "ISRO IRoC-U 2026 · Finalist", sub: "A drone that flies without GPS", color: "#ff7a45" },
-  { key: "helix", caption: "Six papers on SSRN", sub: "Markets and multi-robot learning, written up honestly", color: "#9b7bff" },
-  { key: "rings", caption: "Ropeways at Doppelmayr", sub: "Two coordinates in, an alignment out", color: "#ff5a6e" },
-  { key: "rocket", caption: "RoboRashtra · Morpheus · MARS", sub: "Robots, hackathons and swarms", color: "#12f0c0" },
+  { key: "swarm", caption: "MARS · multi-robot swarms", sub: "Six papers on SSRN, written up honestly", color: "#12f0c0" },
+  { key: "ropeway", caption: "Ropeways at Doppelmayr", sub: "Two coordinates in, an alignment out", color: "#ff5a6e" },
+  { key: "chart", caption: "AlgoTrade", sub: "The strategy that survived ten attempts to kill it", color: "#7dff8a" },
   { key: "globe", caption: "Next stop: Singapore", sub: "Singapore–India Hackathon Grand Finale · 15–17 Nov 2026", color: "#00d2ff" },
-  { key: "thanks", caption: "Thank you for visiting", sub: "Say hello: harshpandhehome@gmail.com", color: "#ffffff" },
+  { key: "hp", caption: "Thank you for visiting", sub: "Say hello: harshpandhehome@gmail.com", color: "#ffffff" },
 ];
 
 export const GALA_POS = new THREE.Vector3(-8, 30, 104);
-// ambient show hangs at a fixed world spot over the sea; never follows the camera
-const AMBIENT_POS = new THREE.Vector3(0, 40, -95);
+// The nightly show hangs at a fixed spot over the sea to the north, like a real show over a bay.
+// The overview camera turns to face it at night (Actors.tsx); the show itself never moves.
+export const AMBIENT_POS = new THREE.Vector3(30, 42, -88);
 export const GALA_CAM = { pos: [-2, 7, 22] as [number, number, number], look: [-8, 14, 104] as [number, number, number] };
+
+// the nightly story, in order: launch, the work, Singapore, sign-off, land
+const AMBIENT: { key: string; hold: number; pal: string[] }[] = [
+  { key: "grid", hold: 5, pal: ["#fff3d6"] },
+  { key: "drone", hold: 8, pal: ["#ff7a45", "#ffd2b0"] },
+  { key: "trophy", hold: 8, pal: ["#ffb300", "#ffd23f"] },
+  { key: "rocket", hold: 8, pal: ["#ffffff", "#ff8a3d"] },
+  { key: "swarm", hold: 9, pal: ["#12f0c0", "#2d5bff", "#ffd23f", "#ff7ac6", "#9b7bff", "#ff8a3d"] },
+  { key: "ropeway", hold: 8, pal: ["#ff5a6e", "#ffffff"] },
+  { key: "chart", hold: 8, pal: ["#7dff8a", "#12f0c0"] },
+  { key: "globe", hold: 9, pal: ["#00d2ff", "#ff3b5c"] },
+  { key: "hp", hold: 8, pal: ["#00d2ff", "#ffffff"] },
+];
+
+/** Drones parked on the water in a launch grid (local units; the holder is scaled 5x and sits 34 m up). */
+function gridShape(n: number) {
+  const out = new Float32Array(n * 3);
+  const c = Math.ceil(Math.sqrt(n));
+  for (let i = 0; i < n; i++) {
+    out[i * 3] = ((i % c) / c - 0.5) * 12;
+    out[i * 3 + 1] = -6.6;
+    out[i * 3 + 2] = (Math.floor(i / c) / c - 0.5) * 6;
+  }
+  return out;
+}
+
+/** Six tight clusters on a ring: they orbit in the frame loop. */
+function swarmShape(n: number) {
+  const out = new Float32Array(n * 3);
+  let s = 11;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < n; i++) {
+    const k = i % 6;
+    const a = (k / 6) * Math.PI * 2;
+    const u = r() * Math.PI * 2,
+      v = Math.acos(2 * r() - 1),
+      rr = 0.55 * Math.cbrt(r());
+    out[i * 3] = Math.cos(a) * 3 + Math.sin(v) * Math.cos(u) * rr;
+    out[i * 3 + 1] = Math.sin(a) * 3 + Math.cos(v) * rr;
+    out[i * 3 + 2] = Math.sin(v) * Math.sin(u) * rr;
+  }
+  return out;
+}
+
+/** A rising equity line with an arrowhead over a row of candles. */
+function risingChart(n: number) {
+  const out = new Float32Array(n * 3);
+  const P: [number, number][] = [[-5, -2.2], [-3.6, -1.2], [-2.6, -1.7], [-1.2, -0.2], [0, -0.8], [1.4, 0.9], [2.4, 0.4], [4.2, 2.6]];
+  const seg = P.slice(1).map((p, i) => Math.hypot(p[0] - P[i][0], p[1] - P[i][1]));
+  const L = seg.reduce((a, b) => a + b, 0);
+  let s = 5;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const nl = Math.floor(n * 0.5),
+    na = Math.floor(n * 0.12);
+  for (let i = 0; i < n; i++) {
+    let x = 0,
+      y = 0;
+    if (i < nl) {
+      let d = (i / nl) * L,
+        k = 0;
+      while (k < seg.length - 1 && d > seg[k]) d -= seg[k++];
+      const u = d / seg[k];
+      x = P[k][0] + (P[k + 1][0] - P[k][0]) * u;
+      y = P[k][1] + (P[k + 1][1] - P[k][1]) * u;
+    } else if (i < nl + na) {
+      // arrowhead at the last point
+      const u = r();
+      if (r() < 0.5) (x = 4.2 - u * 0.35), (y = 2.6 - u * 1.0);
+      else (x = 4.2 - u * 1.0), (y = 2.6 - u * 0.2);
+    } else {
+      // candles: alternating bodies along the bottom, taller to the right
+      const c = Math.floor(r() * 10),
+        cx = -4.6 + c * 1.0,
+        h = 0.5 + c * 0.12 + (c % 3 === 1 ? -0.2 : 0);
+      x = cx + (r() - 0.5) * 0.3;
+      y = -3.4 + r() * h;
+    }
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = (r() - 0.5) * 0.2;
+  }
+  return out;
+}
+
+function glowSprite() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d")!;
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,255,255,1)");
+  gr.addColorStop(0.18, "rgba(255,255,255,.9)");
+  gr.addColorStop(0.45, "rgba(255,255,255,.25)");
+  gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 
 export function LightShow() {
   const geo = useRef<THREE.BufferGeometry>(null);
@@ -35,99 +135,141 @@ export function LightShow() {
   const cols = useMemo(() => new Float32Array(N * 3), []);
   const from = useRef<Float32Array>(new Float32Array(N * 3));
   const to = useRef<Float32Array>(new Float32Array(N * 3));
-  const fromCol = useRef(new THREE.Color("#00d2ff"));
-  const toCol = useRef(new THREE.Color("#00d2ff"));
+  const fromPal = useRef<THREE.Color[]>([new THREE.Color("#fff3d6")]);
+  const toPal = useRef<THREE.Color[]>([new THREE.Color("#fff3d6")]);
   const tStart = useRef(0);
   const lastKey = useRef("");
-  const tmp = useMemo(() => new THREE.Color(), []);
-  const ambient = ["name", "drone", "globe", "rings", "helix", "sih"];
-  const ambientCol = ["#00d2ff", "#7a4dff", "#12f0c0", "#ff7ac6", "#ffd23f", "#ffffff"];
+  const prevKey = useRef("");
+  const cycle = useRef({ i: 0, until: 0 });
+  const ca = useMemo(() => new THREE.Color(), []);
+  const cb = useMemo(() => new THREE.Color(), []);
+  const sprite = useMemo(() => (typeof document === "undefined" ? null : glowSprite()), []);
 
   useEffect(() => {
     const build = () => {
       shapes.current = {
-        name: textShape(N, "HARSH"),
-        sih: textShape(N, "SIH'25"),
-        thanks: textShape(N, "THANK YOU", 11),
+        grid: gridShape(N),
+        hp: textShape(N, "HP", 7),
         trophy: trophyShape(N),
         drone: droneShape(N),
-        helix: helixShape(N),
-        rings: ringsShape(N),
         rocket: rocketShape(N),
-        globe: globeShape(N, 2.4),
+        swarm: swarmShape(N),
+        ropeway: ropewayShape(N),
+        chart: risingChart(N),
+        globe: globeShape(N, 2.6),
       };
-      from.current.set(shapes.current.name);
-      to.current.set(shapes.current.name);
+      from.current.set(shapes.current.grid);
+      to.current.set(shapes.current.grid);
+      pos.set(shapes.current.grid);
     };
     if (document.fonts?.ready) document.fonts.ready.then(build);
     else build();
-  }, []);
+  }, [pos]);
 
   useFrame(({ clock }) => {
     const S = shapes.current;
     if (!S || !geo.current || !mat.current || !holder.current) return;
     const galaIdx = getUI().gala;
     const gala = galaIdx !== null;
-    // in the gala the show hangs over the sea in front of the pier; otherwise opposite the camera
-    if (gala) {
-      holder.current.position.lerp(GALA_POS, 0.05);
-      holder.current.rotation.y = Math.atan2(-GALA_POS.x + GALA_CAM.pos[0], -GALA_POS.z + GALA_CAM.pos[2]);
-    } else {
-      holder.current.position.lerp(AMBIENT_POS, 0.05);
-      holder.current.rotation.y = Math.atan2(AMBIENT_POS.x, AMBIENT_POS.z) + Math.PI;
-    }
-    mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
+    const anchor = gala ? GALA_POS : AMBIENT_POS;
+    holder.current.position.lerp(anchor, gala ? 0.05 : 1);
+    holder.current.rotation.y = gala ? Math.atan2(-GALA_POS.x + GALA_CAM.pos[0], -GALA_POS.z + GALA_CAM.pos[2]) : 0;
+    mat.current.opacity = Math.min(1, Math.max(0, world.night * 1.3 - 0.25));
     if (world.night < 0.02) return;
     const t = clock.elapsedTime;
     // pick the current formation
-    let key: string, col: string;
+    let key: string, pal: string[];
     if (gala) {
       const step = GALA_STEPS[Math.min(galaIdx, GALA_STEPS.length - 1)];
       key = step.key;
-      col = step.color;
+      pal = [step.color, "#ffffff"];
     } else {
-      const i = Math.floor(t / 8) % ambient.length;
-      key = ambient[i];
-      col = ambientCol[i];
+      if (t > cycle.current.until) {
+        cycle.current.i = (cycle.current.i + 1) % AMBIENT.length;
+        cycle.current.until = t + AMBIENT[cycle.current.i].hold;
+      }
+      ({ key, pal } = AMBIENT[cycle.current.i]);
     }
     if (key !== lastKey.current) {
       from.current.set(pos);
-      fromCol.current.copy(tmp);
+      fromPal.current = toPal.current;
       to.current = S[key];
-      toCol.current.set(col);
+      toPal.current = pal.map((c) => new THREE.Color(c));
       tStart.current = t;
+      prevKey.current = lastKey.current;
       lastKey.current = key;
     }
-    const f = Math.min((t - tStart.current) / 2.6, 1);
-    tmp.copy(fromCol.current).lerp(toCol.current, f);
+    // launches and landings take longer, row by row, like a real show
+    const span = key === "grid" || prevKey.current === "grid" ? 4.2 : 3;
+    const f = Math.min((t - tStart.current) / span, 1);
     const A = from.current,
       B = to.current;
+    const k = lastKey.current;
+    const spin = t * 0.5;
+    const cs = Math.cos(spin),
+      sn = Math.sin(spin);
     for (let j = 0; j < N; j++) {
       const ix = j * 3;
-      // staggered: each drone leaves a little after its neighbour, then eases in
-      const kk = Math.min(Math.max((f - (j % 9) * 0.03) / 0.73, 0), 1);
+      // staggered: drones leave in waves across the formation, then ease in along an arc
+      const delay = ((j * 7919) % N) / N;
+      const kk = Math.min(Math.max((f - delay * 0.35) / 0.65, 0), 1);
       const e = kk * kk * (3 - 2 * kk);
-      const lift = Math.sin(e * Math.PI) * 0.6;
-      pos[ix] = A[ix] + (B[ix] - A[ix]) * e;
-      pos[ix + 1] = A[ix + 1] + (B[ix + 1] - A[ix + 1]) * e + lift + Math.sin(t * 1.3 + j) * 0.015;
-      pos[ix + 2] = A[ix + 2] + (B[ix + 2] - A[ix + 2]) * e;
-      // a sparkle runs through the formation
-      const tw = 0.82 + 0.18 * Math.sin(t * 6 + j * 0.37);
-      cols[ix] = tmp.r * tw;
-      cols[ix + 1] = tmp.g * tw;
-      cols[ix + 2] = tmp.b * tw;
+      let bx = B[ix],
+        by = B[ix + 1],
+        bz = B[ix + 2];
+      // living formations: the globe turns, the swarm orbits, the rocket climbs, the drone banks
+      if (k === "globe") {
+        const x = bx * cs - bz * sn;
+        bz = bx * sn + bz * cs;
+        bx = x;
+      } else if (k === "swarm") {
+        const c = j % 6,
+          a = t * 0.45,
+          cx = Math.cos((c / 6) * Math.PI * 2) * 3,
+          cy = Math.sin((c / 6) * Math.PI * 2) * 3;
+        const ox = bx - cx,
+          oy = by - cy;
+        const ra = (c / 6) * Math.PI * 2 + a;
+        bx = Math.cos(ra) * 3 + ox;
+        by = Math.sin(ra) * 3 + oy;
+      } else if (k === "rocket") {
+        by += Math.min(f, 1) * Math.sin(t * 0.6) * 0.4;
+        if (by < -1.6) by -= Math.random() * 0.6; // exhaust flicker
+      } else if (k === "drone") {
+        // the quad is modelled flat; tip it toward the shore so its four rotors read, and let it bank
+        const tip = 1.15 + Math.sin(t * 0.7) * 0.12;
+        const y2 = by * Math.cos(tip) + bz * Math.sin(tip);
+        bz = -by * Math.sin(tip) + bz * Math.cos(tip);
+        by = y2 + Math.sin(t * 1.4) * 0.15;
+      }
+      const lift = Math.sin(e * Math.PI) * 0.9;
+      pos[ix] = A[ix] + (bx - A[ix]) * e;
+      pos[ix + 1] = A[ix + 1] + (by - A[ix + 1]) * e + lift + Math.sin(t * 1.1 + j) * 0.012;
+      pos[ix + 2] = A[ix + 2] + (bz - A[ix + 2]) * e;
+      // synced colour: a slow sweep across the palette from left to right
+      const P = toPal.current,
+        Q = fromPal.current;
+      const sweep = (pos[ix] * 0.12 + t * 0.25 + (k === "swarm" ? (j % 6) / 6 : 0)) % 1;
+      const pi = k === "swarm" ? j % P.length : Math.floor(Math.abs(sweep) * P.length) % P.length;
+      ca.copy(Q[j % Q.length]);
+      cb.copy(P[pi]);
+      ca.lerp(cb, e);
+      const tw = 0.62 + 0.12 * Math.sin(t * 5 + j * 0.37); // dim enough that additive overlap keeps its colour
+      cols[ix] = ca.r * tw;
+      cols[ix + 1] = ca.g * tw;
+      cols[ix + 2] = ca.b * tw;
     }
     geo.current.attributes.position.needsUpdate = true;
     geo.current.attributes.color.needsUpdate = true;
   });
 
   return (
-    <points ref={holder} scale={5} frustumCulled={false} renderOrder={10}>
+    <points ref={holder} scale={6} frustumCulled={false} renderOrder={10}>
       <bufferGeometry ref={geo}>
         <bufferAttribute attach="attributes-position" args={[pos, 3]} />
         <bufferAttribute attach="attributes-color" args={[cols, 3]} />
       </bufferGeometry>
-      <pointsMaterial ref={mat} size={0.12} vertexColors transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
+      <pointsMaterial ref={mat} map={sprite} size={2.2} vertexColors transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
