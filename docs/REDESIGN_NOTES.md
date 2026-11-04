@@ -17,6 +17,31 @@ Feedback from Harsh on the live preview, with the cause found in the code where 
 | 9 | Trees disappear and stop rendering | `app/island/Env.tsx:122+` — instanced meshes for trunks, crowns and pines still have frustum culling on. Their bounding sphere is computed from the base geometry before instance matrices are written, so the whole forest is culled when the camera looks away from the origin | Set `frustumCulled={false}` on all three meshes (or recompute bounds after the matrices are set); check the other instanced meshes in the same file |
 | 10 | NPC speech is stacked into one narrow line | `app/island/Actors.tsx:384-392` — the thought bubble is a `rounded-full` pill with no width, wrap or max-width, rendered inside drei `<Html>` | Give it `w-max max-w-[220px] whitespace-normal`, `rounded-2xl`, and balanced line breaks |
 
+## Round 2 change list
+
+Feedback after walking the island (screenshots of Ropeway Ridge, Trading Floor, Home and The Arena).
+
+| # | Feedback | Where / likely cause | Plan |
+|---|----------|----------------------|------|
+| 11 | NPC speech still stacked one word per line (seen at Ropeway, Home, Arena) | Same as #10: `Actors.tsx:384` thought bubble has no width or wrap | Fix together with #10; verify in a screenshot at every zone |
+| 12 | Cars look wrong: tiny, odd orange and white fragments on the road | Traffic on the ring road; model scale and lamp or lane-marking pieces read as debris | Fix scale, forward axis and lane position (see #6); remove stray lamp meshes; check at road level |
+| 13 | A person sits on a bench next to the bull on the Trading Floor, overlapping it | Bench positions are a fixed rule, 6.2 m from the zone centre (`Decor.tsx`, `People.tsx`), with no check against landmarks | Place benches per zone with explicit clearance from landmarks and billboards |
+| 14 | Reference: https://www.projectmorpheus.in/ | Blocked by the session network policy (403) | Needs the host allowed, or screenshots and copy from Harsh; use it for the Morpheus Gate zone and the visual language |
+| 15 | Pull pictures from LinkedIn for every section and download them | `media.licdn.com` blocked; see the research section below | Needs the host allowed, or a LinkedIn data export, or photos dropped in a folder |
+| 16 | Add a Singapore landmark (Merlion, or the three-tower ship building, Marina Bay Sands) | Not in the scene | Add a Marina Bay Sands style skyline with the Merlion across the water, tied to the Singapore–India Hackathon (15–17 Nov 2026, SMU) |
+| 17 | Expand each section area | Zones are small plazas | Larger footprint per zone with its own props, paths and planting; relies on the bigger island (#8) |
+| 18 | Proper roads, greenery and surroundings | Roads are flat ribbons; greenery is scattered trees and grass | Part of #7 and #8: proper road network, hedges, lawns, flower beds, tree lines |
+| 19 | Arena: crowd is bouncing dots, wants real humans; stadium bigger; rigid bodies must not be walked through | Crowd is an instanced capsule mesh with bounce in `Extras.tsx`; the stadium has no collision | Seat real human models (the KayKit people already in `public/models/people`) in tiered stands; enlarge the bowl; add colliders for the stands, trophy and walls |
+| 20 | Mars Yard: drone propellers do not rotate | `PropDiscs` in `Landmarks.tsx:339` is a static blur disc; the `quad-f450.glb` rotors are not animated | Spin the actual rotor meshes (blur disc only at speed), hover bob, tilt on movement |
+| 21 | Every section can be improved drastically | Round 1 zones are placeholders for the story | Rework zone by zone against the section plan below; one session per zone |
+| 22 | Multi-robot system (Swarm Field) should be properly built | Villagers and swarm field are decorative | Real swarm demo: robots with roles, coverage grid, failure injection and recovery as in the MARS papers, readable HUD |
+| 23 | "My journey" section from school onward | Not present | New journey path through the island: school, diploma in Solapur, SIT Lonavala, hackathons, Doppelmayr, IRoC-U, Singapore; needs school details from Harsh |
+| 24 | Better cinematic story: multiple angles, more control over the flow | `Story.tsx` has nine chapters with one slow camera move each | Multi-shot chapters (wide, tracking, close-up, drone POV); pause, rewind, skip, chapter list, speed control, captions toggle |
+| 25 | Bigger ropeway across 2 or 3 mountains over the city | Ropeway Ridge is one short line | Multi-span ropeway with towers and cabins over several peaks and the city below |
+| 26 | Trading Floor: big screen with Nifty 50, gold and profit and loss | A small billboard | Large trading wall: Nifty 50 and gold charts, P&L, rejected-hypothesis ticker; use real figures only from the research (no invented numbers) |
+| 27 | Robotic arm should look real, import a real model | Current arm is hand-built primitives | Import a CC0 or permissively licensed industrial arm GLB, credit it in `public/models/CREDITS.md`, add joint animation |
+| 28 | Distant mountains look like pyramids | Three layered ranges in `Env.tsx` use simple cone-like profiles | Noise-based ridgelines with layered haze, snow caps and proper silhouettes |
+
 ## Research: what exists and what is missing
 
 Already collected (see `research/README.md`): dossier, 161 LinkedIn posts with full text, SSRN list, repo inventory, own papers.
