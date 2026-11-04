@@ -31,7 +31,7 @@ export const CHAPTERS: Chapter[] = [
     kicker: "Chapter 2",
     title: "Zero hopes",
     lines: ["A hardware idea gets rejected. Over Diwali, a software problem called Telhan Sathi turns up instead.", "December 2025: 10,000+ teams. Team Algo Sapiens wins the Smart India Hackathon."],
-    clip: "story-5-hackathon",
+    clip: "arena-trophy",
     swing: 0.5,
   },
   {
@@ -53,7 +53,7 @@ export const CHAPTERS: Chapter[] = [
     kicker: "Chapter 5",
     title: "No GPS on Mars",
     lines: ["ISRO's robotics challenge: a drone that has to know where it is without satellites.", "LiDAR, an IMU, careful frame maths — and a finalist's place in IRoC-U 2026."],
-    clip: "story-2-navigation",
+    clip: "mars-drone",
     height: 9,
   },
   {

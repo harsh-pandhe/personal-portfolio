@@ -26,8 +26,9 @@ export const MEDIA: Partial<Record<ZoneId, Media>> = {
     ],
   },
   arena: {
-    hero: { video: "story-5-hackathon", cap: "Hackathon hall, animated" },
+    hero: { video: "arena-trophy", cap: "SIH 2025: the trophy goes up, animated" },
     gallery: [
+      { src: V("story-5-hackathon"), cap: "The hackathon hall, animated", video: true, wide: true },
       { src: P("sih-cheque"), cap: "SIH 2025 national win: ₹1,50,000 for Algo Sapiens", wide: true },
       { src: P("sih-team-stage"), cap: "The team at the Grand Finale" },
       { src: P("sih-grand-finale"), cap: "Smart India Hackathon 2025 Grand Finale" },
@@ -39,7 +40,8 @@ export const MEDIA: Partial<Record<ZoneId, Media>> = {
   marsyard: {
     live: "mars",
     gallery: [
-      { src: V("story-2-navigation"), cap: "Navigating without GPS, animated", video: true, wide: true },
+      { src: V("mars-drone"), cap: "A drone mapping a Mars yard with LiDAR, animated", video: true, wide: true },
+      { src: V("story-2-navigation"), cap: "Navigating without GPS, animated", video: true },
       { src: P("ascend-drone"), cap: "ASCEND, the IRoC-U drone" },
       { src: P("drone-workshop-lecture"), cap: "Drone workshop at IIC SIT" },
     ],
