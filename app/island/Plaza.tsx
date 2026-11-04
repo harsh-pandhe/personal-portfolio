@@ -57,10 +57,26 @@ function plaqueTexture(m: (typeof MILESTONES)[number], i: number) {
   return t;
 }
 
+/* The fountain: flowing translucent jets arcing in toward the tower, a tall centre jet,
+   splash rings where the water lands and a rippling pool with caustics. */
+const streamMat = () =>
+  new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uT: { value: 0 }, uNight: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `uniform float uT; uniform float uNight; varying vec2 vUv;
+      void main(){
+        float flow = 0.55 + 0.45*sin(vUv.x*40.0 - uT*14.0);
+        float edge = 1.0 - abs(vUv.y - 0.5)*2.0;
+        float fade = smoothstep(0.0, 0.08, vUv.x) * (1.0 - smoothstep(0.85, 1.0, vUv.x)*0.6);
+        vec3 c = mix(vec3(0.86,0.96,1.0), vec3(0.55,0.85,1.0), uNight) * (0.85 + 0.15*flow);
+        gl_FragColor = vec4(c, (0.45 + 0.4*flow) * (0.35 + 0.65*edge) * fade);
+      }`,
+  });
+
 function Fountain() {
-  const JETS = 16,
-    DROPS = 28;
-  const drops = useRef<THREE.InstancedMesh>(null);
+  const JETS = 16;
   const water = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -68,43 +84,48 @@ function Fountain() {
         uniforms: { uT: { value: 0 }, uNight: { value: 0 } },
         vertexShader: `varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
         fragmentShader: `uniform float uT; uniform float uNight; varying vec2 vP;
+          float caustic(vec2 p){ return abs(sin(p.x*3.1+uT*1.3)+sin(p.y*2.7-uT*1.1)+sin((p.x+p.y)*2.2+uT*0.9)); }
           void main(){ float r = length(vP);
-            float rip = sin(r*5.0 - uT*3.0)*0.5+0.5;
-            vec3 day = mix(vec3(0.25,0.7,0.85), vec3(0.6,0.92,1.0), rip*0.5);
-            vec3 night = mix(vec3(0.05,0.18,0.45), vec3(0.2,0.6,1.0), rip*0.6);
-            gl_FragColor = vec4(mix(day, night, uNight), 0.88); }`,
+            float rip = sin(r*6.0 - uT*3.0)*0.5+0.5;
+            float c = smoothstep(1.6, 2.6, caustic(vP*1.4));
+            vec3 day = mix(vec3(0.16,0.58,0.78), vec3(0.55,0.9,1.0), rip*0.35 + c*0.45);
+            vec3 night = mix(vec3(0.03,0.14,0.4), vec3(0.25,0.65,1.0), rip*0.4 + c*0.5);
+            gl_FragColor = vec4(mix(day, night, uNight), 0.9); }`,
       }),
     []
   );
-  const dropMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8f4ff", emissive: "#6fd3ff", emissiveIntensity: 0.2, transparent: true, opacity: 0.85 }), []);
-  const m = useMemo(() => new THREE.Matrix4(), []);
+  const stream = useMemo(streamMat, []);
+  const jets = useMemo(
+    () =>
+      Array.from({ length: JETS }, (_, j) => {
+        const a = (j / JETS) * Math.PI * 2;
+        const pts = Array.from({ length: 16 }, (_, k) => {
+          const u = k / 15;
+          const r = 5.6 - u * 3.5;
+          return new THREE.Vector3(Math.cos(a) * r, 0.5 + Math.sin(u * Math.PI) * 2.8, Math.sin(a) * r);
+        });
+        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.13, 8, false);
+      }),
+    []
+  );
+  const centre = useMemo(() => new THREE.CylinderGeometry(0.12, 0.35, 6, 12, 8, true), []);
+  const rings = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    water.uniforms.uT.value = t;
-    water.uniforms.uNight.value = world.night;
-    dropMat.emissiveIntensity = 0.2 + world.night * 2.2;
-    let i = 0;
-    for (let j = 0; j < JETS; j++) {
-      const a = (j / JETS) * Math.PI * 2;
-      const pulse = 0.85 + 0.15 * Math.sin(t * 1.3 + j * 0.8);
-      for (let k = 0; k < DROPS; k++) {
-        // each jet arcs from the rim in toward the tower
-        const u = ((t * 0.55 + k / DROPS) % 1) as number;
-        const r = 5.6 - u * 3.4;
-        const y = 0.45 + Math.sin(u * Math.PI) * 3.0 * pulse;
-        const s = 0.09 + (1 - u) * 0.05;
-        m.makeScale(s, s * 1.6, s).setPosition(Math.cos(a) * r, y, Math.sin(a) * r);
-        drops.current!.setMatrixAt(i++, m);
-      }
-    }
-    drops.current!.instanceMatrix.needsUpdate = true;
+    water.uniforms.uT.value = stream.uniforms.uT.value = t;
+    water.uniforms.uNight.value = stream.uniforms.uNight.value = world.night;
+    // splash rings expand and fade where each jet lands
+    rings.current?.children.forEach((r, i) => {
+      const k = (t * 1.2 + i * 0.37) % 1;
+      r.scale.setScalar(0.3 + k * 1.1);
+      ((r as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.6;
+    });
   });
   return (
     <group>
       <mesh position={[0, 0.5, 0]} rotation-x={-Math.PI / 2} material={water}>
         <ringGeometry args={[1.5, 5.9, 64, 4]} />
       </mesh>
-      {/* stone rim and a lit inner ring */}
       <mesh position={[0, 0.45, 0]} rotation-x={-Math.PI / 2}>
         <ringGeometry args={[5.9, 6.6, 64]} />
         <meshStandardMaterial color="#e9e4d8" roughness={0.8} />
@@ -113,9 +134,22 @@ function Fountain() {
         <cylinderGeometry args={[6.6, 6.8, 0.6, 64, 1, true]} />
         <meshStandardMaterial color="#d6d0c2" roughness={0.9} side={THREE.DoubleSide} />
       </mesh>
-      <instancedMesh ref={drops} args={[undefined, undefined, JETS * DROPS]} material={dropMat} frustumCulled={false}>
-        <sphereGeometry args={[1, 6, 4]} />
-      </instancedMesh>
+      {jets.map((g, i) => (
+        <mesh key={i} geometry={g} material={stream} />
+      ))}
+      {/* the tall jet climbing the tower */}
+      <mesh position={[0, 3.5, 0]} geometry={centre} material={stream} />
+      <group ref={rings}>
+        {Array.from({ length: JETS }, (_, j) => {
+          const a = (j / JETS) * Math.PI * 2;
+          return (
+            <mesh key={j} position={[Math.cos(a) * 2.1, 0.52, Math.sin(a) * 2.1]} rotation-x={-Math.PI / 2}>
+              <ringGeometry args={[0.25, 0.32, 20]} />
+              <meshBasicMaterial color="#e6f8ff" transparent opacity={0.5} depthWrite={false} />
+            </mesh>
+          );
+        })}
+      </group>
     </group>
   );
 }
@@ -280,6 +314,124 @@ export function Singapore() {
           <sphereGeometry args={[1, 6, 4]} />
           <meshStandardMaterial color="#d8f4ff" emissive="#7fd8ff" emissiveIntensity={0.6} transparent opacity={0.8} />
         </instancedMesh>
+      </group>
+    </group>
+  );
+}
+
+/* ---------- Singapore on the island: the Merlion on a quay at the end of the pier, a small
+   Marina Bay Sands on the beach beside it ---------- */
+const polarXZ = (deg: number, r: number): [number, number] => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r];
+
+function Merlion({ stone }: { stone: THREE.Material }) {
+  const spout = useRef<THREE.InstancedMesh>(null);
+  const water = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8f4ff", emissive: "#7fd8ff", emissiveIntensity: 0.5, transparent: true, opacity: 0.8 }), []);
+  const m = useMemo(() => new THREE.Matrix4(), []);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    water.emissiveIntensity = 0.4 + world.night * 1.6;
+    for (let k = 0; k < 48; k++) {
+      const u = (t * 0.8 + k / 48) % 1;
+      const s = 0.12 + u * 0.12;
+      m.makeScale(s, s, s).setPosition(1.1 + u * 5.5, 3.7 - u * u * 5.2, 0);
+      spout.current!.setMatrixAt(k, m);
+    }
+    spout.current!.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <group>
+      {/* the fish body coils up from the plinth */}
+      <mesh position={[0, 1.1, 0]} material={stone} castShadow>
+        <cylinderGeometry args={[0.7, 1.05, 2.2, 16]} />
+      </mesh>
+      <mesh position={[-0.55, 0.8, 0]} rotation-z={0.9} material={stone} castShadow>
+        <torusGeometry args={[0.7, 0.24, 8, 18, Math.PI * 1.2]} />
+      </mesh>
+      {/* scales: a few ridges */}
+      {[0.5, 1.0, 1.5].map((y) => (
+        <mesh key={y} position={[0, y, 0]} material={stone}>
+          <torusGeometry args={[0.92 - y * 0.12, 0.05, 6, 20]} />
+        </mesh>
+      ))}
+      {/* the lion's head with its mane and an open mouth facing the sea */}
+      <group position={[0.15, 2.85, 0]}>
+        <mesh scale={[1.1, 1, 1]} material={stone} castShadow>
+          <sphereGeometry args={[0.72, 18, 14]} />
+        </mesh>
+        <mesh position={[-0.25, 0.05, 0]} scale={[0.9, 1.15, 1.25]} material={stone} castShadow>
+          <icosahedronGeometry args={[0.8, 1]} />
+        </mesh>
+        <mesh position={[0.72, -0.12, 0]} rotation-z={-Math.PI / 2} material={stone}>
+          <cylinderGeometry args={[0.32, 0.42, 0.4, 12]} />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[0.55, 0.28, s * 0.28]} material={stone}>
+            <sphereGeometry args={[0.1, 8, 6]} />
+          </mesh>
+        ))}
+      </group>
+      <instancedMesh ref={spout} args={[undefined, undefined, 48]} material={water} frustumCulled={false}>
+        <sphereGeometry args={[1, 6, 4]} />
+      </instancedMesh>
+    </group>
+  );
+}
+
+function MiniMBS({ win, deck }: { win: THREE.Material; deck: THREE.Material }) {
+  return (
+    <group>
+      {[-4.2, 0, 4.2].map((x) => (
+        <group key={x} position={[x, 0, 0]}>
+          <mesh position={[-0.5, 6, 0]} rotation-z={0.05} material={win} castShadow>
+            <boxGeometry args={[1, 12, 1.8]} />
+          </mesh>
+          <mesh position={[0.5, 6, 0]} rotation-z={-0.07} material={win} castShadow>
+            <boxGeometry args={[1, 12, 1.8]} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0.6, 12.4, 0]} material={deck} castShadow>
+        <boxGeometry args={[15.6, 0.55, 2.1]} />
+      </mesh>
+      <mesh position={[8.5, 12.4, 0]} rotation-y={Math.PI / 4} material={deck}>
+        <boxGeometry args={[1.4, 0.5, 1.4]} />
+      </mesh>
+    </group>
+  );
+}
+
+export function SingaporeCorner() {
+  const stone = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f4f1ea", emissive: "#fff4d6", emissiveIntensity: 0.05, roughness: 0.7 }), []);
+  const win = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e8eef5", emissive: "#ffd89a", emissiveIntensity: 0.1, roughness: 0.4, metalness: 0.3 }), []);
+  const deck = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f2f4f7", emissive: "#bfe6ff", emissiveIntensity: 0.05, roughness: 0.5 }), []);
+  useFrame(() => {
+    const n = world.night;
+    stone.emissiveIntensity = 0.05 + n * 0.7;
+    win.emissiveIntensity = 0.1 + n * 1.3;
+    deck.emissiveIntensity = 0.05 + n * 0.9;
+  });
+  const PIER = 95;
+  const [qx, qz] = polarXZ(PIER, 78);
+  const [mx, mz] = polarXZ(PIER + 10, 64);
+  const out = -(PIER * Math.PI) / 180; // local +x points out to sea
+  return (
+    <group>
+      {/* round quay at the end of the pier, linked by a short walkway */}
+      <group position={[qx, 0, qz]} rotation-y={out}>
+        <mesh position={[0, 0.25, 0]} receiveShadow>
+          <cylinderGeometry args={[2.8, 3, 0.7, 28]} />
+          <meshStandardMaterial color="#d9d3c4" roughness={0.9} />
+        </mesh>
+        <mesh position={[-2.6, 0.35, 0]}>
+          <boxGeometry args={[2.4, 0.2, 2]} />
+          <meshStandardMaterial color="#9c6b43" roughness={0.9} />
+        </mesh>
+        <group position={[0, 0.6, 0]} scale={1.15}>
+          <Merlion stone={stone} />
+        </group>
+      </group>
+      <group position={[mx, heightAt(mx, mz) - 0.1, mz]} rotation-y={out + Math.PI / 2} scale={0.75}>
+        <MiniMBS win={win} deck={deck} />
       </group>
     </group>
   );

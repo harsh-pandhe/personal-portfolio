@@ -104,8 +104,26 @@ function Human({ p, clips }: { p: Person; clips: THREE.AnimationClip[] }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mixer]);
+  // KayKit's walk holds the arms out as if carrying weapons; pull them most of the way down
+  const arms = useMemo(() => ["upperarm.l", "upperarm.r"].map((n) => model.getObjectByName(n)).filter(Boolean) as THREE.Bone[], [model]);
+  const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), q: new THREE.Quaternion(), w: new THREE.Quaternion(), p: new THREE.Quaternion() }), []);
   useFrame(({ clock }, dt) => {
     mixer.update(Math.min(dt, 0.1));
+    if (p.plan.kind === "walk") {
+      for (const arm of arms) {
+        const lower = arm.children.find((c) => /lowerarm/.test(c.name));
+        if (!lower || !arm.parent) continue;
+        arm.updateWorldMatrix(true, true);
+        arm.getWorldPosition(tmp.a);
+        lower.getWorldPosition(tmp.b);
+        tmp.b.sub(tmp.a).normalize();
+        tmp.d.set(0, -1, 0).lerp(tmp.b, 0.3).normalize(); // keep a little of the clip's swing
+        tmp.q.setFromUnitVectors(tmp.b, tmp.d);
+        arm.getWorldQuaternion(tmp.w);
+        arm.parent.getWorldQuaternion(tmp.p);
+        arm.quaternion.copy(tmp.p.invert().multiply(tmp.q.multiply(tmp.w)));
+      }
+    }
     const g = group.current;
     if (!g) return;
     const plan = p.plan;

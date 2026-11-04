@@ -96,6 +96,7 @@ export function Skyline() {
       const a = ((-38 + i * 1.5 + (r() - 0.5)) * Math.PI) / 180;
       const d = 148 + r() * 22;
       out.push({ k: Math.floor(r() * BUILDINGS.length), x: Math.cos(a) * d, z: Math.sin(a) * d, s: 5 + r() * 4.5, rot: r() * Math.PI * 2 });
+      // (all of these now stand on the shore mesh below, which spans r 138-200 over this arc)
     }
     return out;
   }, []);
@@ -119,19 +120,57 @@ export function Skyline() {
     [items]
   );
   useEffect(() => () => mats.current.forEach((m) => m.dispose()), []);
+  const shore = useMemo(() => {
+    const ring = (r0: number, r1: number, a0: number, a1: number, y: number) => {
+      const g = new THREE.RingGeometry(r0, r1, 96, 1, a0, a1 - a0);
+      g.rotateX(-Math.PI / 2); // ring lies in XZ; theta runs from +X toward -Z, so flip z below
+      const p = g.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < p.count; i++) p.setZ(i, -p.getZ(i)), p.setY(i, y);
+      g.computeVertexNormals();
+      return g;
+    };
+    const a0 = (-46 * Math.PI) / 180,
+      a1 = (40 * Math.PI) / 180;
+    return {
+      land: ring(140, 205, a0, a1, 0.6),
+      sand: ring(135, 141, a0, a1, 0.35),
+      landMat: new THREE.MeshStandardMaterial({ color: "#8fa98a", roughness: 1, side: THREE.DoubleSide }),
+      sandMat: new THREE.MeshStandardMaterial({ color: "#e8d9ae", roughness: 1, side: THREE.DoubleSide }),
+    };
+  }, []);
+  const towerMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#9fc4dd", metalness: 0.7, roughness: 0.15, emissive: "#ffd27a", emissiveIntensity: 0 }), []);
+  const towerTop = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e9eef3", metalness: 0.5, roughness: 0.3 }), []);
+  const towers = useMemo(() => {
+    const r = rng(77);
+    return Array.from({ length: 7 }, (_, i) => {
+      const a = ((-6 + i * 4.5 + (r() - 0.5) * 2) * Math.PI) / 180,
+        d = 150 + r() * 8;
+      return { x: Math.cos(a) * d, z: Math.sin(a) * d, h: 34 + r() * 30, w: 7 + r() * 3, rot: r() * Math.PI };
+    });
+  }, []);
   useFrame(() => {
     const k = world.night * 0.55;
     for (const m of mats.current) m.emissiveIntensity = k;
+    towerMat.emissiveIntensity = world.night * 0.35;
   });
   return (
     <group>
-      {/* the far shore */}
-      <mesh position={[150, -1.2, -40]} rotation-y={0.25}>
-        <boxGeometry args={[46, 2, 150]} />
-        <meshStandardMaterial color="#8fa98a" roughness={1} />
-      </mesh>
+      {/* the far shore: one curved landmass under the whole skyline arc, with a sand edge */}
+      <mesh geometry={shore.land} material={shore.landMat} receiveShadow />
+      <mesh geometry={shore.sand} material={shore.sandMat} />
+      {/* a trade-centre cluster of glass towers on the waterfront */}
+      {towers.map((t, i) => (
+        <group key={`t${i}`} position={[t.x, 0.6, t.z]} rotation-y={t.rot}>
+          <mesh position={[0, t.h / 2, 0]} material={towerMat} castShadow>
+            <boxGeometry args={[t.w, t.h, t.w * 0.8]} />
+          </mesh>
+          <mesh position={[0, t.h + 1.2, 0]} material={towerTop}>
+            <boxGeometry args={[t.w * 0.6, 2.4, t.w * 0.5]} />
+          </mesh>
+        </group>
+      ))}
       {items.map((it, i) => (
-        <primitive key={i} object={clones[i]} position={[it.x, -0.2, it.z]} scale={it.s} rotation-y={it.rot} />
+        <primitive key={i} object={clones[i]} position={[it.x, 0.6, it.z]} scale={it.s} rotation-y={it.rot} />
       ))}
       {/* a creek bridge on concrete piers */}
       <group position={[118, 0, 38]} rotation-y={-0.9}>

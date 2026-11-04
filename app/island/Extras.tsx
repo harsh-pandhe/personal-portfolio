@@ -92,8 +92,8 @@ function Bull() {
   ];
   return (
     <At id="trading">
-      {/* clear of the approach benches at (±4.9, 3.9) and the building */}
-      <group position={[-7.4, 0, -2.6]}>
+      {/* clear of the approach benches (±4.9, 3.9), the tower and the wall pylons */}
+      <group position={[-10.5, 0, 0.5]}>
         <mesh position={[0, 0.2, 0]}>
           <boxGeometry args={[3.4, 0.4, 2]} />
           <meshStandardMaterial color="#1d2128" roughness={0.6} />

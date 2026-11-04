@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getUI, world } from "./store";
-import { droneShape, globeShape, rocketShape, ropewayShape, textShape, trophyShape } from "./shapes";
+import { droneShape, globeShape, gridTextShape, rocketShape, ropewayShape, trophyShape } from "./shapes";
 import { sfx } from "./audio";
 
 const N = 1400;
@@ -24,7 +24,11 @@ export const GALA_STEPS: { key: string; caption: string; sub: string; color: str
 export const GALA_POS = new THREE.Vector3(-8, 30, 120);
 // The nightly show hangs at a fixed spot over the sea to the north, like a real show over a bay.
 // The overview camera turns to face it at night (Actors.tsx); the show itself never moves.
-export const AMBIENT_POS = new THREE.Vector3(34, 44, -104);
+// above the launch deck on the north shore (LaunchDeck): drones take off from land, not the sea
+const DECK_DEG = -72,
+  DECK_R = 84;
+export const DECK = { x: Math.cos((DECK_DEG * Math.PI) / 180) * DECK_R, z: Math.sin((DECK_DEG * Math.PI) / 180) * DECK_R, top: 1.1, w: 46, d: 24 };
+export const AMBIENT_POS = new THREE.Vector3(DECK.x, 44, DECK.z);
 export const GALA_CAM = { pos: [-4, 16, 56] as [number, number, number], look: [-8, 17, 120] as [number, number, number] };
 
 // the nightly story, in order: launch, the work, Singapore, sign-off, land
@@ -40,16 +44,62 @@ const AMBIENT: { key: string; hold: number; pal: string[] }[] = [
   { key: "hp", hold: 8, pal: ["#00d2ff", "#ffffff"] },
 ];
 
-/** Drones parked on the water in a launch grid (local units; the holder is scaled 5x and sits 34 m up). */
+/** Drones parked in rows on the launch deck (local units: the holder is scaled 6x, 44 m up). */
 function gridShape(n: number) {
   const out = new Float32Array(n * 3);
-  const c = Math.ceil(Math.sqrt(n));
+  const cols = Math.ceil(Math.sqrt(n * 2)),
+    rows = Math.ceil(n / cols);
+  const y = (DECK.top + 0.15 - AMBIENT_POS.y) / 6;
+  // rows follow the deck, which is turned to face out to sea
+  const yaw = Math.atan2(DECK.x, DECK.z),
+    c = Math.cos(yaw),
+    s = Math.sin(yaw);
   for (let i = 0; i < n; i++) {
-    out[i * 3] = ((i % c) / c - 0.5) * 12;
-    out[i * 3 + 1] = -6.6;
-    out[i * 3 + 2] = (Math.floor(i / c) / c - 0.5) * 6;
+    const lx = ((i % cols) / (cols - 1) - 0.5) * ((DECK.w - 4) / 6),
+      lz = (Math.floor(i / cols) / (rows - 1) - 0.5) * ((DECK.d - 4) / 6);
+    out[i * 3] = lx * c + lz * s;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = -lx * s + lz * c;
   }
   return out;
+}
+
+/** The concrete launch deck on stilts off the north shore, with a walkway back to the beach. */
+export function LaunchDeck() {
+  const lamp = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffd23f", emissive: "#ffd23f", emissiveIntensity: 0.3 }), []);
+  useFrame(() => (lamp.emissiveIntensity = 0.3 + world.night * 2.5));
+  const yaw = Math.atan2(DECK.x, DECK.z);
+  return (
+    <group position={[DECK.x, 0, DECK.z]} rotation-y={yaw}>
+      <mesh position={[0, DECK.top - 0.3, 0]} receiveShadow castShadow>
+        <boxGeometry args={[DECK.w, 0.6, DECK.d]} />
+        <meshStandardMaterial color="#b9bec6" roughness={0.9} />
+      </mesh>
+      {/* hazard edge and corner beacons */}
+      <mesh position={[0, DECK.top + 0.01, 0]} rotation-x={-Math.PI / 2}>
+        <ringGeometry args={[DECK.d / 2 - 0.6, DECK.d / 2 - 0.3, 4, 1, Math.PI / 4]} />
+        <meshBasicMaterial color="#ffd23f" />
+      </mesh>
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sz) => (
+          <group key={`${sx}${sz}`} position={[sx * (DECK.w / 2 - 0.6), 0, sz * (DECK.d / 2 - 0.6)]}>
+            <mesh position={[0, DECK.top + 0.5, 0]} material={lamp}>
+              <cylinderGeometry args={[0.18, 0.18, 1, 10]} />
+            </mesh>
+            <mesh position={[0, -1.2, 0]}>
+              <cylinderGeometry args={[0.5, 0.5, 4, 10]} />
+              <meshStandardMaterial color="#8f949b" />
+            </mesh>
+          </group>
+        ))
+      )}
+      {/* walkway to the shore */}
+      <mesh position={[0, DECK.top - 0.35, -(DECK.d / 2 + 6)]} receiveShadow>
+        <boxGeometry args={[3, 0.3, 12]} />
+        <meshStandardMaterial color="#9c6b43" roughness={0.9} />
+      </mesh>
+    </group>
+  );
 }
 
 /** Six tight clusters on a ring: they orbit in the frame loop. */
@@ -149,7 +199,7 @@ export function LightShow() {
     const build = () => {
       shapes.current = {
         grid: gridShape(N),
-        hp: textShape(N, "HP", 7),
+        hp: gridTextShape(N, ["HARSH", "PANDHE"], 10),
         trophy: trophyShape(N),
         drone: droneShape(N),
         rocket: rocketShape(N),

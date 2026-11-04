@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
+import { heightAt, ISLAND_EDGE, MARS_C, ridgeTop } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
 import { resolve } from "./colliders";
@@ -225,11 +225,12 @@ export function CameraRig() {
       const ox = out.x * Math.cos(orbit) - out.y * Math.sin(orbit);
       const oz = out.x * Math.sin(orbit) + out.y * Math.cos(orbit);
       // the zones grew with the island: frame each one whole, tall ones (stadium, trading wall) from higher up
-      const dist = id === "hq" ? 34 : id === "ropeway" ? 40 : id === "arena" ? 40 : id === "trading" ? 32 : 28;
-      const lift = id === "hq" ? 16 : id === "arena" ? 18 : id === "trading" ? 17 : 12;
+      const dist = id === "hq" ? 34 : id === "ropeway" ? 40 : id === "arena" ? 40 : id === "marsyard" ? 44 : id === "trading" ? 32 : 28;
+      const lift = id === "hq" ? 16 : id === "arena" ? 18 : id === "marsyard" ? 24 : id === "trading" ? 17 : 12;
       // look at the zone from the island-centre side, slightly off-axis, so the billboard faces us
       tmp.set(x - ox * dist * 0.9 + oz * 6, y + lift, zz - oz * dist * 0.9 - ox * 6);
       tmp2.set(x, y + (id === "hq" ? 5 : id === "trading" ? 11 : 2.5), zz);
+      if (id === "marsyard") tmp2.set(MARS_C[0], y + 1, MARS_C[1]);
       if (id === "ropeway") {
         // frame the whole line: aim between the valley station and the peaks, from higher up
         const [rx, rz] = ridgeTop();

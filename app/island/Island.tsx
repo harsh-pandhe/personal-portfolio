@@ -9,10 +9,10 @@ import Decor from "./Decor";
 import Paths from "./Paths";
 import Extras from "./Extras";
 import { CameraRig, Dust, MEDALS, Medals, Player, TargetMarker, Teammates } from "./Actors";
-import { Fireworks, LightShow, Searchlights } from "./Show";
+import { Fireworks, LaunchDeck, LightShow, Searchlights } from "./Show";
 import People from "./People";
 import { Skyline, Traffic } from "./City";
-import { JourneyPlaza, Singapore } from "./Plaza";
+import { JourneyPlaza, Singapore, SingaporeCorner } from "./Plaza";
 import { Rain, WeatherController } from "./Weather";
 import { endGala, GalaOverlay, startGala, startStory, StoryOverlay } from "./Story";
 import { setMusic, setSound, sfx } from "./audio";
@@ -75,6 +75,7 @@ function Scene() {
         <Player />
         <TargetMarker />
         <LightShow />
+        <LaunchDeck />
         <JourneyPlaza />
       </Suspense>
       {/* everything decorative mounts after the hero has painted, a piece at a time, so the
@@ -99,6 +100,7 @@ function Scene() {
       <Deferred step={6}>
         <Skyline />
         <Singapore />
+        <SingaporeCorner />
       </Deferred>
       <Deferred step={7}>
         <Fireworks />

@@ -355,3 +355,45 @@ export function rocketShape(n: number): Float32Array {
   }
   return out;
 }
+
+/** Text for a drone show: drones sit on an even grid inside the letter strokes (not random
+ *  samples), so the words read cleanly. `lines` are stacked and centred. */
+export function gridTextShape(n: number, lines: string[], width = 10): Float32Array {
+  const out = new Float32Array(n * 3);
+  const W = 1200,
+    LH = 220,
+    H = LH * lines.length;
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `800 180px ${getComputedStyle(document.body).fontFamily || "Arial Black, sans-serif"}`;
+  lines.forEach((l, i) => ctx.fillText(l, W / 2, LH * (i + 0.5), W * 0.96));
+  const data = ctx.getImageData(0, 0, W, H).data;
+  const inside = (x: number, y: number) => data[(Math.floor(y) * W + Math.floor(x)) * 4 + 3] > 128;
+  // pick the grid step that fills the strokes with about n drones
+  let step = 4,
+    pts: [number, number][] = [];
+  for (let st = 3; st < 40; st += 0.5) {
+    const p: [number, number][] = [];
+    for (let y = st / 2; y < H; y += st) for (let x = st / 2; x < W; x += st) if (inside(x, y)) p.push([x, y]);
+    if (p.length <= n) {
+      pts = p;
+      step = st;
+      break;
+    }
+  }
+  const r = rand(3);
+  for (let i = 0; i < n; i++) {
+    // any spare drones double up on a stroke point, nudged a hair so they don't z-fight
+    const [x, y] = pts[i < pts.length ? i : Math.floor(r() * pts.length)];
+    const j = i < pts.length ? 0 : step * 0.25;
+    out[i * 3] = ((x + (r() - 0.5) * j) / W - 0.5) * width;
+    out[i * 3 + 1] = -((y + (r() - 0.5) * j) / H - 0.5) * width * (H / W);
+    out[i * 3 + 2] = 0;
+  }
+  return out;
+}

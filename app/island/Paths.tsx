@@ -75,15 +75,21 @@ function Roads() {
       out.push({ g: ribbon(circle(ROAD_R + s * 2.42, 220), 0.25, 0.14, true), m: curb });
       out.push({ g: ribbon(circle(ROAD_R + s * 3.2, 220), 1.3, 0.12, true), m: paving });
     }
-    // roundabout around HQ
-    out.push({ g: ribbon(circle(8.2, 90), 2.2, 0.05, true), m: asphalt });
-    out.push({ g: ribbon(circle(9.4, 90), 0.2, 0.09, true), m: curb });
+    // a paved promenade ring around the fountain plaza
+    out.push({ g: ribbon(circle(13.4, 120), 2.6, 0.05, true), m: paving });
+    out.push({ g: ribbon(circle(14.75, 120), 0.2, 0.1, true), m: curb });
     // spokes: paved promenades from the roundabout to each zone
     for (const z of ZONES) {
       if (!z.radius) continue;
       const [x, zz] = zonePos(z);
       const u = new THREE.Vector2(x, zz).normalize();
-      out.push({ g: ribbon(line(u.x * 9.3, u.y * 9.3, x * 0.8, zz * 0.8), 2.3, 0.06), m: paving });
+      // wide promenade with kerbed edges
+      const pts = line(u.x * 13.4, u.y * 13.4, x * 0.8, zz * 0.8);
+      out.push({ g: ribbon(pts, 4.2, 0.06), m: paving });
+      for (const s of [-1, 1]) {
+        const off = pts.map((p) => new THREE.Vector2(p.x - u.y * s * 2.15, p.y + u.x * s * 2.15));
+        out.push({ g: ribbon(off, 0.18, 0.12), m: curb });
+      }
     }
     return out;
   }, []);

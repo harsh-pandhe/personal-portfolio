@@ -12,6 +12,10 @@ const ss = (a: number, b: number, x: number) => {
 
 const zoneXZ = ZONES.map((z) => ({ id: z.id, p: zonePos(z) }));
 const MARS = zoneXZ.find((z) => z.id === "marsyard")!.p;
+// the IRoC-U yard is centred 9 m outward from the zone point, toward the coast
+const ML = Math.hypot(MARS[0], MARS[1]);
+export const MARS_C: [number, number] = [MARS[0] + (MARS[0] / ML) * 9, MARS[1] + (MARS[1] / ML) * 9];
+export const MARS_R = 19;
 const ROPE = zoneXZ.find((z) => z.id === "ropeway")!.p;
 // the ridge rises behind the ropeway valley station, toward the sea
 const RIDGE: [number, number] = [ROPE[0] * 1.42, ROPE[1] * 1.42];
@@ -51,7 +55,7 @@ export function roadMask(x: number, z: number) {
     d = Math.min(d, distSeg(x, z, 0, 0, zz.p[0] * 0.82, zz.p[1] * 0.82));
   }
   // the ring road (with sidewalks) is wider than the spokes
-  return 1 - ss(Math.abs(r - ROAD_R) === d ? 3.9 : 1.4, Math.abs(r - ROAD_R) === d ? 4.8 : 2.2, d);
+  return 1 - ss(Math.abs(r - ROAD_R) === d ? 3.9 : 2.4, Math.abs(r - ROAD_R) === d ? 4.8 : 3.2, d);
 }
 
 export function heightAt(x: number, z: number) {
@@ -77,10 +81,10 @@ export function heightAt(x: number, z: number) {
     const w = zz.id === "arena" ? 1 - ss(14, 17.5, d) : 1 - ss(9.5, 14, d);
     h = h + (PLATEAU - h) * w * (zz.id === "ropeway" ? 0.85 : 1);
   }
+  // the Mars yard: one big flat test field, with a little dune roll
+  const dmc = Math.hypot(x - MARS_C[0], z - MARS_C[1]);
+  h = h + (PLATEAU + 0.12 * Math.sin(x * 0.7) * Math.sin(z * 0.6) - h) * (1 - ss(MARS_R - 1, MARS_R + 3, dmc));
   h = h + (PLATEAU - h) * roadMask(x, z) * 0.9;
-  // Mars yard crater
-  const dm = Math.hypot(x - MARS[0] - 3, z - MARS[1] + 3);
-  if (dm < 3.2) h -= Math.cos((dm / 3.2) * Math.PI * 0.5) * 0.8;
   // shore falloff into the sea
   const edge = ss(ISLAND_EDGE - 6, ISLAND_EDGE + 6, r);
   h = h * (1 - edge) + -2.5 * edge;
@@ -118,10 +122,10 @@ export function buildTerrain(size = 190, seg = 260) {
     for (const zz of zoneXZ) {
       const d = Math.hypot(x - zz.p[0], z - zz.p[1]);
       if (zz.id === "marsyard") {
-        const k = 1 - ss(6.5, 9.5, d);
+        const k = 1 - ss(MARS_R - 2.5, MARS_R + 0.5, Math.hypot(x - MARS_C[0], z - MARS_C[1]));
         c.lerp(n > 0.5 ? C.mars : C.mars2, k);
       } else if (zz.id !== "ropeway" && zz.id !== "swarm") {
-        c.lerp(C.plaza, (1 - ss(zz.id === "arena" ? 12.5 : 5.8, zz.id === "arena" ? 13.5 : 6.8, d)) * 0.9);
+        c.lerp(C.plaza, (1 - ss(zz.id === "arena" ? 12.5 : 8.6, zz.id === "arena" ? 13.5 : 9.8, d)) * 0.9);
       }
     }
     c.lerp(C.road, roadMask(x, z) * 0.95);
@@ -152,6 +156,7 @@ export function isFreeLand(x: number, z: number) {
   if (r > ISLAND_EDGE - 5 || r < 11) return false;
   if (roadMask(x, z) > 0.05) return false;
   for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < (zz.id === "arena" ? 17 : 13)) return false;
+  if (Math.hypot(x - MARS_C[0], z - MARS_C[1]) < MARS_R + 2) return false;
   const [rx, rz] = RIDGE;
   if (distSeg(x, z, ROPE[0], ROPE[1], rx, rz) < 3) return false;
   return true;

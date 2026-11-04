@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { heightAt, ISLAND_EDGE, rng, ROAD_R } from "./terrain";
+import { heightAt, ISLAND_EDGE, MARS_C, rng, ROAD_R } from "./terrain";
 import { zonePos, ZONES } from "./zones";
 
 const m4 = new THREE.Matrix4();
@@ -182,14 +182,13 @@ function BeachRocks() {
 function Rover() {
   const g = useRef<THREE.Group>(null);
   const wheels = useRef<THREE.Group>(null);
-  const z = ZONES.find((zz) => zz.id === "marsyard")!;
-  const [cx, cz] = zonePos(z);
+  const [cx, cz] = MARS_C;
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime * 0.22;
-    const x = cx + Math.cos(t) * 5.8,
-      zz = cz + Math.sin(t * 2) * 2.6;
-    const nx = cx + Math.cos(t + 0.02) * 5.8,
-      nz = cz + Math.sin((t + 0.02) * 2) * 2.6;
+    const x = cx + Math.cos(t) * 10,
+      zz = cz + Math.sin(t * 2) * 4.5;
+    const nx = cx + Math.cos(t + 0.02) * 10,
+      nz = cz + Math.sin((t + 0.02) * 2) * 4.5;
     if (g.current) {
       g.current.position.set(x, heightAt(x, zz) + 0.05, zz);
       g.current.rotation.y = Math.atan2(nx - x, nz - zz);

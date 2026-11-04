@@ -5,7 +5,8 @@ import { Html, useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { ARENA } from "./colliders";
+import { ARENA, zoneToWorld } from "./colliders";
+import { MarsYard } from "./MarsYard";
 import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R, ROPE_PEAKS } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
@@ -24,7 +25,7 @@ export const M = {
 };
 
 /** Emissive material whose glow follows night mode. */
-function useGlow(color: string, day = 0.25, night = 2.2) {
+export function useGlow(color: string, day = 0.25, night = 2.2) {
   const m = useMemo(() => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: day, roughness: 0.4 }), [color, day]);
   useFrame(() => {
     m.emissiveIntensity = day + (night - day) * world.night;
@@ -32,7 +33,7 @@ function useGlow(color: string, day = 0.25, night = 2.2) {
   return m;
 }
 
-function fontFamily() {
+export function fontFamily() {
   if (typeof document === "undefined") return "sans-serif";
   return getComputedStyle(document.body).fontFamily || "sans-serif";
 }
@@ -133,11 +134,14 @@ export function Billboard({ id, pos, rotY, scale = 1 }: { id: ZoneId; pos: [numb
     }
   });
   const h = hoverHandlers(id);
+  // sit on the ground under the board itself, not the zone centre's height
+  const y = useMemo(() => pos[1] + groundOffset(id, pos[0], pos[2]), [id, pos]);
   return (
-    <group ref={g} position={pos} rotation-y={rotY} scale={scale}>
+    <group ref={g} position={[pos[0], y, pos[2]]} rotation-y={rotY} scale={scale}>
       {[-2.2, 2.2].map((x) => (
-        <mesh key={x} position={[x, 1.4, -0.32]} material={M.metal} castShadow>
-          <boxGeometry args={[0.18, 2.8, 0.18]} />
+        // posts run 1 m into the ground so they stay planted on a slope
+        <mesh key={x} position={[x, 0.9, -0.32]} material={M.metal} castShadow>
+          <boxGeometry args={[0.18, 3.8, 0.18]} />
         </mesh>
       ))}
       <mesh position={[0, 3.6, -0.12]} material={frame} castShadow>
@@ -190,7 +194,14 @@ function ZoneLabel({ id, y }: { id: ZoneId; y: number }) {
 }
 
 /** Place a zone group on the terrain, facing the island centre. */
-function ZoneGroup({ id, children }: { id: ZoneId; children: React.ReactNode }) {
+/** Ground height at a zone-local point, relative to the zone centre (ZoneGroup's origin). */
+function groundOffset(id: ZoneId, lx: number, lz: number) {
+  const [x, z] = zonePos(zoneById[id]);
+  const [wx, wz] = id === "hq" ? [lx, lz] : zoneToWorld(id, lx, lz);
+  return heightAt(wx, wz) - heightAt(x, z);
+}
+
+export function ZoneGroup({ id, children }: { id: ZoneId; children: React.ReactNode }) {
   const z = zoneById[id];
   const [x, zz] = zonePos(z);
   const face = Math.atan2(-x, -zz); // +z of the group points at HQ
@@ -614,98 +625,6 @@ export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number 
   );
 }
 
-function MarsYard() {
-  const quad = useRef<THREE.Group>(null);
-  const scan = useRef<THREE.Mesh>(null);
-  const padRing = useGlow("#ff5a36", 0.6, 3);
-  const rocks = useMemo(() => {
-    const r = rng(11);
-    return Array.from({ length: 22 }, () => ({
-      p: [(r() - 0.5) * 15, 0.15, (r() - 0.5) * 13] as [number, number, number],
-      s: 0.2 + r() * 0.55,
-      rot: r() * 3,
-    })).filter((q) => Math.hypot(q.p[0], q.p[2] - 1) > 3.6);
-  }, []);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    // flight plan: take off, survey loop, land, rest
-    const cyc = t % 22;
-    let y = 0.55,
-      x = 0,
-      z = 1,
-      yaw = 0;
-    if (cyc < 3) y = 0.55 + (cyc / 3) * 4.5;
-    else if (cyc < 15) {
-      const a = ((cyc - 3) / 12) * Math.PI * 2;
-      x = Math.sin(a) * 4.5;
-      z = 1 + Math.cos(a) * 3.5 - 3.5;
-      y = 5 + Math.sin(a * 2) * 0.6;
-      yaw = -a;
-    } else if (cyc < 18) y = 5 - ((cyc - 15) / 3) * 4.45;
-    if (cyc >= 3 && cyc < 15) z += 3.5;
-    if (quad.current) {
-      quad.current.position.set(x, y, z);
-      quad.current.rotation.y = yaw;
-      quad.current.rotation.z = Math.sin(t * 2.1) * 0.04;
-    }
-    if (scan.current) {
-      const k = (t % 2.2) / 2.2;
-      scan.current.scale.setScalar(0.3 + k * 6);
-      (scan.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.55;
-      scan.current.position.set(x, 0.12, z);
-    }
-  });
-  return (
-    <ZoneGroup id="marsyard">
-      {/* landing pad */}
-      <mesh position={[0, 0.1, 1]} material={M.dark} receiveShadow>
-        <cylinderGeometry args={[2.4, 2.5, 0.2, 48]} />
-      </mesh>
-      <mesh position={[0, 0.21, 1]} rotation-x={-Math.PI / 2} material={padRing}>
-        <ringGeometry args={[2.0, 2.18, 48]} />
-      </mesh>
-      {[
-        [-0.55, 0, 0.18, 1.5],
-        [0.55, 0, 0.18, 1.5],
-        [0, 0, 1.1, 0.18],
-      ].map(([x, , w, d], i) => (
-        <mesh key={i} position={[x, 0.22, 1]} rotation-x={-Math.PI / 2}>
-          <planeGeometry args={[w, d]} />
-          <meshBasicMaterial color="#ffffff" />
-        </mesh>
-      ))}
-      <mesh ref={scan} rotation-x={-Math.PI / 2}>
-        <ringGeometry args={[0.95, 1, 64]} />
-        <meshBasicMaterial color="#ff5a36" transparent opacity={0.5} depthWrite={false} />
-      </mesh>
-      <group ref={quad}>
-        <group rotation-y={Math.PI / 4}>
-          <Quad />
-        </group>
-      </group>
-      {/* docking station */}
-      <group position={[-5.2, 0, -3]}>
-        <mesh position={[0, 0.8, 0]} material={M.white} castShadow>
-          <boxGeometry args={[2.6, 1.6, 2.2]} />
-        </mesh>
-        <mesh position={[0, 1.75, 0]} rotation-z={0.25} material={M.metal} castShadow>
-          <boxGeometry args={[3.0, 0.12, 2.4]} />
-        </mesh>
-        <mesh position={[0, 0.9, 1.12]} material={padRing}>
-          <boxGeometry args={[1.6, 0.08, 0.02]} />
-        </mesh>
-      </group>
-      {rocks.map((q, i) => (
-        <mesh key={i} position={q.p} rotation={[q.rot, q.rot * 2, 0]} scale={q.s} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#8a3a1f" roughness={1} flatShading />
-        </mesh>
-      ))}
-      <Billboard id="marsyard" pos={[4.6, 0, 6]} rotY={-0.5} />
-    </ZoneGroup>
-  );
-}
-
 /* Swarm Field: six TurtleBot-style robots covering a 16x16 grid with frontier targets, a separation
    (CBF-like) filter and comm links; one robot fails mid-run and reboots, the rest re-plan. */
 const SW_G = 16,
@@ -925,7 +844,7 @@ function Swarm() {
           </mesh>
         );
       })}
-      <Billboard id="swarm" pos={[-half - 2.2, 0, half - 1]} rotY={1.0} />
+      <Billboard id="swarm" pos={[2, 0, half + 4.2]} rotY={0} />
     </ZoneGroup>
   );
 }
@@ -1227,11 +1146,21 @@ function Trading() {
       <mesh position={[0, 6.2, -1.5]} material={M.metal}>
         <boxGeometry args={[9.4, 0.3, 4.4]} />
       </mesh>
-      {/* the big wall on the roof, on two steel legs */}
-      {[-6.5, 6.5].map((x) => (
-        <mesh key={x} position={[x, 7.5, -1.4]} material={M.metal} castShadow>
-          <boxGeometry args={[0.4, 3, 0.4]} />
-        </mesh>
+      {/* the big wall stands on two steel pylons from the ground either side of the tower */}
+      {[-7.6, 7.6].map((x) => (
+        <group key={x} position={[x, 0, -1.4]}>
+          <mesh position={[0, 6.6, 0]} material={M.dark} castShadow>
+            <boxGeometry args={[0.7, 14, 0.7]} />
+          </mesh>
+          <mesh position={[0, 0.25, 0]} material={M.white} receiveShadow>
+            <boxGeometry args={[1.6, 0.5, 1.6]} />
+          </mesh>
+          {[2.5, 5.5].map((y) => (
+            <mesh key={y} position={[x < 0 ? 1.55 : -1.55, y, 0]} rotation-z={x < 0 ? 0.9 : -0.9} material={M.metal}>
+              <boxGeometry args={[0.18, 3.9, 0.18]} />
+            </mesh>
+          ))}
+        </group>
       ))}
       <mesh position={[0, 12.6, -1.4]} material={M.dark} castShadow>
         <boxGeometry args={[16.8, 8.8, 0.4]} />
