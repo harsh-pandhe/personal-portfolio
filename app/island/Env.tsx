@@ -14,28 +14,33 @@ export function SkyDome() {
         side: THREE.BackSide,
         depthWrite: false,
         fog: false,
-        uniforms: { uNight: { value: 0 } },
+        uniforms: { uNight: { value: 0 }, uGrey: { value: 0 }, uFlash: { value: 0 } },
         vertexShader: `varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
         fragmentShader: `
-          varying vec3 vP; uniform float uNight;
+          varying vec3 vP; uniform float uNight; uniform float uGrey; uniform float uFlash;
           float hash(vec3 p){ p = fract(p*0.3183099+.1); p*=17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
           void main(){
             float h = clamp(vP.y, -0.2, 1.0);
             vec3 dayTop = vec3(0.16,0.62,0.98), dayHor = vec3(0.80,0.95,1.0);
             vec3 nTop = vec3(0.01,0.02,0.07), nHor = vec3(0.07,0.10,0.25);
             vec3 day = mix(dayHor, dayTop, pow(max(h,0.0), 0.55));
+            // overcast / monsoon: wash the blue towards a heavy grey
+            day = mix(day, mix(vec3(0.74,0.79,0.84), vec3(0.47,0.53,0.6), pow(max(h,0.0),0.6)), uGrey);
             vec3 night = mix(nHor, nTop, pow(max(h,0.0), 0.5));
             vec3 col = mix(day, night, uNight);
             // stars
             float s = step(0.9975, hash(floor(vP*420.0))) * smoothstep(0.05, 0.4, h);
-            col += vec3(s) * uNight;
+            col += vec3(s) * uNight * (1.0 - uGrey);
+            col += vec3(0.75,0.8,1.0) * uFlash;
             gl_FragColor = vec4(col, 1.0);
           }`,
       }),
     []
   );
-  useFrame(() => {
+  useFrame(({ scene }) => {
     mat.uniforms.uNight.value = world.night;
+    mat.uniforms.uGrey.value = Math.min(1, world.rain * 0.85 + Math.max(0, world.cloud - 0.5) * 0.5);
+    mat.uniforms.uFlash.value = (scene.userData.flash as number) || 0;
   });
   return (
     <mesh material={mat} renderOrder={-1}>
@@ -243,7 +248,8 @@ export function Clouds() {
   }, [parts]);
   useFrame((_, dt) => {
     if (ref.current) ref.current.rotation.y += dt * 0.004;
-    mat.opacity = 0.92 - world.night * 0.75;
+    mat.opacity = 0.92 - world.night * 0.9;
+    mat.color.setScalar(1 - world.rain * 0.45);
   });
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, parts.length]} material={mat} frustumCulled={false}>
@@ -260,12 +266,20 @@ export function Lights() {
   const sunCol = useMemo(() => new THREE.Color("#fff3e0"), []);
   useFrame(({ scene }) => {
     const n = world.night;
+    const dim = 1 - world.rain * 0.55 - Math.max(0, world.cloud - 0.5) * 0.3;
+    const flash = (scene.userData.flash as number) || 0;
     if (sun.current) {
-      sun.current.intensity = 2.6 * (1 - n) + 0.35 * n;
+      sun.current.intensity = (2.6 * (1 - n) + 0.35 * n) * dim + flash * 2;
       sun.current.color.copy(sunCol).lerp(moonCol, n);
     }
-    if (hemi.current) hemi.current.intensity = 1.25 * (1 - n) + 0.25 * n;
-    if (scene.fog) (scene.fog as THREE.Fog).color.setRGB(0.8 - 0.74 * n, 0.93 - 0.84 * n, 1 - 0.78 * n);
+    if (hemi.current) hemi.current.intensity = (1.25 * (1 - n) + 0.25 * n) * (0.75 + dim * 0.25) + flash * 1.5;
+    if (scene.fog) {
+      const f = scene.fog as THREE.Fog;
+      const g = world.rain;
+      f.color.setRGB(0.8 - 0.74 * n - 0.12 * g * (1 - n), 0.93 - 0.84 * n - 0.16 * g * (1 - n), 1 - 0.78 * n - 0.2 * g * (1 - n));
+      f.near = 110 - g * 70;
+      f.far = 330 - g * 170;
+    }
   });
   return (
     <>

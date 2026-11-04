@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { setUI, useUI, world } from "./store";
+import { setMusic, setSound, sfx } from "./audio";
 import { zonePos, ZONES } from "./zones";
 import { MEDALS } from "./Actors";
 import { ISLAND_EDGE, ROAD_R } from "./terrain";
@@ -108,6 +110,8 @@ const KEYS: [string, string][] = [
   ["E", "Open the place you're standing at"],
   ["0 – 9", "Fast travel"],
   ["T", "Guided tour (← → to step)"],
+  ["M", "Watch the story"],
+  ["G", "Gala night: the drone show"],
   ["L", "Day / night"],
   ["O", "Overview"],
   ["Esc", "Close / back"],
@@ -141,4 +145,120 @@ export function Help() {
       </div>
     </div>
   );
+}
+
+/* ---------------- settings sheet ---------------- */
+type Saved = { sound: boolean; music: boolean; weatherMode: "live" | "clear" | "monsoon"; timeMode: "manual" | "live" };
+
+function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return (
+    <div className="inline-flex rounded-full bg-neutral-100 p-1">
+      {options.map(([v, label]) => (
+        <button
+          key={v}
+          onClick={() => onChange(v)}
+          className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition ${value === v ? "bg-white text-neutral-900 shadow" : "text-neutral-500 hover:text-neutral-800"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Settings() {
+  const ui = useUI();
+  // restore saved preferences once (sound always starts off: browsers need a click first)
+  useEffect(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem("hp-settings") || "{}") as Partial<Saved>;
+      setUI({ music: !!s.music, weatherMode: s.weatherMode ?? "live", timeMode: s.timeMode ?? "manual" });
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("hp-settings", JSON.stringify({ music: ui.music, weatherMode: ui.weatherMode, timeMode: ui.timeMode }));
+    } catch {}
+  }, [ui.music, ui.weatherMode, ui.timeMode]);
+  const lite = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
+  const w = ui.weather;
+  return (
+    <div
+      onClick={() => setUI({ settings: false })}
+      className={`fixed inset-0 z-[60] grid place-items-center bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${ui.settings ? "opacity-100" : "pointer-events-none opacity-0"}`}
+    >
+      <div onClick={(e) => e.stopPropagation()} className={`w-[520px] rounded-[30px] bg-white p-8 text-neutral-900 shadow-2xl transition-transform duration-500 ${ui.settings ? "scale-100" : "scale-95"}`}>
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-[36px] font-semibold tracking-[-0.05em]">Settings</h2>
+          <button onClick={() => setUI({ settings: false })} className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 hover:text-black">
+            Esc
+          </button>
+        </div>
+        <div className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200">
+          <Row label="Sound" hint="Waves, birds, rain and interface sounds">
+            <Seg value={ui.sound ? "on" : "off"} options={[["off", "Off"], ["on", "On"]]} onChange={(v) => setUI({ sound: v === "on" })} />
+          </Row>
+          <Row label="Music" hint="A lo-fi loop; brighter during the gala">
+            <Seg value={ui.music ? "on" : "off"} options={[["off", "Off"], ["on", "On"]]} onChange={(v) => setUI({ music: v === "on", sound: v === "on" ? true : ui.sound })} />
+          </Row>
+          <Row label="Weather" hint={w ? `Navi Mumbai now: ${w.icon} ${w.label}, ${w.temp}°C` : "Live data from Open-Meteo, when it loads"}>
+            <Seg value={ui.weatherMode} options={[["live", "Live"], ["clear", "Clear"], ["monsoon", "Monsoon"]]} onChange={(v) => setUI({ weatherMode: v })} />
+          </Row>
+          <Row label="Time of day" hint="Follow the clock in Navi Mumbai (IST)">
+            <Seg value={ui.timeMode} options={[["manual", "Manual"], ["live", "Live IST"]]} onChange={(v) => setUI({ timeMode: v })} />
+          </Row>
+          <Row label="Quality" hint="Lite drops shadows, grass and resolution">
+            <Seg
+              value={lite ? "lite" : "high"}
+              options={[["high", "High"], ["lite", "Lite"]]}
+              onChange={(v) => {
+                const u = new URL(window.location.href);
+                if (v === "lite") u.searchParams.set("lite", "");
+                else u.searchParams.delete("lite");
+                window.location.href = u.toString();
+              }}
+            />
+          </Row>
+        </div>
+        <Link href="/read" className="mt-6 flex items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 text-[14px] font-medium hover:bg-neutral-200">
+          Read everything as a plain page <span>→</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-6 py-4">
+      <div>
+        <div className="text-[15px] font-semibold tracking-[-0.01em]">{label}</div>
+        <div className="text-[13px] text-neutral-500">{hint}</div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Bridges UI state to the audio engine, and plays interface sounds on state changes. */
+export function SoundEffects() {
+  const ui = useUI();
+  const prevOpen = useRef(ui.open);
+  const prevMedals = useRef(ui.medals.length);
+  useEffect(() => setSound(ui.sound), [ui.sound]);
+  useEffect(() => setMusic(ui.music), [ui.music]);
+  useEffect(() => {
+    if (ui.open && !prevOpen.current) sfx("open");
+    else if (!ui.open && prevOpen.current) sfx("close");
+    else if (ui.open !== prevOpen.current) sfx("click");
+    prevOpen.current = ui.open;
+  }, [ui.open]);
+  useEffect(() => {
+    if (ui.medals.length > prevMedals.current) sfx("medal");
+    prevMedals.current = ui.medals.length;
+  }, [ui.medals.length]);
+  useEffect(() => {
+    if (ui.mode === "tour") sfx("click");
+  }, [ui.tour, ui.mode]);
+  return null;
 }

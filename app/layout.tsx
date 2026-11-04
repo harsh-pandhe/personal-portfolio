@@ -31,8 +31,9 @@ export const metadata: Metadata = {
     description:
       "Drones that navigate without GPS, swarms that cover ground safely, and research that reports what didn't work.",
     type: "website",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Harsh Pandhe — Mission Island" }],
   },
-  twitter: { card: "summary_large_image", creator: "@HarshPandhe" },
+  twitter: { card: "summary_large_image", creator: "@HarshPandhe", images: ["/og.jpg"] },
 };
 
 export const viewport = { themeColor: "#05060a" };

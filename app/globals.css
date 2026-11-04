@@ -3,101 +3,29 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 250 80% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 250 60% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 250 80% 60%;
-    --radius: 0.75rem;
-    --heatmap-zero: rgb(51, 51, 51);
+  html {
+    color-scheme: dark;
   }
-
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
+    @apply bg-[#0a0f1d] text-white antialiased;
   }
-
   ::selection {
-    @apply bg-violet-500/30;
+    background: #2d5bff;
+    color: #fff;
   }
 }
 
-@layer utilities {
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400;
-  }
-
-  .glow {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05);
-  }
-
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
-  }
+/* keyboard focus is always visible */
+:focus-visible {
+  outline: 2px solid #2d5bff;
+  outline-offset: 3px;
 }
 
-.loader-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: #fdc800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loader-window {
-  width: min(420px, 70vw);
-  height: min(420px, 70vw);
-}
-
-.loader-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.loader-text {
-  font-size: 0.85rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #141414;
-  font-weight: 600;
-}
-/* 3D hero orbit ring */
-@keyframes orbit-spin {
-  from { transform: rotateX(-14deg) rotateY(0deg); }
-  to { transform: rotateX(-14deg) rotateY(360deg); }
-}
-.orbit-ring { animation: orbit-spin 40s linear infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .orbit-ring { animation: none; }
-}
-
-/* film grain overlay */
-.grain {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-html.custom-cursor,
-html.custom-cursor * {
-  cursor: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

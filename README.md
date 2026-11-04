@@ -1,146 +1,40 @@
-# ✨ Personal Portfolio Website
+# Harsh Pandhe — Mission Island
 
-<div align="center">
+A portfolio you can fly through. A walkable 3D island built with Next.js and React Three Fiber, where every place is a piece of Harsh's work: the Smart India Hackathon arena, the ISRO IRoC-U Mars yard, the MARS swarm field, Doppelmayr's ropeway ridge, the AlgoTrade floor, a research library of six SSRN papers, Project Morpheus, a workshop of 25 builds, and home.
 
-[![Next.js](https://img.shields.io/badge/Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+- **Explore:** WASD or click to walk, E to open a place, 0–9 to fast-travel, `?` for every control.
+- **Watch the story (M):** nine cinematic chapters, ending in the gala.
+- **Gala night (G):** a drone show with formations, fireworks, searchlights and a crowd on the beach.
+- **Live Navi Mumbai:** weather from Open-Meteo (rain, cloud cover, monsoon mode) and an optional live IST day/night.
+- **Sound:** waves, birds, crickets, rain, interface sounds and a lo-fi loop, all synthesised with WebAudio (off until you turn it on).
+- **Read mode:** every case study on one plain page at `/read`; visitors without WebGL are sent there automatically.
 
-<h3>A modern, interactive portfolio with stunning animations and seamless user experience ✨</h3>
-
-[🌐 Live Demo](#) · [🐛 Report Bug](#) · [✨ Request Feature](#)
-
-</div>
-
-## � Features that Spark Joy
-
-<table>
-  <tr>
-    <td>
-      <h3>🌌 Immersive Animations</h3>
-      <ul>
-        <li>✨ Shooting stars background</li>
-        <li>🌊 Dynamic wave effects</li>
-        <li>🚀 Smooth page transitions</li>
-      </ul>
-    </td>
-    <td>
-      <h3>🎯 Interactive Elements</h3>
-      <ul>
-        <li>🛟 Floating dock navigation</li>
-        <li>🌓 Sleek dark mode toggle</li>
-        <li>📱 Touch-friendly interface</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <h3>⚡ Performance First</h3>
-      <ul>
-        <li>📦 Optimized asset loading</li>
-        <li>🚄 Fast page transitions</li>
-        <li>📱 Responsive on all devices</li>
-      </ul>
-    </td>
-    <td>
-      <h3>🛠️ Modern Tech Stack</h3>
-      <ul>
-        <li>⚛️ Next.js 14 & React 18</li>
-        <li>🎨 Tailwind CSS & Framer Motion</li>
-        <li>📝 TypeScript for reliability</li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
-## 🚀 Quick Start
+## Run it
 
 ```bash
-# 🌟 Clone this beauty
-git clone https://github.com/yourusername/personal-portfolio.git
-
-# 📦 Install the magic
-pnpm install
-
-# 🎮 Start the dev server
-pnpm dev
-
-# 🌐 Open http://localhost:3000
-# ✨ Watch the magic happen!
+npm install
+npm run dev
 ```
 
-## 🎯 Key Components
+Open http://localhost:3000. Add `?lite` for a lighter render (no shadows or grass, lower resolution).
 
-<details>
-<summary>🌌 Interactive Backgrounds</summary>
+## Where things live
 
-- `background-beams.tsx` - Create ethereal light beam effects
-- `shooting-stars.tsx` - Animate shooting stars across the sky
-- `stars-background.tsx` - Generate a dynamic starry background
-</details>
+| Path | What it is |
+| --- | --- |
+| `lib/achievements.ts` | Source of truth for facts: missions, papers, projects, experience |
+| `app/island/zones.ts` | Where each place sits and its short copy |
+| `app/island/cases.ts` | The long-form case study for each place |
+| `app/island/Story.tsx` | Story chapters and the gala programme pacing |
+| `app/island/Show.tsx` | Drone-show formations, fireworks, searchlights |
+| `app/island/Landmarks.tsx`, `Extras.tsx`, `Decor.tsx`, `Paths.tsx`, `City.tsx` | The world |
+| `app/island/Actors.tsx`, `People.tsx` | Player, robot villagers, human visitors, medals, camera |
+| `app/island/weather.ts`, `Weather.tsx` | Live weather and rain |
+| `app/island/audio.ts` | Synthesised sound and music |
+| `app/read/page.tsx` | The plain reading page |
+| `public/models/` | 3D models — see `CREDITS.md` there |
+| `docs/LAUNCH_PLAN.md` | What's done and what's left before launch |
 
-<details>
-<summary>🎨 UI Elements</summary>
+## Credits
 
-- `floating-dock.tsx` - MacOS-inspired navigation dock
-- `flip-words.tsx` - Animated word transitions
-- `tailwindcss-buttons.tsx` - Beautiful, accessible buttons
-</details>
-
-<details>
-<summary>📱 Core Features</summary>
-
-- Responsive design that works on all devices
-- Keyboard accessible navigation
-- SEO optimized structure
-- Performance optimized assets
-</details>
-
-## 📁 Project Structure
-
-```bash
-personal-portfolio/
-├── 🎨 app/                # Next.js app directory
-│   ├── 🧩 components/     # Page-specific components
-│   ├── 📝 layout.tsx     # Root layout
-│   └── 🏠 page.tsx       # Home page
-├── 🎯 components/        # Shared UI components
-│   └── 🎨 ui/           # Core UI components
-└── 🖼️ public/           # Static assets
-```
-
-## ⚡ Performance Metrics
-
-| Metric | Score |
-|--------|--------|
-| Performance | 💚 98/100 |
-| Accessibility | ♿ 100/100 |
-| Best Practices | ✅ 100/100 |
-| SEO | 🎯 100/100 |
-
-## 🤝 Contributing
-
-Got ideas? Let's make this portfolio even better!
-
-1. 🍴 Fork it
-2. 🌟 Create your feature branch (`git checkout -b feature/amazing`)
-3. 💫 Commit your changes (`git commit -m 'Add something amazing'`)
-4. 🚀 Push to the branch (`git push origin feature/amazing`)
-5. 🎉 Open a Pull Request
-
-## 📝 License
-
-Released under the MIT License. Feel free to use this for your own portfolio!
-
-## 💖 Like this project?
-
-Give it a ⭐️ to show your support!
-
-<div align="center">
-
-Made with 💖 and ☕
-
-[🔝 Back to Top](#-personal-portfolio-website)
-
-</div>
+3D models: EDU-450 quadcopter from elodin-sys/elodin (Apache-2.0); RobotExpressive by Tomás Laulhé (CC0); KayKit Adventurers and City Builder Bits by Kay Lousberg (CC0). Weather data: Open-Meteo.

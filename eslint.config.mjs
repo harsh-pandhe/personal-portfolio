@@ -10,10 +10,6 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  {
-    // Legacy sections from the previous portfolio layout; no longer rendered, they predate the hooks lint rule.
-    ignores: ["app/components/memories.tsx", "components/fancy/blocks/marquee-along-svg-path.tsx"],
-  },
   ...compat.config({
     extends: ['next'],
     rules: {

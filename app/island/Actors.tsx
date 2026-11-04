@@ -8,7 +8,6 @@ import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
-import { droneShape, globeShape, helixShape, ringsShape, textShape } from "../experience/shapes";
 
 const ROBOT = "/models/robot.glb";
 useGLTF.preload(ROBOT, false, true);
@@ -194,7 +193,12 @@ export function CameraRig() {
     const ui = getUI();
     const t = clock.elapsedTime;
     let ease = 1 - Math.pow(0.04, dt);
-    if (ui.mode === "intro") {
+    if (world.shot) {
+      // story chapters and the gala drive the camera directly
+      tmp.set(...world.shot.pos);
+      tmp2.set(...world.shot.look);
+      ease = 1 - Math.pow(0.25, dt);
+    } else if (ui.mode === "intro") {
       const a = t * 0.035 + 0.6;
       tmp.set(Math.sin(a) * 104, 58, Math.cos(a) * 104);
       // aim past the centre so the island sits in the upper right, clear of the panel and headline
@@ -247,68 +251,6 @@ export function CameraRig() {
   return null;
 }
 
-/* ---------------- Taramandal: a drone light show over the sea at night ---------------- */
-export function LightShow() {
-  const N = 900;
-  const geo = useRef<THREE.BufferGeometry>(null);
-  const mat = useRef<THREE.PointsMaterial>(null);
-  const shapes = useRef<Float32Array[] | null>(null);
-  const pos = useMemo(() => new Float32Array(N * 3), []);
-  const cols = useMemo(() => new Float32Array(N * 3), []);
-  const pal = useMemo(() => ["#00d2ff", "#7a4dff", "#12f0c0", "#ff7ac6", "#ffd23f"].map((c) => new THREE.Color(c)), []);
-  useEffect(() => {
-    const build = () => {
-      shapes.current = [textShape(N, "HARSH"), droneShape(N), globeShape(N, 2.4), ringsShape(N), helixShape(N), textShape(N, "SIH'25")];
-    };
-    if (document.fonts?.ready) document.fonts.ready.then(build);
-    else build();
-  }, []);
-  const holder = useRef<THREE.Points>(null);
-  useFrame(({ clock, camera }) => {
-    // keep the show over the sea on the far side of the island from the camera
-    if (holder.current) {
-      const l = Math.hypot(camera.position.x, camera.position.z) || 1;
-      holder.current.position.set((-camera.position.x / l) * 85, 36, (-camera.position.z / l) * 85);
-      holder.current.rotation.y = Math.atan2(camera.position.x, camera.position.z);
-    }
-    if (!shapes.current || !geo.current || !mat.current) return;
-    mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
-    if (holder.current) holder.current.renderOrder = 10;
-    if (world.night < 0.02) return; // invisible by day: skip the work
-    const t = clock.elapsedTime;
-    const S = shapes.current;
-    const per = 7;
-    const i = Math.floor(t / per) % S.length;
-    const f = Math.min(((t % per) / per) * 2.2, 1);
-    const k = f * f * (3 - 2 * f);
-    const A = S[i],
-      B = S[(i + 1) % S.length];
-    const ca = pal[i % pal.length],
-      cb = pal[(i + 1) % pal.length];
-    for (let j = 0; j < N; j++) {
-      const ix = j * 3;
-      const kk = Math.min(Math.max((k - (j % 7) * 0.02) / 0.88, 0), 1);
-      pos[ix] = A[ix] + (B[ix] - A[ix]) * kk;
-      pos[ix + 1] = A[ix + 1] + (B[ix + 1] - A[ix + 1]) * kk + Math.sin(t + j) * 0.02;
-      pos[ix + 2] = A[ix + 2] + (B[ix + 2] - A[ix + 2]) * kk;
-      const c = kk > 0.5 ? cb : ca;
-      cols[ix] = c.r;
-      cols[ix + 1] = c.g;
-      cols[ix + 2] = c.b;
-    }
-    geo.current.attributes.position.needsUpdate = true;
-    geo.current.attributes.color.needsUpdate = true;
-  });
-  return (
-    <points ref={holder} scale={5} frustumCulled={false}>
-      <bufferGeometry ref={geo}>
-        <bufferAttribute attach="attributes-position" args={[pos, 3]} />
-        <bufferAttribute attach="attributes-color" args={[cols, 3]} />
-      </bufferGeometry>
-      <pointsMaterial ref={mat} size={0.13} vertexColors transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
-    </points>
-  );
-}
 
 /* ---------------- click-to-walk target marker ---------------- */
 export function TargetMarker() {

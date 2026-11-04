@@ -8,9 +8,15 @@ import Landmarks from "./Landmarks";
 import Decor from "./Decor";
 import Paths from "./Paths";
 import Extras from "./Extras";
-import { CameraRig, Dust, LightShow, MEDALS, Medals, Player, TargetMarker, Teammates } from "./Actors";
+import { CameraRig, Dust, MEDALS, Medals, Player, TargetMarker, Teammates } from "./Actors";
+import { Fireworks, LightShow, Searchlights } from "./Show";
+import People from "./People";
+import { Skyline, Traffic } from "./City";
+import { Rain, WeatherController } from "./Weather";
+import { endGala, GalaOverlay, startGala, startStory, StoryOverlay } from "./Story";
+import { setMusic, setSound, sfx } from "./audio";
 import { getUI, setUI, travel, TOUR, useUI } from "./store";
-import { Help, Minimap, Toast } from "./Hud";
+import { Help, Minimap, Settings, SoundEffects, Toast } from "./Hud";
 import CaseStudy from "./CaseStudy";
 import { zoneById, ZONES } from "./zones";
 import { profile } from "@/lib/achievements";
@@ -61,6 +67,12 @@ function Scene() {
         <Dust />
         <TargetMarker />
         <LightShow />
+        <Fireworks />
+        <Searchlights />
+        <People />
+        <Traffic />
+        <Skyline />
+        <Rain />
       </Suspense>
       <CameraRig />
     </Canvas>
@@ -122,6 +134,9 @@ const Icon = {
   trophy: <path d="M8 4h8v4a4 4 0 0 1-8 0V4Zm0 2H5a3 3 0 0 0 3 3m8-3h3a3 3 0 0 1-3 3M12 12v4m-4 4h8m-6-4h4" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" />,
   user: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" />,
   case: <path d="M4 8h16v11H4zM9 8V5h6v3M4 13h16" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round" />,
+  film: <path d="M4 6h16v12H4zM8 6v12M16 6v12M4 10h4M4 14h4M16 10h4M16 14h4" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round" />,
+  spark: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" />,
+  gear: <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14.5 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round" />,
   moon: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" stroke="currentColor" strokeWidth="1.6" fill="none" />,
   sun: <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-13v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4m0-12.8L17 7m-10 10-1.4 1.4" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" />,
 };
@@ -138,11 +153,11 @@ function MenuItem({ title, sub, icon, primary, onClick, active }: { title: strin
   return (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center gap-4 rounded-[18px] px-3 py-3 text-left transition-all duration-300 ${
+      className={`group flex w-full items-center gap-3.5 rounded-[18px] px-3 py-2.5 text-left transition-all duration-300 ${
         primary ? "bg-[#22d36b] text-[#06240f] hover:bg-[#2be277]" : active ? "bg-white/[0.12]" : "bg-white/[0.05] hover:bg-white/[0.1]"
       }`}
     >
-      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${primary ? "bg-[#0b1a10] text-white" : "bg-white/[0.06] text-white/80"}`}>
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${primary ? "bg-[#0b1a10] text-white" : "bg-white/[0.06] text-white/80"}`}>
         <Svg d={icon} />
       </span>
       <span>
@@ -156,8 +171,13 @@ function MenuItem({ title, sub, icon, primary, onClick, active }: { title: strin
 function Panel() {
   const ui = useUI();
   const exploring = ui.mode === "explore";
+  const cinema = ui.story !== null || ui.gala !== null;
   return (
-    <aside className="fixed bottom-[18px] left-[18px] top-[18px] z-30 flex w-[340px] flex-col rounded-[30px] border border-white/10 bg-[#1e2126]/[0.86] p-[18px] text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+    <aside
+      className={`fixed bottom-[18px] left-[18px] top-[18px] z-30 flex w-[340px] flex-col rounded-[30px] border border-white/10 bg-[#1e2126]/[0.86] p-[18px] text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform [transition-duration:800ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+        cinema ? "-translate-x-[120%]" : "translate-x-0"
+      }`}
+    >
       <div className="flex items-center gap-3 px-1 pb-4 pt-1">
         <div className="relative grid h-[52px] w-[52px] place-items-center rounded-full bg-[conic-gradient(from_200deg,#2d5bff,#00d2ff,#12f0c0,#22d36b,#2d5bff)] p-[2.5px]">
           <div className="grid h-full w-full place-items-center rounded-full bg-[#14171b] text-[17px] font-bold tracking-tight">HP</div>
@@ -174,8 +194,9 @@ function Panel() {
         ) : (
           <MenuItem title="Enter the island" sub="Walk it at your own pace" icon={Icon.play} primary onClick={() => setUI({ mode: "explore", open: null })} />
         )}
-        <MenuItem title="Guided tour" sub="Every place, one after another" icon={Icon.route} active={ui.mode === "tour"} onClick={() => setUI({ mode: "tour", tour: 0, open: null })} />
-        <MenuItem title="Mission log" sub="Wins, finals and selections" icon={Icon.trophy} onClick={() => setUI({ open: "arena" })} />
+        <MenuItem title="Watch the story" sub="Nine chapters, then the gala · M" icon={Icon.film} onClick={startStory} />
+        <MenuItem title="Guided tour" sub="Every place, one after another · T" icon={Icon.route} active={ui.mode === "tour"} onClick={() => setUI({ mode: "tour", tour: 0, open: null })} />
+        <MenuItem title="Gala night" sub="The drone show, with fireworks · G" icon={Icon.spark} onClick={startGala} />
         <MenuItem title="About Harsh" sub="Work, research and path" icon={Icon.user} onClick={() => setUI({ open: "hq" })} />
         <MenuItem title="Work with me" sub="Roles, projects or a hello" icon={Icon.case} onClick={() => setUI({ open: "home" })} />
       </div>
@@ -219,16 +240,21 @@ function Panel() {
         </button>
       </div>
 
-      <button
-        onClick={() => setUI({ night: !ui.night })}
-        className="mb-3 flex items-center justify-between rounded-[16px] bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/75 transition hover:bg-white/10"
-      >
-        <span className="flex items-center gap-2.5">
-          <Svg d={ui.night ? Icon.moon : Icon.sun} />
-          {ui.night ? "Night · drone show is on" : "Switch to night · drone show"}
-        </span>
-        <kbd className="rounded-md border border-white/20 px-1.5 font-mono text-[10px]">L</kbd>
-      </button>
+      <div className="mb-3 grid grid-cols-[1fr_auto] gap-2">
+        <button
+          onClick={() => setUI({ night: !ui.night, timeMode: "manual" })}
+          className="flex items-center justify-between rounded-[16px] bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/75 transition hover:bg-white/10"
+        >
+          <span className="flex items-center gap-2.5">
+            <Svg d={ui.night ? Icon.moon : Icon.sun} />
+            {ui.night ? "Night" : "Day"} {ui.timeMode === "live" ? "· live IST" : ""}
+          </span>
+          <kbd className="rounded-md border border-white/20 px-1.5 font-mono text-[10px]">L</kbd>
+        </button>
+        <button onClick={() => setUI({ settings: true })} aria-label="Settings" className="grid w-11 place-items-center rounded-[16px] bg-white/[0.05] text-white/75 transition hover:bg-white/10">
+          <Svg d={Icon.gear} />
+        </button>
+      </div>
 
       <div className={`grid grid-cols-3 gap-2 ${exploring ? "hidden" : ""}`}>
         {[
@@ -246,9 +272,9 @@ function Panel() {
         {[
           ["WASD", "walk"],
           ["E", "open"],
-          ["T", "tour"],
-          ["L", "night"],
-          ["O", "overview"],
+          ["M", "story"],
+          ["G", "gala"],
+          ["?", "help"],
         ].map(([k, v]) => (
           <span key={k} className="flex items-center gap-1">
             <kbd className="rounded-md border border-white/25 px-1.5 py-px font-mono text-[10px] text-white/80">{k}</kbd>
@@ -264,7 +290,7 @@ function Panel() {
 /* ---------------- hero headline (overview) ---------------- */
 function Hero() {
   const ui = useUI();
-  const show = ui.mode === "intro" && !ui.open && ui.loaded;
+  const show = ui.mode === "intro" && !ui.open && ui.loaded && ui.story === null && ui.gala === null;
   return (
     <>
       <div
@@ -362,14 +388,31 @@ function TourCard() {
 /* ---------------- top-right: contact pill ---------------- */
 function Corner() {
   const ui = useUI();
+  const w = ui.weather;
+  const hide = ui.open || ui.story !== null || ui.gala !== null;
   return (
-    <div className={`fixed right-[18px] top-[18px] z-20 flex items-center gap-2 transition-opacity duration-500 ${ui.open ? "opacity-0" : "opacity-100"}`}>
-      <a href={profile.links.github} target="_blank" rel="noreferrer" className="rounded-full bg-white/80 px-4 py-2 text-[13px] font-medium text-neutral-900 shadow-lg backdrop-blur hover:bg-white">
-        GitHub ↗
-      </a>
-      <a href={profile.links.linkedin} target="_blank" rel="noreferrer" className="rounded-full bg-white/80 px-4 py-2 text-[13px] font-medium text-neutral-900 shadow-lg backdrop-blur hover:bg-white">
-        LinkedIn ↗
-      </a>
+    <div className={`fixed right-[18px] top-[18px] z-20 flex items-center gap-2 transition-opacity duration-500 ${hide ? "pointer-events-none opacity-0" : "opacity-100"}`}>
+      <button
+        onClick={() => setUI({ settings: true })}
+        title="Live weather in Navi Mumbai"
+        className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[13px] font-medium text-neutral-900 shadow-lg backdrop-blur hover:bg-white"
+      >
+        <span>{w ? w.icon : "📍"}</span>
+        <span>Navi Mumbai{w ? ` · ${w.temp}°C ${w.label}` : ""}</span>
+        <span className="font-mono text-[11px] text-neutral-500">
+          <Clock />
+        </span>
+      </button>
+      <button
+        onClick={() => setUI({ sound: !ui.sound })}
+        aria-label={ui.sound ? "Mute sound" : "Turn sound on"}
+        className={`grid h-9 w-9 place-items-center rounded-full shadow-lg backdrop-blur transition ${ui.sound ? "bg-[#121417] text-white" : "bg-white/80 text-neutral-900 hover:bg-white"}`}
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+          {ui.sound ? <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}
+        </svg>
+      </button>
       <a href={`mailto:${profile.email}`} className="rounded-full bg-[#121417] px-4 py-2 text-[13px] font-semibold text-white shadow-lg hover:bg-black">
         Say hello
       </a>
@@ -377,8 +420,28 @@ function Corner() {
   );
 }
 
+function Clock() {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const f = () => setT(new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date()) + " IST");
+    f();
+    const i = setInterval(f, 30000);
+    return () => clearInterval(i);
+  }, []);
+  return <>{t}</>;
+}
+
 /* ---------------- root ---------------- */
 export default function Island() {
+  // no WebGL: send visitors to the plain reading page instead of a blank canvas
+  useEffect(() => {
+    try {
+      const c = document.createElement("canvas");
+      if (!(c.getContext("webgl2") || c.getContext("webgl"))) window.location.replace("/read");
+    } catch {
+      window.location.replace("/read");
+    }
+  }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === "INPUT") return;
@@ -386,11 +449,17 @@ export default function Island() {
       const k = e.key.toLowerCase();
       if (k === "?" || (k === "/" && e.shiftKey)) setUI({ help: !ui.help });
       else if (k === "escape") {
-        if (ui.help) setUI({ help: false });
+        if (ui.settings) setUI({ settings: false });
+        else if (ui.story !== null) setUI({ story: null });
+        else if (ui.gala !== null) endGala();
+        else if (ui.help) setUI({ help: false });
         else if (ui.open) setUI({ open: null });
         else if (ui.mode !== "intro") setUI({ mode: "intro" });
       } else if (k === "e" && ui.mode === "explore" && ui.near) setUI({ open: ui.open ? null : ui.near });
-      else if (k === "l") setUI({ night: !ui.night });
+      else if (ui.story !== null || ui.gala !== null) return; // cinema: only Esc and the on-screen buttons
+      else if (k === "l") setUI({ night: !ui.night, timeMode: "manual" });
+      else if (k === "m") startStory();
+      else if (k === "g") startGala();
       else if (k === "t") setUI({ mode: "tour", tour: 0, open: null });
       else if (k === "o") setUI({ mode: "intro", open: null });
       else if (k === "enter" && ui.mode === "intro") setUI({ mode: "explore" });
@@ -417,6 +486,11 @@ export default function Island() {
       <Minimap />
       <Toast />
       <Help />
+      <StoryOverlay />
+      <GalaOverlay />
+      <Settings />
+      <WeatherController />
+      <SoundEffects />
       <Loader />
     </div>
   );

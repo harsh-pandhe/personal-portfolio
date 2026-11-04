@@ -14,6 +14,11 @@ export const world = {
   camDist: 11,
   dragging: false,
   target: null as null | { x: number; z: number }, // click-to-walk destination
+  gala: 0, // 0..1 while the gala drone show runs
+  rain: 0, // 0..1 eased rain amount
+  rainTarget: 0,
+  cloud: 0.3, // 0..1 cloud cover
+  shot: null as null | { pos: [number, number, number]; look: [number, number, number] }, // story-mode camera
 };
 
 /** UI state shared between the canvas and the DOM overlay. */
@@ -25,11 +30,37 @@ type UI = {
   night: boolean;
   loaded: boolean;
   medals: number[]; // indices of found medals
+  weatherMode: "live" | "clear" | "monsoon";
+  timeMode: "manual" | "live";
+  weather: import("./weather").WeatherNow | null;
+  sound: boolean;
+  music: boolean;
+  settings: boolean;
+  story: number | null; // chapter index while story mode runs
+  gala: number | null; // formation index while the gala show runs
   toast: { id: number; title: string; body?: string } | null;
   help: boolean;
 };
 
-let ui: UI = { mode: "intro", near: null, open: null, tour: 0, night: false, loaded: false, medals: [], toast: null, help: false };
+let ui: UI = {
+  mode: "intro",
+  near: null,
+  open: null,
+  tour: 0,
+  night: false,
+  loaded: false,
+  medals: [],
+  toast: null,
+  help: false,
+  weatherMode: "live",
+  timeMode: "manual",
+  weather: null,
+  sound: false,
+  music: false,
+  settings: false,
+  story: null,
+  gala: null,
+};
 
 let toastId = 0;
 export function toast(title: string, body?: string) {

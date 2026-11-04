@@ -283,54 +283,14 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
   }
 }
 
-export default function CaseStudy() {
-  const ui = useUI();
-  const [id, setId] = useState<ZoneId>("hq");
-  const scroller = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ui.open) {
-      setId(ui.open);
-      scroller.current?.scrollTo({ top: 0 });
-    }
-  }, [ui.open]);
-  const on = !!ui.open;
+/** The long-form case study for one place; used by the island overlay and by /read. */
+export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) => void }) {
   const z = zoneById[id];
   const c = CASES[id];
   const idx = ZONES.findIndex((q) => q.id === id);
   const next = ZONES[(idx + 1) % ZONES.length];
-
   return (
-    <>
-      <div
-        onClick={() => setUI({ open: null })}
-        className={`fixed inset-0 z-[39] bg-[#070b17]/40 backdrop-blur-[3px] transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`}
-      />
-      <div
-        ref={scroller}
-        data-case-scroll
-        style={{ ["--accent" as string]: z.accent }}
-        className={`fixed bottom-[18px] left-[376px] right-[18px] top-[18px] z-40 overflow-y-auto overflow-x-hidden rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
-          on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[6%] opacity-0"
-        }`}
-      >
-        {/* sticky bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#070b17]/60 px-10 py-3.5 font-mono text-[12px] uppercase backdrop-blur-xl">
-          <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: `linear-gradient(100deg, ${z.accent}, #00d2ff 60%, #12f0c0)` }} />
-          <span className="flex items-center gap-2.5 text-white/55">
-            <i className="h-2.5 w-2.5 rounded-[3px]" style={{ background: z.accent }} />
-            {z.name} · {z.team}
-          </span>
-          <span className="flex items-center gap-2">
-          <button onClick={() => travel(id)} className="rounded-full bg-[#22d36b] px-3.5 py-1.5 font-semibold text-[#06240f] transition hover:bg-[#2be277]">
-            Walk there →
-          </button>
-          <button onClick={() => setUI({ open: null })} className="flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] px-3.5 py-1.5 text-white transition hover:bg-white hover:text-[#0b1020]">
-            Close <kbd className="rounded border border-current px-1 text-[10px]">Esc</kbd>
-          </button>
-          </span>
-        </div>
-
-        <article key={id} className="pb-10">
+    <article className="pb-10">
           {/* hero */}
           <section className="px-10 pt-14">
             <h1 className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
@@ -441,7 +401,7 @@ export default function CaseStudy() {
 
           {/* next place */}
           <button
-            onClick={() => setUI({ open: next.id })}
+            onClick={() => onNext?.(next.id)}
             className="group mx-10 mt-24 flex w-[calc(100%-80px)] items-end justify-between border-t border-white/15 pt-8 text-left"
           >
             <span>
@@ -453,6 +413,54 @@ export default function CaseStudy() {
             <span className="mb-3 text-[48px] transition-transform duration-500 group-hover:translate-x-3">→</span>
           </button>
         </article>
+  );
+}
+
+export default function CaseStudy() {
+  const ui = useUI();
+  const [id, setId] = useState<ZoneId>("hq");
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ui.open) {
+      setId(ui.open);
+      scroller.current?.scrollTo({ top: 0 });
+    }
+  }, [ui.open]);
+  const on = !!ui.open;
+  const z = zoneById[id];
+
+  return (
+    <>
+      <div
+        onClick={() => setUI({ open: null })}
+        className={`fixed inset-0 z-[39] bg-[#070b17]/40 backdrop-blur-[3px] transition-opacity duration-500 ${on ? "opacity-100" : "pointer-events-none opacity-0"}`}
+      />
+      <div
+        ref={scroller}
+        data-case-scroll
+        style={{ ["--accent" as string]: z.accent }}
+        className={`fixed bottom-[18px] left-[376px] right-[18px] top-[18px] z-40 overflow-y-auto overflow-x-hidden rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
+          on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[6%] opacity-0"
+        }`}
+      >
+        {/* sticky bar */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#070b17]/60 px-10 py-3.5 font-mono text-[12px] uppercase backdrop-blur-xl">
+          <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: `linear-gradient(100deg, ${z.accent}, #00d2ff 60%, #12f0c0)` }} />
+          <span className="flex items-center gap-2.5 text-white/55">
+            <i className="h-2.5 w-2.5 rounded-[3px]" style={{ background: z.accent }} />
+            {z.name} · {z.team}
+          </span>
+          <span className="flex items-center gap-2">
+          <button onClick={() => travel(id)} className="rounded-full bg-[#22d36b] px-3.5 py-1.5 font-semibold text-[#06240f] transition hover:bg-[#2be277]">
+            Walk there →
+          </button>
+          <button onClick={() => setUI({ open: null })} className="flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] px-3.5 py-1.5 text-white transition hover:bg-white hover:text-[#0b1020]">
+            Close <kbd className="rounded border border-current px-1 text-[10px]">Esc</kbd>
+          </button>
+          </span>
+        </div>
+
+        <CaseBody key={id} id={id} onNext={(n) => setUI({ open: n })} />
       </div>
     </>
   );
