@@ -44,7 +44,7 @@ function RoadDashes() {
   }, []);
   useInstances(ref, list);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, list.length]} receiveShadow>
+    <instancedMesh frustumCulled={false} ref={ref} args={[undefined, undefined, list.length]} receiveShadow>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ffffff" roughness={0.6} />
     </instancedMesh>
@@ -92,19 +92,19 @@ function PlazaFurniture() {
   useInstances(blooms, data.b, ["#ff8fb1", "#9b7bff", "#ffd23f", "#ff6b5b"]);
   return (
     <>
-      <instancedMesh ref={seats} args={[undefined, undefined, data.s.length]} castShadow receiveShadow>
+      <instancedMesh frustumCulled={false} ref={seats} args={[undefined, undefined, data.s.length]} castShadow receiveShadow>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#b07a4c" roughness={0.85} />
       </instancedMesh>
-      <instancedMesh ref={legs} args={[undefined, undefined, data.l.length]} castShadow>
+      <instancedMesh frustumCulled={false} ref={legs} args={[undefined, undefined, data.l.length]} castShadow>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#2a2f36" roughness={0.5} metalness={0.4} />
       </instancedMesh>
-      <instancedMesh ref={pots} args={[undefined, undefined, data.p.length]} castShadow receiveShadow>
+      <instancedMesh frustumCulled={false} ref={pots} args={[undefined, undefined, data.p.length]} castShadow receiveShadow>
         <cylinderGeometry args={[0.5, 0.42, 1, 12]} />
         <meshStandardMaterial color="#eef1f4" roughness={0.6} />
       </instancedMesh>
-      <instancedMesh ref={blooms} args={[undefined, undefined, data.b.length]} castShadow>
+      <instancedMesh frustumCulled={false} ref={blooms} args={[undefined, undefined, data.b.length]} castShadow>
         <icosahedronGeometry args={[1, 1]} />
         <meshStandardMaterial roughness={0.8} flatShading />
       </instancedMesh>
@@ -171,7 +171,7 @@ function BeachRocks() {
   }, []);
   useInstances(ref, list);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, list.length]} castShadow receiveShadow>
+    <instancedMesh frustumCulled={false} ref={ref} args={[undefined, undefined, list.length]} castShadow receiveShadow>
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial color="#9aa29a" roughness={1} flatShading />
     </instancedMesh>

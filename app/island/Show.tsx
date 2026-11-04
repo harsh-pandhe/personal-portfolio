@@ -22,6 +22,8 @@ export const GALA_STEPS: { key: string; caption: string; sub: string; color: str
 ];
 
 export const GALA_POS = new THREE.Vector3(-8, 30, 104);
+// ambient show hangs at a fixed world spot over the sea; never follows the camera
+const AMBIENT_POS = new THREE.Vector3(0, 40, -95);
 export const GALA_CAM = { pos: [-2, 7, 22] as [number, number, number], look: [-8, 14, 104] as [number, number, number] };
 
 export function LightShow() {
@@ -61,7 +63,7 @@ export function LightShow() {
     else build();
   }, []);
 
-  useFrame(({ clock, camera }) => {
+  useFrame(({ clock }) => {
     const S = shapes.current;
     if (!S || !geo.current || !mat.current || !holder.current) return;
     const galaIdx = getUI().gala;
@@ -71,9 +73,8 @@ export function LightShow() {
       holder.current.position.lerp(GALA_POS, 0.05);
       holder.current.rotation.y = Math.atan2(-GALA_POS.x + GALA_CAM.pos[0], -GALA_POS.z + GALA_CAM.pos[2]);
     } else {
-      const l = Math.hypot(camera.position.x, camera.position.z) || 1;
-      holder.current.position.set((-camera.position.x / l) * 85, 36, (-camera.position.z / l) * 85);
-      holder.current.rotation.y = Math.atan2(camera.position.x, camera.position.z);
+      holder.current.position.lerp(AMBIENT_POS, 0.05);
+      holder.current.rotation.y = Math.atan2(AMBIENT_POS.x, AMBIENT_POS.z) + Math.PI;
     }
     mat.current.opacity = Math.max(0, world.night * 1.2 - 0.2);
     if (world.night < 0.02) return;

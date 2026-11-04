@@ -40,7 +40,7 @@ function Car({ kind, lane, speed, phase }: { kind: (typeof CARS)[number]; lane: 
     const ahead = ang.current + d * 0.16;
     const ax = Math.cos(ahead) * lane,
       az = Math.sin(ahead) * lane;
-    const blocked = Math.hypot(world.player.x - ax, world.player.z - az) < 2.6;
+    const blocked = Math.hypot(world.player.x - ax, world.player.z - az) < 3.2;
     v.current += ((blocked ? 0 : speed) - v.current) * Math.min(dt * 2.5, 1);
     ang.current += (v.current / lane) * dt;
     const x = Math.cos(ang.current) * lane,
@@ -55,17 +55,20 @@ function Car({ kind, lane, speed, phase }: { kind: (typeof CARS)[number]; lane: 
   });
   return (
     <group ref={g}>
-      <primitive object={model} scale={0.55} />
-      {[-0.32, 0.32].map((x) => (
-        <group key={x}>
-          <mesh position={[x, 0.42, 1.12]} material={lamp}>
-            <boxGeometry args={[0.18, 0.1, 0.04]} />
-          </mesh>
-          <mesh position={[x, 0.45, -1.12]} material={tail}>
-            <boxGeometry args={[0.18, 0.08, 0.04]} />
-          </mesh>
-        </group>
-      ))}
+      {/* KayKit cars are ~0.6 units long; at 4.2 they read as ~2.5 m next to the visitors */}
+      <group scale={4.2}>
+        <primitive object={model} />
+        {[-0.1, 0.1].map((x) => (
+          <group key={x}>
+            <mesh position={[x, 0.11, 0.335]} material={lamp}>
+              <boxGeometry args={[0.05, 0.025, 0.01]} />
+            </mesh>
+            <mesh position={[x, 0.12, -0.335]} material={tail}>
+              <boxGeometry args={[0.05, 0.02, 0.01]} />
+            </mesh>
+          </group>
+        ))}
+      </group>
     </group>
   );
 }
@@ -74,7 +77,7 @@ export function Traffic() {
   return (
     <>
       {CARS.map((k, i) => (
-        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - 0.75 : ROAD_R + 0.75} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
+        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - 0.8 : ROAD_R + 0.8} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
       ))}
     </>
   );

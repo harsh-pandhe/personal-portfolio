@@ -74,7 +74,7 @@ function ArenaLife() {
   }, []);
   return (
     <At id="arena">
-      <instancedMesh ref={crowd} args={[undefined, undefined, N]} castShadow>
+      <instancedMesh frustumCulled={false} ref={crowd} args={[undefined, undefined, N]} castShadow>
         <capsuleGeometry args={[0.5, 0.6, 3, 8]} />
         <meshStandardMaterial roughness={0.7} />
       </instancedMesh>
@@ -122,7 +122,8 @@ function Bull() {
   ];
   return (
     <At id="trading">
-      <group position={[-6.2, 0, 3.2]}>
+      {/* clear of the approach benches at (±4.9, 3.9) and the building */}
+      <group position={[-7.4, 0, -2.6]}>
         <mesh position={[0, 0.2, 0]}>
           <boxGeometry args={[3.4, 0.4, 2]} />
           <meshStandardMaterial color="#1d2128" roughness={0.6} />

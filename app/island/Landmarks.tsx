@@ -313,48 +313,79 @@ function Arena() {
   );
 }
 
-const QUAD = "/models/quad-f450.glb";
-useGLTF.preload(QUAD, false, true);
+// A light procedural F450-style quad (the old CAD GLB was ~350k vertices per copy and its props
+// were merged into the frame, so they could never spin). Sized so scale 5.5 spans ~2 m.
+const QMAT = {
+  frame: new THREE.MeshStandardMaterial({ color: "#20242b", roughness: 0.55, metalness: 0.3 }),
+  arm: new THREE.MeshStandardMaterial({ color: "#e8452c", roughness: 0.5, metalness: 0.1 }),
+  motor: new THREE.MeshStandardMaterial({ color: "#9aa3ad", roughness: 0.3, metalness: 0.8 }),
+  prop: new THREE.MeshStandardMaterial({ color: "#111418", roughness: 0.6 }),
+  blur: new THREE.MeshBasicMaterial({ color: "#c9d2dc", transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
+  ledF: new THREE.MeshStandardMaterial({ color: "#1dff7a", emissive: "#1dff7a", emissiveIntensity: 2 }),
+  ledB: new THREE.MeshStandardMaterial({ color: "#ff2d2d", emissive: "#ff2d2d", emissiveIntensity: 2 }),
+  bat: new THREE.MeshStandardMaterial({ color: "#2d5bff", roughness: 0.6 }),
+};
 
-function Quad({ scale = 5.5 }: { scale?: number }) {
-  const { scene } = useGLTF(QUAD, false, true);
-  const clone = useMemo(() => {
-    const c = scene.clone(true);
-    c.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh) {
-        m.castShadow = true;
-        const mat = m.material as THREE.MeshStandardMaterial;
-        if (mat) {
-          mat.metalness = 0.35;
-          mat.roughness = 0.45;
-        }
-      }
-    });
-    return c;
-  }, [scene]);
-  return <primitive object={clone} scale={scale} />;
-}
-
-/** A rotor blur disc so the props look like they're spinning. */
-function PropDiscs({ r = 0.95, span = 1.15, y = 0.42 }) {
-  const g = useRef<THREE.Group>(null);
+function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number }) {
+  const props = useRef<THREE.Group[]>([]);
   useFrame((_, dt) => {
-    g.current?.children.forEach((c, i) => (c.rotation.z += dt * (i % 2 ? 40 : -40)));
+    // alternate spin directions, like a real X-quad
+    props.current.forEach((p, i) => p && (p.rotation.y += dt * 38 * spin * (i % 3 === 0 ? 1 : -1)));
   });
+  const k = scale / 5.5;
+  const arm = 0.82;
   return (
-    <group ref={g}>
-      {[
-        [span, span],
-        [-span, span],
-        [span, -span],
-        [-span, -span],
-      ].map(([x, z], i) => (
-        <mesh key={i} position={[x, y, z]} rotation-x={-Math.PI / 2}>
-          <ringGeometry args={[0.15, r, 24, 1, 0, Math.PI * 1.6]} />
-          <meshBasicMaterial color="#1b1f26" transparent opacity={0.18} side={THREE.DoubleSide} depthWrite={false} />
-        </mesh>
+    <group scale={k}>
+      {/* body: bottom plate, top plate, battery, flight controller */}
+      <mesh position={[0, 0.2, 0]} material={QMAT.frame} castShadow>
+        <boxGeometry args={[0.55, 0.05, 0.55]} />
+      </mesh>
+      <mesh position={[0, 0.34, 0]} material={QMAT.frame} castShadow>
+        <boxGeometry args={[0.48, 0.04, 0.48]} />
+      </mesh>
+      <mesh position={[0, 0.43, 0]} material={QMAT.bat} castShadow>
+        <boxGeometry args={[0.36, 0.14, 0.16]} />
+      </mesh>
+      <mesh position={[0, 0.27, 0]} material={QMAT.motor}>
+        <cylinderGeometry args={[0.1, 0.1, 0.1, 12]} />
+      </mesh>
+      {/* landing gear */}
+      {[-1, 1].map((sx) => (
+        <group key={sx}>
+          <mesh position={[sx * 0.26, 0.08, 0]} rotation-z={sx * 0.35} material={QMAT.frame}>
+            <boxGeometry args={[0.03, 0.26, 0.03]} />
+          </mesh>
+          <mesh position={[sx * 0.31, -0.03, 0]} rotation-x={Math.PI / 2} material={QMAT.frame}>
+            <cylinderGeometry args={[0.02, 0.02, 0.6, 6]} />
+          </mesh>
+        </group>
       ))}
+      {[0, 1, 2, 3].map((i) => {
+        const a = (i / 4) * Math.PI * 2;
+        const x = Math.cos(a) * arm,
+          z = Math.sin(a) * arm;
+        return (
+          <group key={i}>
+            <mesh position={[x / 2, 0.27, z / 2]} rotation-y={-a} material={QMAT.arm} castShadow>
+              <boxGeometry args={[arm, 0.05, 0.08]} />
+            </mesh>
+            <mesh position={[x, 0.33, z]} material={QMAT.motor} castShadow>
+              <cylinderGeometry args={[0.07, 0.07, 0.12, 14]} />
+            </mesh>
+            <mesh position={[x * 1.03, 0.22, z * 1.03]} material={i === 0 || i === 1 ? QMAT.ledF : QMAT.ledB}>
+              <sphereGeometry args={[0.03, 8, 6]} />
+            </mesh>
+            <group position={[x, 0.41, z]} ref={(el) => void (props.current[i] = el!)}>
+              <mesh material={QMAT.prop} castShadow>
+                <boxGeometry args={[0.6, 0.012, 0.055]} />
+              </mesh>
+              <mesh rotation-x={-Math.PI / 2} material={QMAT.blur}>
+                <circleGeometry args={[0.31, 24]} />
+              </mesh>
+            </group>
+          </group>
+        );
+      })}
     </group>
   );
 }
@@ -1021,7 +1052,6 @@ function Couriers() {
           <group rotation-y={Math.PI / 4}>
             <Quad />
           </group>
-          <PropDiscs />
         </group>
       ))}
     </group>

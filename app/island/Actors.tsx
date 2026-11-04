@@ -384,7 +384,7 @@ const VILLAGERS: Villager[] = [
 function Bubble({ kind, z, text, onOpen }: { kind: "think" | "ask"; z: Zone; text: string; onOpen?: () => void }) {
   if (kind === "think")
     return (
-      <div className="relative animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-medium text-neutral-800 shadow-lg backdrop-blur">
+      <div className="relative animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] w-max max-w-[210px] whitespace-normal rounded-2xl bg-white/90 px-3 py-2 text-center text-[12px] font-medium leading-snug text-neutral-800 [text-wrap:balance] shadow-lg backdrop-blur">
         {text}
         <span className="absolute -bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-white/90" />
         <span className="absolute -bottom-[14px] left-[calc(50%+6px)] h-1.5 w-1.5 rounded-full bg-white/90" />

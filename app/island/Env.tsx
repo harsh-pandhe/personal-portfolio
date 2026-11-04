@@ -167,15 +167,15 @@ export function Trees() {
   }, [data]);
   return (
     <group>
-      <instancedMesh ref={trunks} args={[undefined, undefined, data.length]} castShadow>
+      <instancedMesh ref={trunks} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
         <cylinderGeometry args={[0.12, 0.18, 1.4, 6]} />
         <meshStandardMaterial color="#7a5638" roughness={1} />
       </instancedMesh>
-      <instancedMesh ref={crowns} args={[undefined, undefined, data.length]} castShadow>
+      <instancedMesh ref={crowns} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
         <icosahedronGeometry args={[1.1, 1]} />
         <meshStandardMaterial roughness={0.9} flatShading />
       </instancedMesh>
-      <instancedMesh ref={pines} args={[undefined, undefined, data.length]} castShadow>
+      <instancedMesh ref={pines} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
         <coneGeometry args={[0.9, 2.6, 7]} />
         <meshStandardMaterial roughness={0.9} flatShading />
       </instancedMesh>
