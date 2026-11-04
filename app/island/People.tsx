@@ -64,7 +64,7 @@ function buildPeople(): Person[] {
   const r = rng(61);
   for (let i = 0; i < 8; i++) {
     const a = ((88 + (i - 4) * 3.2) * Math.PI) / 180;
-    const d = 46 + r() * 2.5;
+    const d = 59 + r() * 2.5;
     const x = Math.cos(a) * d,
       z = Math.sin(a) * d;
     out.push({ id: `crowd${i}`, body: b(i), plan: { kind: "crowd", x, z, yaw: Math.atan2(x, z) }, line: "" });

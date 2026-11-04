@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { ZONES, zonePos } from "./zones";
 
-export const ISLAND_EDGE = 54; // where land meets the beach
-export const ROAD_R = 21;
+export const ISLAND_EDGE = 68; // where land meets the beach
+export const ROAD_R = 27;
 export const PLATEAU = 1.6;
 
 const ss = (a: number, b: number, x: number) => {
@@ -15,7 +15,15 @@ const MARS = zoneXZ.find((z) => z.id === "marsyard")!.p;
 const ROPE = zoneXZ.find((z) => z.id === "ropeway")!.p;
 // the ridge rises behind the ropeway valley station, toward the sea
 const RIDGE: [number, number] = [ROPE[0] * 1.42, ROPE[1] * 1.42];
-export const RIDGE_TOP = 11;
+export const RIDGE_TOP = 13;
+// [x, z, height, spread]: hills in the gaps between zones, out toward the coast
+const HILLS: [number, number, number, number][] = ([
+  [-70, 56, 8, 7],
+  [-30, 57, 7, 6.5],
+  [10, 56, 6, 6],
+  [130, 55, 9, 7.5],
+  [170, 54, 7, 6],
+] as const).map(([deg, r, hh, s]) => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r, hh, s]);
 
 export function ridgeTop(): [number, number] {
   return RIDGE;
@@ -46,13 +54,19 @@ export function heightAt(x: number, z: number) {
     0.9 * Math.sin(x * 0.09) * Math.cos(z * 0.08) +
     0.7 * Math.sin((x + z) * 0.045 + 1.3) +
     0.35 * Math.sin(x * 0.23 + z * 0.17);
+  // rolling hills between the zones and the coast, so the island isn't a flat disc
+  for (const [hx, hz, hh, hs] of HILLS) {
+    const d2 = (x - hx) ** 2 + (z - hz) ** 2;
+    h += hh * Math.exp(-d2 / (2 * hs * hs));
+  }
+  h += 1.4 * Math.max(0, Math.sin(x * 0.06 + 0.8) * Math.sin(z * 0.07 - 0.4)) * ss(30, 48, r);
   // the ridge
   const dr = Math.hypot(x - RIDGE[0], z - RIDGE[1]);
   h += RIDGE_TOP * Math.exp(-(dr * dr) / (2 * 7.5 * 7.5));
   // flat plateaus for zones and roads
   for (const zz of zoneXZ) {
     const d = Math.hypot(x - zz.p[0], z - zz.p[1]);
-    const w = 1 - ss(7.5, 11, d);
+    const w = zz.id === "arena" ? 1 - ss(14, 17.5, d) : 1 - ss(9.5, 14, d);
     h = h + (PLATEAU - h) * w * (zz.id === "ropeway" ? 0.85 : 1);
   }
   h = h + (PLATEAU - h) * roadMask(x, z) * 0.9;
@@ -77,7 +91,7 @@ const C = {
   plaza: new THREE.Color("#eef1f4"),
 };
 
-export function buildTerrain(size = 150, seg = 240) {
+export function buildTerrain(size = 190, seg = 300) {
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position as THREE.BufferAttribute;
@@ -99,7 +113,7 @@ export function buildTerrain(size = 150, seg = 240) {
         const k = 1 - ss(6.5, 9.5, d);
         c.lerp(n > 0.5 ? C.mars : C.mars2, k);
       } else if (zz.id !== "ropeway" && zz.id !== "swarm") {
-        c.lerp(C.plaza, (1 - ss(4.6, 5.4, d)) * 0.9);
+        c.lerp(C.plaza, (1 - ss(zz.id === "arena" ? 12.5 : 5.8, zz.id === "arena" ? 13.5 : 6.8, d)) * 0.9);
       }
     }
     c.lerp(C.road, roadMask(x, z) * 0.95);
@@ -127,9 +141,9 @@ export function rng(seed: number) {
 /** True where trees/props may grow (not on roads, plazas, beach or the ridge path). */
 export function isFreeLand(x: number, z: number) {
   const r = Math.hypot(x, z);
-  if (r > ISLAND_EDGE - 5 || r < 9) return false;
+  if (r > ISLAND_EDGE - 5 || r < 11) return false;
   if (roadMask(x, z) > 0.05) return false;
-  for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < 10.5) return false;
+  for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < (zz.id === "arena" ? 17 : 13)) return false;
   const [rx, rz] = RIDGE;
   if (distSeg(x, z, ROPE[0], ROPE[1], rx, rz) < 3) return false;
   return true;

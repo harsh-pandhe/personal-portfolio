@@ -24,32 +24,6 @@ function glow(color: string) {
 
 /* ---------- The Arena: a cheering crowd in the stands, floodlights and a scoreboard ---------- */
 function ArenaLife() {
-  const crowd = useRef<THREE.InstancedMesh>(null);
-  const N = 150;
-  const seats = useMemo(() => {
-    const r = rng(8);
-    return Array.from({ length: N }, () => {
-      const row = Math.floor(r() * 3);
-      const a = -Math.PI * 0.05 + r() * Math.PI * 1.4;
-      return { a, rad: 7 + row * 0.75, y: 1.0 + row * 0.7, ph: r() * 6, c: r() };
-    });
-  }, []);
-  const m = useMemo(() => new THREE.Matrix4(), []);
-  useEffect(() => {
-    const c = new THREE.Color();
-    seats.forEach((s, i) => crowd.current!.setColorAt(i, c.setHSL(s.c, 0.55, 0.6)));
-    if (crowd.current!.instanceColor) crowd.current!.instanceColor.needsUpdate = true;
-  }, [seats]);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    seats.forEach((s, i) => {
-      // a Mexican wave goes round every few seconds
-      const wave = Math.max(0, Math.sin(t * 1.6 - s.a * 2.2)) ** 6 * 0.35;
-      m.makeScale(0.22, 0.32, 0.22).setPosition(Math.cos(s.a) * s.rad, s.y + 0.32 + Math.abs(Math.sin(t * 3 + s.ph)) * 0.05 + wave, -Math.sin(s.a) * s.rad);
-      crowd.current!.setMatrixAt(i, m);
-    });
-    crowd.current!.instanceMatrix.needsUpdate = true;
-  });
   const lamp = useMemo(() => glow("#fff7d6"), []);
   useFrame(() => (lamp.emissiveIntensity = 0.3 + world.night * 3));
   const board = useMemo(() => {
@@ -74,24 +48,20 @@ function ArenaLife() {
   }, []);
   return (
     <At id="arena">
-      <instancedMesh frustumCulled={false} ref={crowd} args={[undefined, undefined, N]} castShadow>
-        <capsuleGeometry args={[0.5, 0.6, 3, 8]} />
-        <meshStandardMaterial roughness={0.7} />
-      </instancedMesh>
       {[-1, 1].flatMap((sx) =>
         [-1, 1].map((sz) => (
-          <group key={`${sx}${sz}`} position={[sx * 8.6, 0, sz * 8.6 - 1]}>
-            <mesh position={[0, 4, 0]}>
-              <cylinderGeometry args={[0.1, 0.14, 8, 8]} />
+          <group key={`${sx}${sz}`} position={[sx * 12.6, 0, sz * 12.6 - 1]}>
+            <mesh position={[0, 5.5, 0]}>
+              <cylinderGeometry args={[0.14, 0.2, 11, 8]} />
               <meshStandardMaterial color="#d9dde3" metalness={0.7} roughness={0.3} />
             </mesh>
-            <mesh position={[0, 8.2, 0]} rotation-y={Math.atan2(-sx, -sz)} material={lamp}>
+            <mesh position={[0, 11.2, 0]} rotation-y={Math.atan2(-sx, -sz)} material={lamp}>
               <boxGeometry args={[1.4, 0.8, 0.3]} />
             </mesh>
           </group>
         ))
       )}
-      <group position={[0, 0, -9.5]}>
+      <group position={[0, 4.4, -15.6]}>
         <mesh position={[0, 2.5, 0]}>
           <boxGeometry args={[0.2, 5, 0.2]} />
           <meshStandardMaterial color="#2a2f36" />

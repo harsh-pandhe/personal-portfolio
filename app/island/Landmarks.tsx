@@ -4,6 +4,8 @@ import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Html, useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { ARENA } from "./colliders";
 import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
@@ -262,53 +264,150 @@ function Trophy() {
   );
 }
 
-function Arena() {
-  const crops = useRef<THREE.InstancedMesh>(null);
-  const N = 520;
-  useEffect(() => {
-    const m = new THREE.Matrix4();
-    const r = rng(3);
-    let i = 0;
-    for (let row = 0; row < 13; row++)
-      for (let k = 0; k < 40 && i < N; k++) {
-        const x = -9.5 + k * 0.48 + (r() - 0.5) * 0.15;
-        const z = -8 - row * 0.62;
-        const s = 0.5 + r() * 0.35;
-        m.makeScale(s, s * 1.6, s).setPosition(x, 0.35 * s + 0.1, z);
-        crops.current!.setMatrixAt(i++, m);
+/* The Arena: a tiered bowl with a canopy, open toward HQ, full of seated fans doing the wave. */
+const SHIRTS = ["#2d5bff", "#ff5a36", "#ffd23f", "#12f0c0", "#ff7ac6", "#f7f8fa", "#9b7bff", "#1d2128", "#3aa66b", "#e5322d"];
+const SKIN = ["#8d5524", "#c68642", "#e0ac69", "#a0663a", "#6b4423", "#f1c27d"];
+function Crowd() {
+  const body = useRef<THREE.InstancedMesh>(null);
+  const head = useRef<THREE.InstancedMesh>(null);
+  const legs = useRef<THREE.InstancedMesh>(null);
+  const arms = useRef<THREE.InstancedMesh>(null);
+  const seats = useMemo(() => {
+    const r = rng(8);
+    const out: { x: number; y: number; z: number; yaw: number; a: number; ph: number; shirt: number; skin: number }[] = [];
+    for (let row = 0; row < 6; row++) {
+      const rad = ARENA.r0 + 0.55 + row * 0.95;
+      const n = Math.floor((rad * (Math.PI * 2 - ARENA.gapHalf * 2)) / 0.72);
+      for (let k = 0; k < n; k++) {
+        if (r() < 0.12) continue; // a few empty seats
+        const a = ARENA.gapHalf + 0.06 + (k / n) * (Math.PI * 2 - ARENA.gapHalf * 2 - 0.12);
+        const x = Math.sin(a) * rad,
+          z = Math.cos(a) * rad;
+        out.push({ x, y: 0.62 + row * 0.6, z, yaw: Math.atan2(-x, -z), a, ph: r() * 6, shirt: Math.floor(r() * SHIRTS.length), skin: Math.floor(r() * SKIN.length) });
       }
-    crops.current!.count = i;
-    crops.current!.instanceMatrix.needsUpdate = true;
+    }
+    return out;
   }, []);
+  const N = seats.length;
+  const armGeo = useMemo(() => {
+    // two arms as one geometry, pivoting at the shoulders (origin), hanging along -y
+    const g1 = new THREE.BoxGeometry(0.1, 0.42, 0.1).translate(-0.27, -0.21, 0);
+    const g2 = new THREE.BoxGeometry(0.1, 0.42, 0.1).translate(0.27, -0.21, 0);
+    const g = mergeGeometries([g1, g2])!;
+    return g;
+  }, []);
+  useEffect(() => {
+    const c = new THREE.Color();
+    seats.forEach((s, i) => {
+      body.current!.setColorAt(i, c.set(SHIRTS[s.shirt]));
+      arms.current!.setColorAt(i, c.set(SHIRTS[s.shirt]));
+      head.current!.setColorAt(i, c.set(SKIN[s.skin]));
+      legs.current!.setColorAt(i, c.set(s.shirt % 3 ? "#2a3446" : "#4a3b2c"));
+    });
+    [body, head, legs, arms].forEach((m) => m.current!.instanceColor && (m.current!.instanceColor.needsUpdate = true));
+  }, [seats]);
+  const m = useMemo(() => new THREE.Matrix4(), []);
+  const q = useMemo(() => new THREE.Quaternion(), []);
+  const e = useMemo(() => new THREE.Euler(), []);
+  const v = useMemo(() => new THREE.Vector3(), []);
+  const one = useMemo(() => new THREE.Vector3(1, 1, 1), []);
   useFrame(({ clock }) => {
-    if (crops.current) crops.current.rotation.z = Math.sin(clock.elapsedTime * 1.3) * 0.004;
+    const t = clock.elapsedTime;
+    const cheer = world.gala > 0.5 ? 1 : 0;
+    for (let i = 0; i < N; i++) {
+      const s = seats[i];
+      // a Mexican wave goes round the bowl; everyone fidgets a little
+      const wave = Math.max(0, Math.sin(t * 1.5 - s.a * 2)) ** 8;
+      const up = Math.min(1, wave + cheer * (0.5 + 0.5 * Math.sin(t * 6 + s.ph)));
+      const hop = up * 0.18 + Math.abs(Math.sin(t * 2 + s.ph)) * 0.015;
+      e.set(0, s.yaw, 0);
+      q.setFromEuler(e);
+      m.compose(v.set(s.x, s.y + 0.32 + hop, s.z), q, one);
+      body.current!.setMatrixAt(i, m);
+      m.compose(v.set(s.x, s.y + 0.72 + hop, s.z), q, one);
+      head.current!.setMatrixAt(i, m);
+      m.compose(v.set(s.x + Math.sin(s.yaw) * 0.14, s.y + 0.06, s.z + Math.cos(s.yaw) * 0.14), q, one);
+      legs.current!.setMatrixAt(i, m);
+      e.set(-Math.PI * up * 0.95, s.yaw, 0, "YXZ");
+      q.setFromEuler(e);
+      m.compose(v.set(s.x, s.y + 0.52 + hop, s.z), q, one);
+      arms.current!.setMatrixAt(i, m);
+    }
+    [body, head, legs, arms].forEach((r) => (r.current!.instanceMatrix.needsUpdate = true));
   });
   return (
+    <>
+      <instancedMesh ref={body} args={[undefined, undefined, N]} frustumCulled={false} castShadow>
+        <boxGeometry args={[0.44, 0.5, 0.28]} />
+        <meshStandardMaterial roughness={0.8} />
+      </instancedMesh>
+      <instancedMesh ref={head} args={[undefined, undefined, N]} frustumCulled={false}>
+        <sphereGeometry args={[0.15, 10, 8]} />
+        <meshStandardMaterial roughness={0.7} />
+      </instancedMesh>
+      <instancedMesh ref={legs} args={[undefined, undefined, N]} frustumCulled={false}>
+        <boxGeometry args={[0.4, 0.14, 0.42]} />
+        <meshStandardMaterial roughness={0.9} />
+      </instancedMesh>
+      <instancedMesh ref={arms} args={[undefined, undefined, N]} geometry={armGeo} frustumCulled={false}>
+        <meshStandardMaterial roughness={0.8} />
+      </instancedMesh>
+    </>
+  );
+}
+
+function Arena() {
+  const bowl = useMemo(() => {
+    // stepped profile: six tiers of seating, then a back wall
+    const pts: THREE.Vector2[] = [new THREE.Vector2(ARENA.r0, 0), new THREE.Vector2(ARENA.r0, 0.6)];
+    for (let i = 0; i < 6; i++) {
+      const r = ARENA.r0 + i * 0.95;
+      pts.push(new THREE.Vector2(r + 0.95, 0.6 + i * 0.6), new THREE.Vector2(r + 0.95, 1.2 + i * 0.6));
+    }
+    pts.push(new THREE.Vector2(ARENA.r1, 4.4), new THREE.Vector2(ARENA.r1 + 0.3, 4.4), new THREE.Vector2(ARENA.r1 + 0.3, 0));
+    return new THREE.LatheGeometry(pts, 96, ARENA.gapHalf, Math.PI * 2 - ARENA.gapHalf * 2);
+  }, []);
+  const canopy = useMemo(
+    () => new THREE.LatheGeometry([new THREE.Vector2(ARENA.r1 + 0.4, 6.2), new THREE.Vector2(ARENA.r1 - 3.2, 6.9)], 96, ARENA.gapHalf, Math.PI * 2 - ARENA.gapHalf * 2),
+    []
+  );
+  const seatMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9ced6", roughness: 0.8, side: THREE.DoubleSide, flatShading: true }), []);
+  const roofMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f4f6f8", roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide }), []);
+  const cols = useMemo(() => Array.from({ length: 14 }, (_, i) => ARENA.gapHalf + 0.1 + (i / 13) * (Math.PI * 2 - ARENA.gapHalf * 2 - 0.2)), []);
+  return (
     <ZoneGroup id="arena">
-      {/* pitch */}
-      <mesh position={[0, 0.06, 0]} rotation-x={-Math.PI / 2} receiveShadow>
-        <circleGeometry args={[6.2, 48]} />
-        <meshStandardMaterial color="#5cb85c" roughness={0.9} />
+      {/* pitch with mowing stripes and a running track */}
+      <mesh position={[0, 0.05, 0]} rotation-x={-Math.PI / 2} receiveShadow>
+        <circleGeometry args={[ARENA.r0, 64]} />
+        <meshStandardMaterial color="#c4553a" roughness={0.9} />
       </mesh>
+      <mesh position={[0, 0.07, 0]} rotation-x={-Math.PI / 2} receiveShadow>
+        <circleGeometry args={[ARENA.r0 - 1.3, 64]} />
+        <meshStandardMaterial color="#4fae55" roughness={0.9} />
+      </mesh>
+      {[-4, -2, 0, 2, 4].map((x) => (
+        <mesh key={x} position={[x, 0.075, 0]} rotation-x={-Math.PI / 2}>
+          <planeGeometry args={[1, Math.sqrt(Math.max(0, (ARENA.r0 - 1.3) ** 2 - x * x)) * 2 - 0.2]} />
+          <meshStandardMaterial color="#5cbc60" roughness={0.9} />
+        </mesh>
+      ))}
       <mesh position={[0, 0.08, 0]} rotation-x={-Math.PI / 2}>
         <ringGeometry args={[2.4, 2.55, 48]} />
         <meshBasicMaterial color="#ffffff" />
       </mesh>
-      {/* stands */}
-      {Array.from({ length: 3 }, (_, i) => (
-        <mesh key={i} position={[0, 0.5 + i * 0.7, 0]} rotation-x={-Math.PI / 2} material={i === 2 ? M.metal : M.white} castShadow receiveShadow>
-          <torusGeometry args={[7 + i * 0.75, 0.42, 6, 64, Math.PI * 1.45]} />
+      <mesh geometry={bowl} material={seatMat} castShadow receiveShadow />
+      <mesh geometry={canopy} material={roofMat} castShadow />
+      {cols.map((a) => (
+        <mesh key={a} position={[Math.sin(a) * (ARENA.r1 + 0.15), 5.3, Math.cos(a) * (ARENA.r1 + 0.15)]} material={M.metal}>
+          <cylinderGeometry args={[0.12, 0.15, 2, 8]} />
         </mesh>
       ))}
+      <Crowd />
       <mesh position={[0, 0.5, 0]} material={M.white}>
         <cylinderGeometry args={[0.9, 1.1, 1.2, 24]} />
       </mesh>
       <Trophy />
-      <instancedMesh ref={crops} args={[undefined, undefined, N]} castShadow>
-        <sphereGeometry args={[0.32, 6, 5]} />
-        <meshStandardMaterial color="#ffd21f" roughness={0.7} />
-      </instancedMesh>
-      <Billboard id="arena" pos={[0, 0, 9.2]} rotY={0} />
+      <Billboard id="arena" pos={[-9.5, 0, ARENA.r1 + 1]} rotY={0.45} />
     </ZoneGroup>
   );
 }

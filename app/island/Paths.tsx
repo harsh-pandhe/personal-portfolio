@@ -136,11 +136,11 @@ function Footpaths() {
     const sih = MEDALS[0].at(),
       robo = MEDALS[2].at();
     const routes: [number, number][][] = [
-      [at(200, ROAD_R + 1.5), at(203, 32), at(208, 42), at(205, 50)], // lighthouse
-      [at(97, ROAD_R + 1.5), at(93, 34), at(96, 43), at(95, 49)], // pier
+      [at(200, ROAD_R + 1.5), at(203, 40), at(208, 53), at(205, 64)], // lighthouse
+      [at(97, ROAD_R + 1.5), at(93, 43), at(96, 54), at(95, 63)], // pier
       [[ropeA[0] * 1.08, ropeA[1] * 1.08], [ropeA[0] * 1.2 + 2, ropeA[1] * 1.2 - 2], [rx - 2, rz + 1.5]], // up the ridge
-      [at(-80, ROAD_R + 1.5), at(-78, 38), [sih[0] - 2, sih[1] + 3]], // behind the arena
-      [at(-25, ROAD_R + 1.5), at(-22, 36), [robo[0] - 3, robo[1] + 2]], // past the swarm field
+      [at(-80, ROAD_R + 1.5), at(-78, 48), [sih[0] - 2, sih[1] + 3]], // behind the arena
+      [at(-25, ROAD_R + 1.5), at(-22, 46), [robo[0] - 3, robo[1] + 2]], // past the swarm field
     ];
     const r = rng(12);
     const g: THREE.BufferGeometry[] = [];

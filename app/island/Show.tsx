@@ -21,11 +21,11 @@ export const GALA_STEPS: { key: string; caption: string; sub: string; color: str
   { key: "hp", caption: "Thank you for visiting", sub: "Say hello: harshpandhehome@gmail.com", color: "#ffffff" },
 ];
 
-export const GALA_POS = new THREE.Vector3(-8, 30, 104);
+export const GALA_POS = new THREE.Vector3(-8, 30, 120);
 // The nightly show hangs at a fixed spot over the sea to the north, like a real show over a bay.
 // The overview camera turns to face it at night (Actors.tsx); the show itself never moves.
-export const AMBIENT_POS = new THREE.Vector3(30, 42, -88);
-export const GALA_CAM = { pos: [-4, 15, 40] as [number, number, number], look: [-8, 16, 104] as [number, number, number] };
+export const AMBIENT_POS = new THREE.Vector3(34, 44, -104);
+export const GALA_CAM = { pos: [-4, 16, 56] as [number, number, number], look: [-8, 17, 120] as [number, number, number] };
 
 // the nightly story, in order: launch, the work, Singapore, sign-off, land
 const AMBIENT: { key: string; hold: number; pal: string[] }[] = [
@@ -355,7 +355,7 @@ export function Searchlights() {
   return (
     <group ref={g}>
       {[-22, -8, 6, 20].map((x, i) => (
-        <mesh key={i} geometry={geo} material={mat} position={[x, 0.5, 52 + (i % 2) * 2]} />
+        <mesh key={i} geometry={geo} material={mat} position={[x, 0.5, 66 + (i % 2) * 2]} />
       ))}
     </group>
   );

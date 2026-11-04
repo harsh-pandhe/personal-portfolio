@@ -8,6 +8,7 @@ import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { heightAt, ISLAND_EDGE, ridgeTop } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
+import { resolve } from "./colliders";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 
 const ROBOT = "/models/robot.glb";
@@ -99,6 +100,7 @@ export function Player() {
         nx *= (ISLAND_EDGE + 1) / r;
         nz *= (ISLAND_EDGE + 1) / r;
       }
+      [nx, nz] = resolve(nx, nz);
       p.x = nx;
       p.z = nz;
       const target = Math.atan2(dx, dz);
@@ -204,11 +206,11 @@ export function CameraRig() {
         // night: hold a view across the island toward the fixed drone show over the northern sea,
         // drifting a little instead of orbiting away from it
         const a = Math.sin(t * 0.05) * 0.28;
-        tmp.set(Math.sin(a) * 96, 34, Math.cos(a) * 96);
+        tmp.set(Math.sin(a) * 112, 38, Math.cos(a) * 112);
         tmp2.set(AMBIENT_POS.x * 0.15, 24, AMBIENT_POS.z * 0.6);
       } else {
         const a = t * 0.035 + 0.6;
-        tmp.set(Math.sin(a) * 104, 58, Math.cos(a) * 104);
+        tmp.set(Math.sin(a) * 126, 68, Math.cos(a) * 126);
         // aim past the centre so the island sits in the upper right, clear of the panel and headline
         tmp2.set(Math.sin(a - 0.5) * -10, -14, Math.cos(a - 0.5) * -10);
       }
@@ -561,7 +563,7 @@ export const MEDALS = [
   { name: "Smart India Hackathon 2025", note: "National Winner · ₹1,50,000", at: () => [9, -45] as [number, number] },
   { name: "ISRO IRoC-U 2026", note: "Finalist · Team 10144", at: () => ridgeTop() },
   { name: "RoboRashtra 2026", note: "1st Runner-Up · Chakravyuh", at: () => [44, -16] as [number, number] },
-  { name: "Singapore–India Hackathon 2026", note: "Selected for the Grand Finale at SMU", at: () => [Math.cos(1.66) * 50, Math.sin(1.66) * 50] as [number, number] },
+  { name: "Singapore–India Hackathon 2026", note: "Selected for the Grand Finale at SMU", at: () => [Math.cos(1.66) * 63, Math.sin(1.66) * 63] as [number, number] },
   { name: "PCU Ideathon 2.0", note: "Top 40 of 500+ teams", at: () => [Math.cos(3.45) * 49, Math.sin(3.45) * 49] as [number, number] },
 ];
 

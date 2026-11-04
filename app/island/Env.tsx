@@ -76,12 +76,12 @@ export function Sea() {
           #include <fog_pars_fragment>
           void main(){
             vec3 shallow = vec3(0.35,0.85,0.92), deep = vec3(0.09,0.45,0.78);
-            vec3 col = mix(shallow, deep, smoothstep(54.0, 110.0, vD));
+            vec3 col = mix(shallow, deep, smoothstep(68.0, 130.0, vD));
             // concentric swell bands, like a toy ocean
             float band = sin(vD*1.25 - uTime*1.4 + sin(vXZ.x*0.05)*1.5);
             col += smoothstep(0.75, 1.0, band) * 0.10;
             // surf line
-            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 56.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
+            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 70.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
             col = mix(col, col*vec3(0.12,0.16,0.35), uNight);
             gl_FragColor = vec4(col,1.0);
             #include <fog_fragment>
@@ -129,7 +129,7 @@ export function Trees() {
     let guard = 0;
     while (out.length < 340 && guard++ < 20000) {
       const a = r() * Math.PI * 2;
-      const d = 9 + Math.sqrt(r()) * 44;
+      const d = 11 + Math.sqrt(r()) * 56;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
       if (!isFreeLand(x, z)) continue;
@@ -199,7 +199,7 @@ export function Flowers() {
       const pa = Math.floor(r() * 26);
       const pr = rng(pa * 97 + 3);
       const a = pr() * Math.PI * 2,
-        d = 12 + pr() * 38;
+        d = 14 + pr() * 48;
       const x = Math.cos(a) * d + (r() - 0.5) * 7,
         z = Math.sin(a) * d + (r() - 0.5) * 7;
       if (!isFreeLand(x, z)) continue;
@@ -290,10 +290,10 @@ export function Lights() {
         intensity={2.6}
         castShadow
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-70}
-        shadow-camera-right={70}
-        shadow-camera-top={70}
-        shadow-camera-bottom={-70}
+        shadow-camera-left={-82}
+        shadow-camera-right={82}
+        shadow-camera-top={82}
+        shadow-camera-bottom={-82}
         shadow-camera-far={200}
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
@@ -420,7 +420,7 @@ export function Grass({ count = 38000 }: { count?: number }) {
       guard = 0;
     while (i < count && guard++ < count * 6) {
       const a = r() * Math.PI * 2,
-        d = 8 + Math.sqrt(r()) * 46;
+        d = 10 + Math.sqrt(r()) * 58;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
       if (!isFreeLand(x, z)) continue;
@@ -464,13 +464,13 @@ export function Shore() {
   // lighthouse on the north-west point, pier on the south shore
   const LH = useMemo(() => {
     const a = (205 * Math.PI) / 180;
-    const x = Math.cos(a) * 53,
-      z = Math.sin(a) * 53;
+    const x = Math.cos(a) * 67,
+      z = Math.sin(a) * 67;
     return [x, heightAt(x, z), z] as const;
   }, []);
   const PIER = useMemo(() => {
     const a = (95 * Math.PI) / 180;
-    return { a, x: Math.cos(a) * 50, z: Math.sin(a) * 50 };
+    return { a, x: Math.cos(a) * 64, z: Math.sin(a) * 64 };
   }, []);
   useFrame((_, dt) => {
     const n = world.night;
@@ -527,16 +527,16 @@ export function Shore() {
 const NAV_GEO = new THREE.SphereGeometry(0.2, 8, 6);
 type Lane = { kind: "cargo" | "ferry" | "sail"; ang: number; off: number; len: number; speed: number; phase: number; tint: string };
 const LANES: Lane[] = [
-  { kind: "cargo", ang: 0.35, off: 118, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" },
-  { kind: "cargo", ang: 0.35, off: 132, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
-  { kind: "cargo", ang: 2.1, off: 150, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" },
-  { kind: "ferry", ang: 1.2, off: 92, len: 360, speed: 4.6, phase: 0.1, tint: "#ffffff" },
-  { kind: "ferry", ang: 2.9, off: 104, len: 380, speed: -4.0, phase: 0.6, tint: "#ffffff" },
-  { kind: "sail", ang: 0.9, off: 74, len: 220, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
-  { kind: "sail", ang: 1.7, off: 80, len: 220, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
-  { kind: "sail", ang: 2.5, off: 70, len: 200, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
-  { kind: "sail", ang: 3.8, off: 76, len: 220, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
-  { kind: "sail", ang: 4.6, off: 84, len: 240, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
+  { kind: "cargo", ang: 0.35, off: 134, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" },
+  { kind: "cargo", ang: 0.35, off: 148, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
+  { kind: "cargo", ang: 2.1, off: 166, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" },
+  { kind: "ferry", ang: 1.2, off: 108, len: 360, speed: 4.6, phase: 0.1, tint: "#ffffff" },
+  { kind: "ferry", ang: 2.9, off: 120, len: 380, speed: -4.0, phase: 0.6, tint: "#ffffff" },
+  { kind: "sail", ang: 0.9, off: 90, len: 220, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
+  { kind: "sail", ang: 1.7, off: 96, len: 220, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
+  { kind: "sail", ang: 2.5, off: 86, len: 200, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
+  { kind: "sail", ang: 3.8, off: 92, len: 220, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
+  { kind: "sail", ang: 4.6, off: 100, len: 240, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
 ];
 
 function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: { red: THREE.Material; green: THREE.Material; white: THREE.Material; win: THREE.Material } }) {

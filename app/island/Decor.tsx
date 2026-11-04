@@ -63,7 +63,7 @@ function PlazaFurniture() {
       p: number[][] = [],
       b: number[][] = [];
     for (const z of ZONES) {
-      if (z.id === "ropeway" || z.id === "swarm") continue;
+      if (z.id === "ropeway" || z.id === "swarm" || z.id === "arena") continue;
       const [zx, zz] = zonePos(z);
       const base = z.radius ? Math.atan2(zx, zz) : 0;
       for (const k of [-1, 1]) {
