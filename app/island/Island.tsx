@@ -23,6 +23,19 @@ import { zoneById, ZONES } from "./zones";
 import { profile } from "@/lib/achievements";
 
 /* ---------------- 3D scene ---------------- */
+/** Mount children once the loader is gone, `step` idle slots later (~350 ms apart). */
+function Deferred({ step, children }: { step: number; children: React.ReactNode }) {
+  const loaded = useUI().loaded;
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!loaded || on) return;
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const t = setTimeout(() => (ric ? ric(() => setOn(true), { timeout: 1200 }) : setOn(true)), 250 + step * 350);
+    return () => clearTimeout(t);
+  }, [loaded, on, step]);
+  return on ? <Suspense fallback={null}>{children}</Suspense> : null;
+}
+
 const LITE = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
 
 function Scene() {
@@ -53,31 +66,45 @@ function Scene() {
         <Mountains />
         <Terrain />
         <Trees />
-        <Flowers />
-        {!LITE && <Grass />}
         <Shore />
-        <Ships />
-        <Birds />
-        <Clouds />
         <Landmarks />
         <Decor />
         <Paths />
-        <Extras />
         <Teammates />
         <Medals />
         <Player />
-        <Dust />
         <TargetMarker />
         <LightShow />
+        <JourneyPlaza />
+      </Suspense>
+      {/* everything decorative mounts after the hero has painted, a piece at a time, so the
+          first screen doesn't stutter while ~40k grass blades, crowds and GLB clones compile */}
+      <Deferred step={1}>{!LITE && <Grass />}</Deferred>
+      <Deferred step={2}>
+        <Flowers />
+        <Clouds />
+        <Birds />
+      </Deferred>
+      <Deferred step={3}>
+        <Extras />
+        <Dust />
+      </Deferred>
+      <Deferred step={4}>
+        <People />
+      </Deferred>
+      <Deferred step={5}>
+        <Traffic />
+        <Ships />
+      </Deferred>
+      <Deferred step={6}>
+        <Skyline />
+        <Singapore />
+      </Deferred>
+      <Deferred step={7}>
         <Fireworks />
         <Searchlights />
-        <People />
-        <Traffic />
-        <JourneyPlaza />
-        <Singapore />
-        <Skyline />
         <Rain />
-      </Suspense>
+      </Deferred>
       <CameraRig />
     </Canvas>
   );

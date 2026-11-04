@@ -98,7 +98,7 @@ const C = {
   plaza: new THREE.Color("#eef1f4"),
 };
 
-export function buildTerrain(size = 190, seg = 300) {
+export function buildTerrain(size = 190, seg = 260) {
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position as THREE.BufferAttribute;
