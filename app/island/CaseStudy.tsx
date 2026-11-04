@@ -5,7 +5,7 @@ import { papers, profile } from "@/lib/achievements";
 import { CASES, PAPER_NOTES, type Section } from "./cases";
 import { setUI, travel, useUI } from "./store";
 import { zoneById, ZONES, type ZoneId } from "./zones";
-import Cover from "./Cover";
+import { Gallery, MediaHero } from "./CaseMedia";
 
 /* Reveal children as they scroll into the case-study panel. */
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -320,12 +320,14 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
 
           {/* animated cover */}
           <div className="mx-10 overflow-hidden rounded-[22px] shadow-[0_60px_120px_-40px_rgba(0,0,0,.9),0_0_0_1px_rgba(255,255,255,.12)] transition-transform duration-700 [transform:perspective(1800px)_rotateX(7deg)] [transform-origin:50%_0] hover:[transform:perspective(1800px)_rotateX(0deg)]">
-            <Cover id={id} accent={z.accent} />
+            <MediaHero id={id} accent={z.accent} />
           </div>
 
           <Reveal>
             <p className="max-w-[22ch] px-10 pb-16 pt-28 text-[clamp(36px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.045em]">{c.hook}</p>
           </Reveal>
+
+          <Gallery id={id} accent={z.accent} />
 
           {c.cracked && (
             <Reveal className="mx-10">

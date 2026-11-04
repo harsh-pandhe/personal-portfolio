@@ -326,7 +326,7 @@ const QMAT = {
   bat: new THREE.MeshStandardMaterial({ color: "#2d5bff", roughness: 0.6 }),
 };
 
-function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number }) {
+export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number }) {
   const props = useRef<THREE.Group[]>([]);
   useFrame((_, dt) => {
     // alternate spin directions, like a real X-quad
