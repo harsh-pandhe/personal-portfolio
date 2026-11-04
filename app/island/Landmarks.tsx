@@ -982,17 +982,129 @@ function Trading() {
   );
 }
 
-function Workshop() {
-  const arm = useRef<THREE.Group>(null);
-  const j2 = useRef<THREE.Group>(null);
-  const j3 = useRef<THREE.Group>(null);
-  const tip = useGlow("#7a4dff", 0.6, 3);
+/* A six-axis industrial arm (KUKA-style orange) running a pick-and-place loop with a crate. */
+const ARM_KEYS: { t: number; j: [number, number, number, number, number]; grip: number; carry: boolean }[] = [
+  // a1 yaw, a2 shoulder, a3 elbow, a5 wrist, a6 roll; grip 0 open .. 1 closed
+  { t: 0, j: [0.9, -0.2, 1.0, 0.8, 0], grip: 0, carry: false },
+  { t: 1.6, j: [0.9, 0.55, 0.65, 0.4, 0], grip: 0, carry: false }, // reach down to the crate
+  { t: 2.2, j: [0.9, 0.55, 0.65, 0.4, 0], grip: 1, carry: true }, // grip
+  { t: 3.6, j: [0.2, -0.35, 1.2, 0.7, 1.2], grip: 1, carry: true }, // lift and swing
+  { t: 5.2, j: [-1.0, 0.45, 0.75, 0.45, 1.6], grip: 1, carry: true }, // over the pallet
+  { t: 5.8, j: [-1.0, 0.45, 0.75, 0.45, 1.6], grip: 0, carry: false }, // release
+  { t: 7.4, j: [-0.1, -0.2, 1.0, 0.8, 0.4], grip: 0, carry: false },
+  { t: 8.6, j: [0.9, -0.2, 1.0, 0.8, 0], grip: 0, carry: false },
+];
+function IndustrialArm() {
+  const orange = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ff7a00", roughness: 0.45, metalness: 0.25 }), []);
+  const grey = useMemo(() => new THREE.MeshStandardMaterial({ color: "#3a3f47", roughness: 0.5, metalness: 0.5 }), []);
+  const steel = useMemo(() => new THREE.MeshStandardMaterial({ color: "#b8bec7", roughness: 0.3, metalness: 0.85 }), []);
+  const r = useRef<(THREE.Group | null)[]>([]);
+  const fingers = useRef<(THREE.Mesh | null)[]>([]);
+  const crate = useRef<THREE.Mesh>(null);
+  const led = useGlow("#12f0c0", 0.6, 3);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    if (arm.current) arm.current.rotation.y = Math.sin(t * 0.6) * 1.2;
-    if (j2.current) j2.current.rotation.z = -0.6 + Math.sin(t * 1.1) * 0.35;
-    if (j3.current) j3.current.rotation.z = 1.1 + Math.sin(t * 1.3 + 1) * 0.4;
+    const T = ARM_KEYS[ARM_KEYS.length - 1].t;
+    const t = clock.elapsedTime % T;
+    let k = 0;
+    while (k < ARM_KEYS.length - 2 && t > ARM_KEYS[k + 1].t) k++;
+    const A = ARM_KEYS[k],
+      B = ARM_KEYS[k + 1];
+    const u0 = (t - A.t) / (B.t - A.t || 1),
+      u = u0 * u0 * (3 - 2 * u0);
+    const j = A.j.map((v, i) => v + (B.j[i] - v) * u);
+    const g = A.grip + (B.grip - A.grip) * u;
+    if (r.current[0]) r.current[0].rotation.y = j[0];
+    if (r.current[1]) r.current[1].rotation.z = -j[1];
+    if (r.current[2]) r.current[2].rotation.z = -j[2];
+    if (r.current[3]) r.current[3].rotation.z = -j[3];
+    if (r.current[4]) r.current[4].rotation.x = j[4];
+    fingers.current.forEach((f, i) => f && (f.position.z = (i ? 1 : -1) * (0.2 - g * 0.1)));
+    if (crate.current) crate.current.visible = A.carry;
   });
+  return (
+    <group>
+      {/* floor plate and base */}
+      <mesh position={[0, 0.06, 0]} material={grey} receiveShadow>
+        <boxGeometry args={[1.8, 0.12, 1.8]} />
+      </mesh>
+      <mesh position={[0, 0.35, 0]} material={orange} castShadow>
+        <cylinderGeometry args={[0.6, 0.72, 0.5, 28]} />
+      </mesh>
+      <group ref={(el) => void (r.current[0] = el)} position={[0, 0.6, 0]}>
+        {/* turret (A1) with the A2 motor housing */}
+        <mesh position={[0.1, 0.32, 0]} material={orange} castShadow>
+          <boxGeometry args={[1.0, 0.64, 0.95]} />
+        </mesh>
+        <mesh position={[0.35, 0.7, 0.55]} rotation-x={Math.PI / 2} material={grey}>
+          <cylinderGeometry args={[0.28, 0.28, 0.25, 20]} />
+        </mesh>
+        <mesh position={[-0.25, 0.4, -0.52]} material={led}>
+          <boxGeometry args={[0.3, 0.06, 0.02]} />
+        </mesh>
+        <group ref={(el) => void (r.current[1] = el)} position={[0.35, 0.7, 0]}>
+          {/* upper arm (A2) */}
+          <mesh position={[0, 0.95, 0]} material={orange} castShadow>
+            <boxGeometry args={[0.4, 1.9, 0.48]} />
+          </mesh>
+          <mesh position={[0, 0, 0]} rotation-x={Math.PI / 2} material={orange}>
+            <cylinderGeometry args={[0.34, 0.34, 0.6, 22]} />
+          </mesh>
+          <group ref={(el) => void (r.current[2] = el)} position={[0, 1.9, 0]}>
+            {/* elbow (A3) and forearm (A4) */}
+            <mesh rotation-x={Math.PI / 2} material={orange} castShadow>
+              <cylinderGeometry args={[0.3, 0.3, 0.6, 22]} />
+            </mesh>
+            <mesh position={[-0.35, 0.05, 0]} material={grey}>
+              <boxGeometry args={[0.45, 0.4, 0.42]} />
+            </mesh>
+            <mesh position={[0.8, 0.05, 0]} rotation-z={Math.PI / 2} material={orange} castShadow>
+              <cylinderGeometry args={[0.18, 0.24, 1.5, 18]} />
+            </mesh>
+            <group ref={(el) => void (r.current[3] = el)} position={[1.6, 0.05, 0]}>
+              {/* wrist (A5) */}
+              <mesh rotation-x={Math.PI / 2} material={grey}>
+                <cylinderGeometry args={[0.16, 0.16, 0.36, 16]} />
+              </mesh>
+              <group ref={(el) => void (r.current[4] = el)} position={[0, -0.25, 0]} rotation-z={0}>
+                {/* flange (A6) and a two-finger gripper */}
+                <mesh material={steel}>
+                  <cylinderGeometry args={[0.13, 0.13, 0.14, 16]} />
+                </mesh>
+                <mesh position={[0, -0.14, 0]} material={grey}>
+                  <boxGeometry args={[0.22, 0.12, 0.5]} />
+                </mesh>
+                {[0, 1].map((i) => (
+                  <mesh key={i} ref={(el) => void (fingers.current[i] = el)} position={[0, -0.32, i ? 0.2 : -0.2]} material={steel}>
+                    <boxGeometry args={[0.1, 0.3, 0.05]} />
+                  </mesh>
+                ))}
+                <mesh ref={crate} position={[0, -0.45, 0]} castShadow>
+                  <boxGeometry args={[0.28, 0.28, 0.28]} />
+                  <meshStandardMaterial color="#12f0c0" roughness={0.6} />
+                </mesh>
+              </group>
+            </group>
+          </group>
+        </group>
+      </group>
+      {/* safety fence around the cell */}
+      {[0, 1, 2, 3].map((i) => {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        return (
+          <mesh key={i} position={[Math.cos(a) * 2.5, 0.5, Math.sin(a) * 2.5]} material={M.metal}>
+            <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
+          </mesh>
+        );
+      })}
+      <mesh position={[0, 0.85, 0]} rotation-x={-Math.PI / 2}>
+        <ringGeometry args={[2.48, 2.53, 4, 1, Math.PI / 4]} />
+        <meshBasicMaterial color="#ffd23f" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
+function Workshop() {
   const crates = useMemo(() => {
     const r = rng(9);
     return Array.from({ length: 9 }, (_, i) => ({
@@ -1017,35 +1129,8 @@ function Workshop() {
           <boxGeometry args={[3, 2.6, 0.02]} />
         </mesh>
       </group>
-      {/* robot arm */}
-      <group position={[-1.5, 0, 1]}>
-        <mesh position={[0, 0.3, 0]} material={M.dark} castShadow>
-          <cylinderGeometry args={[0.7, 0.8, 0.6, 24]} />
-        </mesh>
-        <group ref={arm} position={[0, 0.6, 0]}>
-          <mesh position={[0, 0.9, 0]} material={M.white} castShadow>
-            <boxGeometry args={[0.45, 1.8, 0.45]} />
-          </mesh>
-          <group ref={j2} position={[0, 1.8, 0]}>
-            <mesh material={M.dark}>
-              <sphereGeometry args={[0.3, 16, 12]} />
-            </mesh>
-            <mesh position={[0.9, 0, 0]} material={M.white} castShadow>
-              <boxGeometry args={[1.8, 0.35, 0.35]} />
-            </mesh>
-            <group ref={j3} position={[1.8, 0, 0]}>
-              <mesh material={M.dark}>
-                <sphereGeometry args={[0.24, 16, 12]} />
-              </mesh>
-              <mesh position={[0.6, 0, 0]} material={M.white} castShadow>
-                <boxGeometry args={[1.2, 0.26, 0.26]} />
-              </mesh>
-              <mesh position={[1.25, 0, 0]} material={tip}>
-                <sphereGeometry args={[0.16, 12, 10]} />
-              </mesh>
-            </group>
-          </group>
-        </group>
+      <group position={[-1.5, 0, 1]} scale={1.15}>
+        <IndustrialArm />
       </group>
       {crates.map((q, i) => (
         <mesh key={i} position={q.p} scale={q.s} castShadow>
