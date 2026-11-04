@@ -33,12 +33,12 @@ function RoadDashes() {
   const ref = useRef<THREE.InstancedMesh>(null);
   const list = useMemo(() => {
     const out: number[][] = [];
-    const N = 120;
+    const N = 150;
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2;
       const x = Math.cos(a) * ROAD_R,
         z = Math.sin(a) * ROAD_R;
-      out.push([x, heightAt(x, z) + 0.1, z, -a, 0.12, 0.02, 0.55]);
+      out.push([x, heightAt(x, z) + 0.1, z, -a, 0.14, 0.02, 0.8]);
     }
     return out;
   }, []);

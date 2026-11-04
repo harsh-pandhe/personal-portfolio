@@ -62,15 +62,19 @@ function curve(points: [number, number][], seg = 60) {
 const asphalt = new THREE.MeshStandardMaterial({ color: "#3b4048", roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -2 });
 const curb = new THREE.MeshStandardMaterial({ color: "#f2f3f5", roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -3 });
 const paving = new THREE.MeshStandardMaterial({ color: "#e9e2d0", roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2 });
+const lineMat = new THREE.MeshStandardMaterial({ color: "#f4f4f0", roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4 });
 const dirt = new THREE.MeshStandardMaterial({ color: "#d8c49a", roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 });
 
 function Roads() {
   const geos = useMemo(() => {
     const out: { g: THREE.BufferGeometry; m: THREE.Material }[] = [];
-    // ring road with white curbs either side
-    out.push({ g: ribbon(circle(ROAD_R), 3.0, 0.05, true), m: asphalt });
-    out.push({ g: ribbon(circle(ROAD_R - 1.6), 0.22, 0.09, true), m: curb });
-    out.push({ g: ribbon(circle(ROAD_R + 1.6), 0.22, 0.09, true), m: curb });
+    // two-lane ring road: asphalt, solid edge lines, raised kerbs and a sidewalk either side
+    out.push({ g: ribbon(circle(ROAD_R, 220), 4.6, 0.05, true), m: asphalt });
+    for (const s of [-1, 1]) {
+      out.push({ g: ribbon(circle(ROAD_R + s * 2.0, 220), 0.12, 0.08, true), m: lineMat });
+      out.push({ g: ribbon(circle(ROAD_R + s * 2.42, 220), 0.25, 0.14, true), m: curb });
+      out.push({ g: ribbon(circle(ROAD_R + s * 3.2, 220), 1.3, 0.12, true), m: paving });
+    }
     // roundabout around HQ
     out.push({ g: ribbon(circle(8.2, 90), 2.2, 0.05, true), m: asphalt });
     out.push({ g: ribbon(circle(9.4, 90), 0.2, 0.09, true), m: curb });
@@ -101,14 +105,14 @@ function Crossings() {
       if (!z.radius) continue;
       const [x, zz] = zonePos(z);
       const a = Math.atan2(zz, x);
-      for (let k = -2; k <= 2; k++) {
+      for (let k = -3; k <= 3; k++) {
         const t = new THREE.Vector2(-Math.sin(a), Math.cos(a));
         const cx = Math.cos(a) * ROAD_R + t.x * k * 0.45,
           cz = Math.sin(a) * ROAD_R + t.y * k * 0.45;
         const m = new THREE.Matrix4().compose(
           new THREE.Vector3(cx, heightAt(cx, cz) + 0.1, cz),
           new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -a),
-          new THREE.Vector3(2.6, 0.02, 0.24)
+          new THREE.Vector3(4.2, 0.02, 0.3)
         );
         out.push(m);
       }

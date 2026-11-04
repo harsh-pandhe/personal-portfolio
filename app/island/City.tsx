@@ -77,7 +77,7 @@ export function Traffic() {
   return (
     <>
       {CARS.map((k, i) => (
-        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - 0.8 : ROAD_R + 0.8} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
+        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - 1.15 : ROAD_R + 1.15} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
       ))}
     </>
   );

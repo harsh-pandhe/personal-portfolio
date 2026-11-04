@@ -50,7 +50,8 @@ export function roadMask(x: number, z: number) {
     if (zz.id === "hq") continue;
     d = Math.min(d, distSeg(x, z, 0, 0, zz.p[0] * 0.82, zz.p[1] * 0.82));
   }
-  return 1 - ss(1.1, 1.9, d);
+  // the ring road (with sidewalks) is wider than the spokes
+  return 1 - ss(Math.abs(r - ROAD_R) === d ? 3.9 : 1.4, Math.abs(r - ROAD_R) === d ? 4.8 : 2.2, d);
 }
 
 export function heightAt(x: number, z: number) {
