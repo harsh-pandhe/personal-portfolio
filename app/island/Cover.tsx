@@ -19,6 +19,7 @@ const css = `
 @keyframes cv-left { to { transform: translateX(-50%) } }
 @keyframes cv-right { from { transform: translateX(-50%) } to { transform: translateX(0) } }
 @keyframes cv-grow { from { transform: scaleY(0) } to { transform: scaleY(1) } }
+@keyframes cv-growx { from { transform: scaleX(0) } to { transform: scaleX(1) } }
 @keyframes cv-rise { from { transform: translateY(120px) } to { transform: translateY(0) } }
 .cv-spin { animation: cv-spin 9s linear infinite; transform-box: fill-box; transform-origin: center }
 .cv-bob { animation: cv-bob 3.2s ease-in-out infinite }
@@ -261,26 +262,29 @@ function Workshop({ a }: { a: string }) {
 }
 
 function Library({ a }: { a: string }) {
+  // horizontal bars with the title beside each one, so long paper names never overflow
+  const max = Math.max(...papers.map((p) => p.views));
   return (
     <>
+      <text x="40" y="44" fontFamily="monospace" fontSize="14" fill="rgba(255,255,255,.55)">
+        SSRN · VIEWS PER PAPER · QUANT (LIGHT) · ROBOTICS (COLOUR)
+      </text>
       {papers.map((p, i) => {
-        const h = 150 + (p.views / 244) * 200;
-        const x = 140 + i * 160;
+        const y = 78 + i * 62;
+        const w = 40 + (p.views / max) * 520;
+        const t = p.title.split(":")[0];
         return (
           <g key={p.id}>
-            <rect x={x} y={H - 40 - h} width="110" height={h} rx="8" fill={i < 3 ? "#e9eef5" : a} style={{ animation: `cv-grow 1.1s ${i * 0.12}s cubic-bezier(.16,1,.3,1) both`, transformBox: "fill-box", transformOrigin: "bottom" }} />
-            <text x={x + 55} y={H - 56} textAnchor="middle" fontSize="13" fontWeight="700" fill="#070b17" fontFamily="monospace">
-              {p.views}
+            <text x="40" y={y + 26} fontSize="16" fontWeight="600" fill="rgba(255,255,255,.88)">
+              {t.length > 46 ? t.slice(0, 45) + "…" : t}
             </text>
-            <text transform={`translate(${x + 60} ${H - 80 - h + 50}) rotate(90)`} fontSize="13" fontWeight="600" fill="#070b17">
-              {p.title.split(":")[0].slice(0, 28)}
+            <rect x="560" y={y + 6} width={w} height="30" rx="7" fill={i < 3 ? "#e9eef5" : a} style={{ animation: `cv-growx 1.1s ${i * 0.12}s cubic-bezier(.16,1,.3,1) both`, transformBox: "fill-box", transformOrigin: "left" }} />
+            <text x={560 + w + 12} y={y + 27} fontSize="15" fontWeight="700" fill="rgba(255,255,255,.8)" fontFamily="monospace">
+              {p.views}
             </text>
           </g>
         );
       })}
-      <text x="40" y="44" fontFamily="monospace" fontSize="14" fill="rgba(255,255,255,.55)">
-        SSRN · VIEWS PER PAPER · QUANT (LIGHT) · ROBOTICS (COLOUR)
-      </text>
     </>
   );
 }

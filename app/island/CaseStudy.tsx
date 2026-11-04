@@ -239,26 +239,32 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
         </div>
       );
     case "links":
+      // full-width cards: no lonely label column, so nothing reads as a missing image
       return (
-        <Row label={s.label}>
-          <ul className="divide-y divide-white/10 border-y border-white/10">
+        <div>
+          <div className="mb-4 flex items-center gap-3 border-t border-white/12 pt-5">
+            <Label>{s.label}</Label>
+            <span className="h-px flex-1 bg-white/10" />
+          </div>
+          <ul className={`grid gap-3 ${s.items.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
             {s.items.map((it) => {
               const body = (
-                <div className="group flex items-start justify-between gap-6 py-4">
-                  <div>
-                    <div className="text-[18px] font-semibold leading-snug tracking-[-0.02em] transition-colors group-hover:text-white" style={{}}>
-                      {it.t}
-                    </div>
-                    {it.s && <div className="mt-1 max-w-[62ch] text-[14.5px] leading-relaxed text-white/60">{it.s}</div>}
-                    {it.meta && <div className="mt-1.5 font-mono text-[11px] uppercase text-white/38">{it.meta}</div>}
+                <div className="group relative h-full overflow-hidden rounded-[18px] border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015))] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/25">
+                  <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="text-[19px] font-semibold leading-snug tracking-[-0.02em]">{it.t}</div>
+                    {it.href && <span className="text-white/40 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white">↗</span>}
                   </div>
-                  {it.href && <span className="mt-1 text-white/40 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white">↗</span>}
+                  {it.s && <p className="mt-2 text-[14.5px] leading-relaxed text-white/65">{it.s}</p>}
+                  {it.meta && (
+                    <span className="mt-3 inline-block rounded-full border border-white/15 px-2.5 py-0.5 font-mono text-[10.5px] uppercase text-white/55">{it.meta}</span>
+                  )}
                 </div>
               );
               return (
                 <li key={it.t}>
                   {it.href ? (
-                    <a href={it.href} target="_blank" rel="noreferrer">
+                    <a href={it.href} target="_blank" rel="noreferrer" className="block h-full">
                       {body}
                     </a>
                   ) : (
@@ -268,7 +274,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
               );
             })}
           </ul>
-        </Row>
+        </div>
       );
     case "papers":
       return (
@@ -452,7 +458,7 @@ export default function CaseStudy() {
         ref={scroller}
         data-case-scroll
         style={{ ["--accent" as string]: z.accent }}
-        className={`fixed bottom-[18px] left-[376px] right-[18px] top-[18px] z-40 overflow-y-auto overflow-x-hidden rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
+        className={`fixed bottom-[18px] left-[var(--pl,376px)] right-[18px] top-[18px] z-40 overflow-y-auto overflow-x-hidden rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
           on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[6%] opacity-0"
         }`}
       >

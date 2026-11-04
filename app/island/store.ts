@@ -40,6 +40,7 @@ type UI = {
   gala: number | null; // formation index while the gala show runs
   toast: { id: number; title: string; body?: string } | null;
   help: boolean;
+  panel: boolean; // left sidebar shown
 };
 
 let ui: UI = {
@@ -60,6 +61,7 @@ let ui: UI = {
   settings: false,
   story: null,
   gala: null,
+  panel: true,
 };
 
 let toastId = 0;

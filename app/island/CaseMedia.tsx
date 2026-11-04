@@ -21,20 +21,18 @@ export const MEDIA: Partial<Record<ZoneId, Media>> = {
     gallery: [
       { src: P("sih-team-stage"), cap: "Algo Sapiens on stage, SIH 2025 Grand Finale", wide: true },
       { src: P("desk-rig"), cap: "The desk where most of it gets built" },
-      { src: P("drone-workshop-lecture"), cap: "Teaching the IIC drone workshop" },
-      { src: P("event-stage"), cap: "Hackathon night, SIT Lonavala" },
+      { src: P("code2launch-lecture"), cap: "Code2Launch: a three-day ACM web-dev event" },
     ],
   },
   arena: {
     hero: { video: "arena-trophy", cap: "SIH 2025: the trophy goes up, animated" },
     gallery: [
       { src: V("story-5-hackathon"), cap: "The hackathon hall, animated", video: true, wide: true },
-      { src: P("sih-cheque"), cap: "SIH 2025 national win: ₹1,50,000 for Algo Sapiens", wide: true },
-      { src: P("sih-team-stage"), cap: "The team at the Grand Finale" },
+      { src: P("sih-team-stage"), cap: "Algo Sapiens at the SIH 2025 Grand Finale", wide: true },
       { src: P("sih-grand-finale"), cap: "Smart India Hackathon 2025 Grand Finale" },
-      { src: P("roborashtra-bot"), cap: "RoboRashtra 2026 maze bot: 1st runner-up" },
+      { src: P("roborashtra-cheque"), cap: "RoboRashtra 2026: 1st runner-up, ₹10,000 for the maze bot", wide: true },
+      { src: P("roborashtra-bot"), cap: "The maze-solving bot" },
       { src: P("roborashtra-newspaper"), cap: "RoboRashtra in Maval Maza" },
-      { src: P("event-stage"), cap: "Hackathon crowd" },
     ],
   },
   marsyard: {
@@ -42,8 +40,7 @@ export const MEDIA: Partial<Record<ZoneId, Media>> = {
     gallery: [
       { src: V("mars-drone"), cap: "A drone mapping a Mars yard with LiDAR, animated", video: true, wide: true },
       { src: V("story-2-navigation"), cap: "Navigating without GPS, animated", video: true },
-      { src: P("ascend-drone"), cap: "ASCEND, the IRoC-U drone" },
-      { src: P("drone-workshop-lecture"), cap: "Drone workshop at IIC SIT" },
+      { src: P("ascend-site"), cap: "ASCEND: the drone project's landing page" },
     ],
   },
   swarm: { live: "swarm" },

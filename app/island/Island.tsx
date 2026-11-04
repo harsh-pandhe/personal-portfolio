@@ -199,10 +199,47 @@ function MenuItem({ title, sub, icon, primary, onClick, active }: { title: strin
   );
 }
 
+/** Show/hide the sidebar; remembered per visitor, and exposed as --pl so overlays slide over. */
+function usePanelToggle() {
+  const ui = useUI();
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("panel") === "0") setUI({ panel: false });
+    } catch {}
+  }, []);
+  useEffect(() => {
+    const cinema = ui.story !== null || ui.gala !== null;
+    document.documentElement.style.setProperty("--pl", ui.panel && !cinema ? "376px" : "18px");
+    try {
+      localStorage.setItem("panel", ui.panel ? "1" : "0");
+    } catch {}
+  }, [ui.panel, ui.story, ui.gala]);
+}
+
+function PanelToggle() {
+  const ui = useUI();
+  if (ui.story !== null || ui.gala !== null) return null;
+  return (
+    <button
+      onClick={() => setUI({ panel: !ui.panel })}
+      title={ui.panel ? "Hide the sidebar ([)" : "Show the sidebar ([)"}
+      aria-label={ui.panel ? "Hide the sidebar" : "Show the sidebar"}
+      className={`fixed top-[34px] z-[31] grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-[#1e2126]/90 text-white shadow-lg backdrop-blur transition-all [transition-duration:800ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:bg-[#2a2e35] ${
+        ui.panel ? "left-[340px]" : "left-[18px]"
+      }`}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-500 ${ui.panel ? "" : "rotate-180"}`}>
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+  );
+}
+
 function Panel() {
   const ui = useUI();
+  usePanelToggle();
   const exploring = ui.mode === "explore";
-  const cinema = ui.story !== null || ui.gala !== null;
+  const cinema = ui.story !== null || ui.gala !== null || !ui.panel;
   return (
     <aside
       className={`fixed bottom-[18px] left-[18px] top-[18px] z-30 flex w-[340px] flex-col rounded-[30px] border border-white/10 bg-[#1e2126]/[0.86] p-[18px] text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform [transition-duration:800ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
@@ -331,7 +368,7 @@ function Hero() {
           show ? "opacity-100" : "opacity-0"
         }`}
       />
-      <div className={`pointer-events-none fixed bottom-[46px] left-[396px] right-12 z-20 transition-all [transition-duration:1200ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${show ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
+      <div className={`pointer-events-none fixed bottom-[46px] left-[calc(var(--pl,376px)+20px)] right-12 z-20 transition-all [transition-duration:1200ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${show ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
         <div className={`mb-3 text-[15px] font-medium ${ui.night ? "text-white/80" : "text-neutral-800"}`}>Autonomous navigation & multi-agent robotics · SIT Lonavala</div>
         <h1 className={`text-[clamp(72px,8.6vw,168px)] font-semibold leading-[0.86] tracking-[-0.065em] transition-colors duration-1000 ${ui.night ? "text-white" : "text-[#121417]"}`}>
           A portfolio
@@ -375,7 +412,7 @@ function TourCard() {
   const z = zoneById[TOUR[ui.tour]];
   return (
     <div
-      className={`fixed bottom-[18px] left-[376px] z-20 w-[520px] rounded-[28px] border border-white/60 bg-white/80 p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+      className={`fixed bottom-[18px] left-[var(--pl,376px)] z-20 w-[520px] rounded-[28px] border border-white/60 bg-white/80 p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
         on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
       }`}
     >
@@ -488,6 +525,7 @@ export default function Island() {
         else if (ui.mode !== "intro") setUI({ mode: "intro" });
       } else if (k === "e" && ui.mode === "explore" && ui.near) setUI({ open: ui.open ? null : ui.near });
       else if (ui.story !== null || ui.gala !== null) return; // cinema: only Esc and the on-screen buttons
+      else if (k === "[") setUI({ panel: !ui.panel });
       else if (k === "l") setUI({ night: !ui.night, timeMode: "manual" });
       else if (k === "m") startStory();
       else if (k === "g") startGala();
@@ -510,6 +548,7 @@ export default function Island() {
       <Scene />
       <Hero />
       <Panel />
+      <PanelToggle />
       <Prompt />
       <TourCard />
       <Corner />
