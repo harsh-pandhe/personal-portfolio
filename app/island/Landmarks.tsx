@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ARENA } from "./colliders";
-import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R } from "./terrain";
+import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R, ROPE_PEAKS } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
 import { papers } from "@/lib/achievements";
@@ -668,89 +668,142 @@ function Swarm() {
   );
 }
 
+/* Ropeway Ridge: a multi-span gondola from the valley station over three coastal peaks. */
 function Ropeway() {
   const z = zoneById.ropeway;
   const [vx, vz] = zonePos(z);
   const [tx, tz] = ridgeTop();
-  const a = useMemo(() => new THREE.Vector3(vx, heightAt(vx, vz) + 3.2, vz), [vx, vz]);
-  const b = useMemo(() => new THREE.Vector3(tx, heightAt(tx, tz) + 3.6, tz), [tx, tz]);
-  const side = useMemo(() => new THREE.Vector3(b.z - a.z, 0, -(b.x - a.x)).normalize().multiplyScalar(0.9), [a, b]);
+  // stations: valley, ridge, then the two outer peaks
+  const stops = useMemo(() => {
+    const pts: [number, number][] = [[vx, vz], [tx, tz], ...ROPE_PEAKS.map(([x, zz]) => [x, zz] as [number, number])];
+    return pts.map(([x, zz], i) => new THREE.Vector3(x, heightAt(x, zz) + (i === 0 ? 4 : 4.6), zz));
+  }, [vx, vz, tx, tz]);
+  // one continuous line with a catenary sag in every span, so cabins ride straight through the stations
   const curve = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 40; i++) {
-      const t = i / 40;
-      const p = a.clone().lerp(b, t);
-      p.y -= Math.sin(t * Math.PI) * 1.6; // sag
-      pts.push(p);
+    for (let s = 0; s < stops.length - 1; s++) {
+      const A = stops[s],
+        B = stops[s + 1];
+      const sag = A.distanceTo(B) * 0.055;
+      for (let i = s ? 1 : 0; i <= 24; i++) {
+        const t = i / 24;
+        pts.push(A.clone().lerp(B, t).setY(A.y + (B.y - A.y) * t - Math.sin(t * Math.PI) * sag));
+      }
     }
-    return new THREE.CatmullRomCurve3(pts);
-  }, [a, b]);
+    return new THREE.CatmullRomCurve3(pts, false, "centripetal");
+  }, [stops]);
+  const side = useMemo(() => {
+    const d = stops[stops.length - 1].clone().sub(stops[0]);
+    return new THREE.Vector3(d.z, 0, -d.x).normalize().multiplyScalar(1.1);
+  }, [stops]);
   const cables = useMemo(
     () =>
-      [-1, 1].map((s) => {
-        const off = side.clone().multiplyScalar(s);
-        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(curve.getPoints(60).map((p) => p.clone().add(off))), 120, 0.035, 5);
+      [-1, 1].map((sgn) => {
+        const off = side.clone().multiplyScalar(sgn);
+        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(curve.getPoints(220).map((p) => p.clone().add(off))), 440, 0.05, 5);
       }),
     [curve, side]
   );
+  // a lattice tower at the middle of every long span
+  const towers = useMemo(() => {
+    const out: { p: THREE.Vector3; g: number; yaw: number }[] = [];
+    for (let s = 0; s < stops.length - 1; s++) {
+      const A = stops[s],
+        B = stops[s + 1];
+      const L = A.distanceTo(B);
+      const n = L > 24 ? 1 : 0;
+      for (let k = 1; k <= n; k++) {
+        const t = k / (n + 1);
+        const p = A.clone().lerp(B, t);
+        p.y = A.y + (B.y - A.y) * t - Math.sin(t * Math.PI) * L * 0.055 + 0.4;
+        out.push({ p, g: heightAt(p.x, p.z), yaw: Math.atan2(B.x - A.x, B.z - A.z) });
+      }
+    }
+    return out;
+  }, [stops]);
   const cabins = useRef<THREE.Group>(null);
+  const tan = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     cabins.current?.children.forEach((cab, i) => {
       const up = i % 2 === 0;
-      const k = ((t * 0.035 + i * 0.25) % 1 + 1) % 1;
+      const k = (((t * 0.012 + i * 0.1) % 1) + 1) % 1;
       const u = up ? k : 1 - k;
       const p = curve.getPointAt(u).add(side.clone().multiplyScalar(up ? -1 : 1));
-      cab.position.set(p.x, p.y - 1.25, p.z);
-      cab.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+      cab.position.set(p.x, p.y - 1.6, p.z);
+      curve.getTangentAt(u, tan);
+      cab.rotation.y = Math.atan2(tan.x, tan.z);
+      cab.rotation.z = Math.sin(t * 1.3 + i) * 0.03; // a little sway
     });
   });
-  const towers = [0.33, 0.66].map((t) => {
-    const p = curve.getPointAt(t);
-    const g = heightAt(p.x, p.z);
-    return { p, g };
-  });
   const lamp = useGlow("#ffe8a3", 0.1, 2.5);
+  const cabinCols = useMemo(() => ["#e5322d", "#f7f8fa", "#e5322d", "#2d5bff", "#f7f8fa"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.2 })), []);
   return (
     <group>
       {cables.map((g, i) => (
         <mesh key={i} geometry={g} material={M.dark} />
       ))}
-      {towers.map(({ p, g }, i) => (
-        <group key={i} position={[p.x, g, p.z]} rotation-y={Math.atan2(b.x - a.x, b.z - a.z)}>
-          <mesh position={[0, (p.y - g) / 2, 0]} material={M.metal} castShadow>
-            <boxGeometry args={[0.45, p.y - g, 0.45]} />
-          </mesh>
+      {towers.map(({ p, g, yaw }, i) => (
+        <group key={i} position={[p.x, g, p.z]} rotation-y={yaw}>
+          {/* four tapered legs and a head frame */}
+          {[-1, 1].flatMap((sx) =>
+            [-1, 1].map((sz) => (
+              <mesh key={`${sx}${sz}`} position={[sx * 0.45, (p.y - g) / 2, sz * 0.45]} rotation={[sz * -0.06, 0, sx * 0.06]} material={M.metal} castShadow>
+                <boxGeometry args={[0.16, p.y - g, 0.16]} />
+              </mesh>
+            ))
+          )}
+          {Array.from({ length: Math.max(1, Math.floor((p.y - g) / 2.2)) }, (_, k) => (
+            <mesh key={k} position={[0, 1.6 + k * 2.2, 0]} material={M.metal}>
+              <boxGeometry args={[1.0, 0.08, 1.0]} />
+            </mesh>
+          ))}
           <mesh position={[0, p.y - g, 0]} material={M.metal} castShadow>
-            <boxGeometry args={[2.4, 0.2, 0.3]} />
+            <boxGeometry args={[3, 0.25, 0.5]} />
           </mesh>
         </group>
       ))}
-      {/* stations */}
-      {[a, b].map((p, i) => (
-        <group key={i} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={Math.atan2(b.x - a.x, b.z - a.z)}>
-          <mesh position={[0, 1.6, 0]} material={M.white} castShadow receiveShadow>
-            <boxGeometry args={[4.2, 3.2, 3.2]} />
-          </mesh>
-          <mesh position={[0, 3.35, 0]} material={M.red} castShadow>
-            <boxGeometry args={[4.8, 0.3, 4]} />
-          </mesh>
-          <mesh position={[0, 2.2, i ? -1.62 : 1.62]} material={lamp}>
-            <boxGeometry args={[3, 0.6, 0.04]} />
-          </mesh>
-        </group>
-      ))}
+      {/* stations: the valley terminal, two mid stations on the peaks and a top terminal */}
+      {stops.map((p, i) => {
+        const nxt = stops[Math.min(i + 1, stops.length - 1)],
+          prv = stops[Math.max(i - 1, 0)];
+        const yaw = Math.atan2(nxt.x - prv.x, nxt.z - prv.z);
+        const big = i === 0 || i === stops.length - 1;
+        return (
+          <group key={i} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw}>
+            <mesh position={[0, 1.8, 0]} material={M.white} castShadow receiveShadow>
+              <boxGeometry args={[big ? 5 : 3.6, 3.6, big ? 4.6 : 3.4]} />
+            </mesh>
+            <mesh position={[0, 3.8, 0]} rotation-x={0.08} material={M.red} castShadow>
+              <boxGeometry args={[big ? 5.8 : 4.4, 0.35, big ? 5.6 : 4.4]} />
+            </mesh>
+            {/* bullwheel */}
+            <mesh position={[0, 4.3, 0]} rotation-x={Math.PI / 2} material={M.metal}>
+              <torusGeometry args={[1.15, 0.12, 8, 24]} />
+            </mesh>
+            <mesh position={[0, 2.3, (big ? 2.32 : 1.72) * (i === 0 ? 1 : -1)]} material={lamp}>
+              <boxGeometry args={[big ? 3.6 : 2.6, 0.7, 0.04]} />
+            </mesh>
+          </group>
+        );
+      })}
       <group ref={cabins}>
-        {Array.from({ length: 6 }, (_, i) => (
+        {Array.from({ length: 10 }, (_, i) => (
           <group key={i}>
-            <mesh position={[0, 1.15, 0]} material={M.dark}>
-              <cylinderGeometry args={[0.03, 0.03, 0.9, 6]} />
+            <mesh position={[0, 1.5, 0]} material={M.dark}>
+              <cylinderGeometry args={[0.04, 0.04, 1.2, 6]} />
             </mesh>
-            <mesh material={M.red} castShadow>
-              <boxGeometry args={[0.95, 0.8, 0.95]} />
+            <mesh position={[0, 2.1, 0]} material={M.metal}>
+              <boxGeometry args={[0.5, 0.18, 0.3]} />
             </mesh>
-            <mesh position={[0, 0.1, 0]} material={M.glass}>
-              <boxGeometry args={[0.98, 0.35, 0.98]} />
+            <mesh material={cabinCols[i % cabinCols.length]} castShadow>
+              <boxGeometry args={[1.25, 1.05, 1.25]} />
+            </mesh>
+            <mesh position={[0, 0.15, 0]} material={M.glass}>
+              <boxGeometry args={[1.28, 0.48, 1.28]} />
+            </mesh>
+            <mesh position={[0, 0.56, 0]} material={M.dark}>
+              <boxGeometry args={[1.3, 0.08, 1.3]} />
             </mesh>
           </group>
         ))}

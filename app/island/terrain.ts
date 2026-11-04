@@ -20,7 +20,6 @@ export const RIDGE_TOP = 13;
 const HILLS: [number, number, number, number][] = ([
   [-70, 56, 8, 7],
   [-30, 57, 7, 6.5],
-  [10, 56, 6, 6],
   [130, 55, 9, 7.5],
   [170, 54, 7, 6],
 ] as const).map(([deg, r, hh, s]) => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r, hh, s]);
@@ -28,6 +27,13 @@ const HILLS: [number, number, number, number][] = ([
 export function ridgeTop(): [number, number] {
   return RIDGE;
 }
+
+// two more coastal peaks beyond the ridge for the ropeway to cross: [x, z, height, spread]
+const polar = (deg: number, r: number): [number, number] => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r];
+export const ROPE_PEAKS: [number, number, number, number][] = [
+  [...polar(9, 60), 17, 7],
+  [...polar(-13, 59), 14.5, 6.5],
+];
 
 function distSeg(px: number, pz: number, ax: number, az: number, bx: number, bz: number) {
   const vx = bx - ax,
@@ -60,6 +66,7 @@ export function heightAt(x: number, z: number) {
     h += hh * Math.exp(-d2 / (2 * hs * hs));
   }
   h += 1.4 * Math.max(0, Math.sin(x * 0.06 + 0.8) * Math.sin(z * 0.07 - 0.4)) * ss(30, 48, r);
+  for (const [px, pz, ph, ps] of ROPE_PEAKS) h += ph * Math.exp(-((x - px) ** 2 + (z - pz) ** 2) / (2 * ps * ps));
   // the ridge
   const dr = Math.hypot(x - RIDGE[0], z - RIDGE[1]);
   h += RIDGE_TOP * Math.exp(-(dr * dr) / (2 * 7.5 * 7.5));

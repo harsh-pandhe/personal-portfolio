@@ -230,6 +230,12 @@ export function CameraRig() {
       // look at the zone from the island-centre side, slightly off-axis, so the billboard faces us
       tmp.set(x - ox * dist * 0.9 + oz * 6, y + lift, zz - oz * dist * 0.9 - ox * 6);
       tmp2.set(x, y + (id === "hq" ? 5 : id === "trading" ? 11 : 2.5), zz);
+      if (id === "ropeway") {
+        // frame the whole line: aim between the valley station and the peaks, from higher up
+        const [rx, rz] = ridgeTop();
+        tmp2.set((x + rx) / 2 - 6, y + 9, (zz + rz) / 2 - 8);
+        tmp.y += 14;
+      }
       // shift the aim down-left so the zone lands up-right of the panel and tour card
       const fx = tmp2.x - tmp.x,
         fz = tmp2.z - tmp.z;
