@@ -6,6 +6,7 @@ import { CASES, PAPER_NOTES, type Section } from "./cases";
 import { setUI, travel, useUI } from "./store";
 import { zoneById, ZONES, type ZoneId } from "./zones";
 import { Gallery, MediaHero } from "./CaseMedia";
+import ProjectBoard from "./ProjectBoard";
 
 /* Reveal children as they scroll into the case-study panel. */
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -181,6 +182,8 @@ function PaperCards({ area, accent }: { area?: "Quant" | "Robotics"; accent: str
 
 function SectionView({ s, accent }: { s: Section; accent: string }) {
   switch (s.type) {
+    case "board":
+      return <ProjectBoard />;
     case "statement":
       return <p className="max-w-[19ch] text-[clamp(40px,5vw,84px)] font-semibold leading-[1.02] tracking-[-0.045em]">{s.text}</p>;
     case "quote":

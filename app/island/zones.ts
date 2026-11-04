@@ -208,7 +208,7 @@ export const ZONES: Zone[] = [
     id: "workshop",
     key: "6",
     name: "The Workshop",
-    team: `Archive · ${archive.length} builds`,
+    team: "The board · 45 builds",
     accent: "#7a4dff",
     angle: 110,
     radius: ISLAND_R,

@@ -11,6 +11,7 @@ export type Section =
   | { type: "quote"; text: string; who: string }
   | { type: "links"; label: string; items: { t: string; s?: string; meta?: string; href?: string }[] }
   | { type: "contact" }
+  | { type: "board" }
   | { type: "papers"; label: string; area?: "Quant" | "Robotics" };
 
 /** Key results for each paper, from the SSRN posts on LinkedIn and the local PDF drafts. */
@@ -325,18 +326,14 @@ export const CASES: Record<ZoneId, Case> = {
   workshop: {
     titleLines: ["The", "Workshop"],
     meta: [
-      ["Builds here", `${archive.length}`],
+      ["Builds on the board", "45"],
       ["Public repos", "102"],
       ["Open source", "validator.js · rich"],
       ["Streak", "#365DaysOfCode"],
     ],
     hook: "Robotics, ML, hardware, civic tech and full-stack products — most of them on GitHub.",
     sections: [
-      {
-        type: "links",
-        label: "Archive",
-        items: archive.map((a) => ({ t: a.name, s: a.line, meta: `${a.year} · ${a.kind}`, href: a.href })),
-      },
+      { type: "board" },
       {
         type: "links",
         label: "Merged open-source PRs",
