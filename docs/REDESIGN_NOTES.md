@@ -42,6 +42,35 @@ Feedback after walking the island (screenshots of Ropeway Ridge, Trading Floor, 
 | 27 | Robotic arm should look real, import a real model | Current arm is hand-built primitives | Import a CC0 or permissively licensed industrial arm GLB, credit it in `public/models/CREDITS.md`, add joint animation |
 | 28 | Distant mountains look like pyramids | Three layered ranges in `Env.tsx` use simple cone-like profiles | Noise-based ridgelines with layered haze, snow caps and proper silhouettes |
 
+## Round 3 change list
+
+Feedback after opening the case-study pages (Arena, Mars Yard, Swarm Field, Ropeway, Morpheus Gate).
+
+| # | Feedback | Where / likely cause | Plan |
+|---|----------|----------------------|------|
+| 29 | Arena case-study page is weak (flat trophy, confetti) | `app/island/CaseStudy.tsx` and `cases.ts`: every page is a generic stat row plus one drawn hero | Redesign per page around real media (team photos, deck slides, Flow video), timeline of the SIH 2025 run, result card |
+| 30 | Mars Yard page is weak (a flat drone drawing) | Same | Real sim footage, LiDAR and FAST-LIO visuals, a short Flow video, a 3D drone with spinning rotors |
+| 31 | Ropeway page is weak | Same | Multi-peak ropeway scene (see #25), Doppelmayr work only where shareable |
+| 32 | Morpheus page is weak | Same; green rain and two circles | Match the real Project Morpheus site look (needs the site, see #14), event photos, registration stats |
+| 33 | Swarm page is weak | Same; a static grid | Live swarm sim as the hero (see #22) |
+| 34 | Use the Flow connector and Google Flow to generate good videos, put them in the pages | Not available in this session (no Flow connector loaded, no folder attached) | Needs the connector or Flow exports from Harsh; embed as muted looping video per page with posters |
+| 35 | Make good 3D with local Blender and its connector | Blender connector not available here | Needs Blender attached via a computer folder or exported GLBs; otherwise import CC0 models |
+| 36 | Workshop: the project list is long, wants figma-board style cards of different sizes, scattered, connected by wires, a big decorative board | Workshop is a plain list | One large board: cards of varied size and shape for every project (apps, drones, tools), wire connectors, pan and zoom, click to open |
+| 37 | Home page feels like a child's drawing | `Landmarks.tsx` Home house: primitive boxes and a flat roof | Rebuild Home as a believable Navi Mumbai home with detail, planting and lighting; it carries the contact call to action |
+| 38 | More education: school onward | Not in the content | Add an education timeline from school to SIT Lonavala; needs school names and years from Harsh |
+| 39 | Mission Control can be better | Hero zone | Rework as a control room with live panels (hackathon countdown, status, stats) |
+| 40 | Deep research on Harsh: LinkedIn, GitHub, other accounts, launched mobile apps, all projects; find what's missing; add sections | Research covers LinkedIn text, SSRN, repo inventory; no live browsing, no app-store pass | Needs a browser session on Harsh's machine or exports; then add sections for apps, GitHub projects, education, certificates, volunteering |
+| 41 | Expand the island | See #8 | Larger island with the new zones |
+| 42 | City centre from Solapur to Singapore: a fountain or landmark, better storytelling | Home to Singapore link is only a sign | Central plaza with a fountain and a path of milestones from Solapur to Singapore |
+| 43 | Cleaner, more cinematic story | See #24 | Same plan, multi-angle shots and controls |
+| 44 | Verify every listed change in the browser with proof | I can run Chromium locally, so this part is possible | Screenshot or short capture per change at the end of each batch, attached to the PR |
+
+## What I cannot reach from this session
+
+- Your browser, Blender, Google Flow and the Flow repo: no connector loaded, no computer folder attached.
+- `media.licdn.com` and `projectmorpheus.in`: blocked by the network policy.
+- Without those, media and the real Morpheus look stay open; code, layout and 3D work can proceed with CC0 models.
+
 ## Research: what exists and what is missing
 
 Already collected (see `research/README.md`): dossier, 161 LinkedIn posts with full text, SSRN list, repo inventory, own papers.
