@@ -32,6 +32,7 @@ function build(): Collider[] {
   box("trading", 0, -1.5, 9.2, 4.2); // tower
   box("workshop", 3.5, -3, 7.2, 4.7); // shed
   box("home", 0.2, -4.2, 7.6, 5.2); // house
+  box("library", -0.4, -6, 11, 16.8); // gothic hall and its tower
   const [bx, bz] = zoneToWorld("trading", -10.5, 0.5);
   out.push({ kind: "circle", x: bx, z: bz, r: 1.9 }); // bull plinth
   return out;

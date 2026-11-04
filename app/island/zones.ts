@@ -231,7 +231,7 @@ export const ZONES: Zone[] = [
     angle: 150,
     radius: ISLAND_R,
     headline: "Six papers. Half of them are about being wrong, honestly.",
-    blurb: "Each monolith is a paper. Quant finance on the Nifty 500, and multi-robot reinforcement learning.",
+    blurb: "Six papers float outside an old stone hall. Quant finance on the Nifty 500, and multi-robot reinforcement learning.",
     blocks: [
       {
         kind: "list",

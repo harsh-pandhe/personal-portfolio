@@ -214,7 +214,7 @@ function Pages() {
   }, []);
   const pages = useMemo(() => {
     const r = rng(4);
-    return Array.from({ length: 14 }, () => ({ x: (r() - 0.5) * 12, z: (r() - 0.5) * 6 - 2, y: 5 + r() * 3, ph: r() * 6, s: 0.4 + r() * 0.3 }));
+    return Array.from({ length: 34 }, () => ({ x: (r() - 0.5) * 16, z: -6 + (r() - 0.5) * 20, y: 3 + r() * 9, ph: r() * 6, s: 0.35 + r() * 0.3 }));
   }, []);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;

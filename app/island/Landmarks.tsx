@@ -1285,55 +1285,127 @@ function Workshop() {
   );
 }
 
+/* Research Library: a gothic hall modelled in Blender (public/models/library.glb). The six SSRN
+   papers float in front of the doors like candles; hover one for its title, click to open. */
+const LIB_GLB = "/models/library.glb";
+useGLTF.preload(LIB_GLB, false, true);
+function paperTexture(title: string, area: string) {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 340;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#fbf6e9";
+  g.fillRect(0, 0, 256, 340);
+  g.fillStyle = area === "Quant" ? "#1d4ed8" : "#0f766e";
+  g.fillRect(0, 0, 256, 10);
+  g.fillStyle = "#1d2128";
+  g.font = "700 20px serif";
+  const words = title.split(":")[0].split(" ");
+  let line = "",
+    y = 52;
+  for (const w of words) {
+    if (g.measureText(line + w).width > 220) {
+      g.fillText(line, 18, y);
+      line = "";
+      y += 26;
+    }
+    line += w + " ";
+  }
+  g.fillText(line, 18, y);
+  g.fillStyle = "#9aa3ad";
+  for (let i = 0; i < 9; i++) g.fillRect(18, y + 28 + i * 16, 220 - (i % 3) * 30, 5);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 function Library() {
   const [hover, setHover] = useState<number | null>(null);
-  const glow = useGlow("#00d2ff", 0.2, 2.2);
+  const { scene } = useGLTF(LIB_GLB, false, true);
+  const hall = useMemo(() => {
+    const c = scene.clone(true);
+    const glow: THREE.MeshStandardMaterial[] = [];
+    c.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = m.receiveShadow = true;
+      const mat = m.material as THREE.MeshStandardMaterial;
+      if (/LibGlass|LibRose/.test(mat.name)) glow.push(mat);
+    });
+    return { c, glow };
+  }, [scene]);
+  const sheets = useMemo(() => papers.map((p) => new THREE.MeshStandardMaterial({ map: paperTexture(p.title, p.area), emissive: "#ffcf7a", emissiveIntensity: 0.15, side: THREE.DoubleSide, roughness: 0.9 })), []);
+  const flames = useRef<THREE.Group>(null);
+  const g = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime,
+      n = world.night;
+    hall.glow.forEach((m) => (m.emissiveIntensity = 0.4 + n * 2.2));
+    sheets.forEach((m, i) => (m.emissiveIntensity = (hover === i ? 0.6 : 0.12) + n * 0.5));
+    g.current?.children.forEach((s, i) => {
+      s.position.y = 3.4 + (i % 3) * 0.7 + Math.sin(t * 0.9 + i) * 0.25;
+      s.rotation.y = Math.sin(t * 0.4 + i) * 0.35;
+      s.rotation.z = Math.sin(t * 0.7 + i * 2) * 0.06;
+    });
+    flames.current?.children.forEach((f, i) => f.scale.setScalar(0.85 + Math.sin(t * 12 + i * 3) * 0.15));
+  });
   return (
     <ZoneGroup id="library">
-      {papers.map((p, i) => {
-        const a = (i / (papers.length - 1) - 0.5) * 2.2;
-        const x = Math.sin(a) * 6,
-          z = -Math.cos(a) * 6 + 2;
-        const h = 4.4 + (i % 3) * 0.9;
-        return (
-          <group key={p.id} position={[x, 0, z]} rotation-y={-a}>
-            <mesh
-              position={[0, h / 2, 0]}
-              material={M.metal}
-              castShadow
-              onPointerOver={(e) => {
-                e.stopPropagation();
-                setHover(i);
-                document.body.style.cursor = "pointer";
-              }}
-              onPointerOut={() => {
-                setHover(null);
-                document.body.style.cursor = "";
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setUI({ open: "library" });
-              }}
-            >
-              <boxGeometry args={[1.5, h, 0.45]} />
-            </mesh>
-            <mesh position={[0, h * 0.8, 0.23]} material={glow}>
-              <boxGeometry args={[1.0, 0.06, 0.01]} />
-            </mesh>
-            {hover === i && (
-              <Html position={[0, h + 0.8, 0]} center zIndexRange={[30, 0]} style={{ pointerEvents: "none" }}>
-                <div className="w-64 rounded-xl border border-white/20 bg-neutral-900/90 p-3 text-white shadow-2xl backdrop-blur">
-                  <div className="text-[10px] uppercase tracking-widest text-cyan-300">
-                    {p.area} · {p.date}
+      <primitive object={hall.c} position={[0, 0, -6]} />
+      <group ref={g}>
+        {papers.map((p, i) => {
+          const a = (i / (papers.length - 1) - 0.5) * 2.0;
+          const x = Math.sin(a) * 5.2,
+            z = 4.2 - Math.cos(a) * 1.4;
+          return (
+            <group key={p.id} position={[x, 4, z]}>
+              <mesh
+                material={sheets[i]}
+                castShadow
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  setHover(i);
+                  document.body.style.cursor = "pointer";
+                }}
+                onPointerOut={() => {
+                  setHover(null);
+                  document.body.style.cursor = "";
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUI({ open: "library" });
+                }}
+              >
+                <planeGeometry args={[1.3, 1.72]} />
+              </mesh>
+              {hover === i && (
+                <Html position={[0, 1.4, 0]} center zIndexRange={[30, 0]} style={{ pointerEvents: "none" }}>
+                  <div className="w-64 rounded-xl border border-white/20 bg-neutral-900/90 p-3 text-white shadow-2xl backdrop-blur">
+                    <div className="text-[10px] uppercase tracking-widest text-cyan-300">
+                      {p.area} · {p.date}
+                    </div>
+                    <div className="mt-1 text-[13px] font-semibold leading-snug">{p.title}</div>
                   </div>
-                  <div className="mt-1 text-[13px] font-semibold leading-snug">{p.title}</div>
-                </div>
-              </Html>
-            )}
-          </group>
-        );
-      })}
-      <Billboard id="library" pos={[0, 0, 6.6]} rotY={0} scale={0.85} />
+                </Html>
+              )}
+            </group>
+          );
+        })}
+      </group>
+      {/* candles on stands either side of the steps */}
+      <group ref={flames}>
+        {[-3.6, -2.2, 2.2, 3.6].map((x) => (
+          <mesh key={x} position={[x, 1.55, 2.6]}>
+            <sphereGeometry args={[0.09, 8, 6]} />
+            <meshBasicMaterial color="#ffcf7a" />
+          </mesh>
+        ))}
+      </group>
+      {[-3.6, -2.2, 2.2, 3.6].map((x) => (
+        <mesh key={x} position={[x, 0.7, 2.6]} material={M.dark}>
+          <cylinderGeometry args={[0.05, 0.12, 1.4, 8]} />
+        </mesh>
+      ))}
+      <Billboard id="library" pos={[7.5, 0, 7.5]} rotY={-0.45} scale={0.85} />
     </ZoneGroup>
   );
 }
