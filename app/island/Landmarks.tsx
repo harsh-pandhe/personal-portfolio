@@ -214,9 +214,7 @@ function HQ() {
       <mesh position={[0, 0.2, 0]} material={M.white} receiveShadow>
         <cylinderGeometry args={[6.2, 6.6, 0.4, 48]} />
       </mesh>
-      <mesh position={[0, 0.4, 0]} material={M.glass}>
-        <sphereGeometry args={[3.4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-      </mesh>
+      {/* the base doubles as the fountain basin (Plaza.tsx) */}
       <mesh position={[0, 7, 0]} material={M.metal} castShadow>
         <cylinderGeometry args={[0.9, 1.4, 14, 24]} />
       </mesh>
@@ -236,7 +234,7 @@ function HQ() {
           <sphereGeometry args={[0.9, 24, 12, 0, Math.PI * 2, 0, 1.0]} />
         </mesh>
       </group>
-      <Billboard id="hq" pos={[0, 0.4, 5.2]} rotY={0} scale={0.9} />
+      <Billboard id="hq" pos={[0, 0, 8.2]} rotY={0} scale={0.9} />
     </ZoneGroup>
   );
 }

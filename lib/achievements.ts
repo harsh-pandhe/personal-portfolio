@@ -282,6 +282,12 @@ export const education = [
     period: "2021 – 2024",
     note: "First Class with Distinction · General Secretary (Head Boy).",
   },
+  {
+    school: "Presentation Convent School, Nerul",
+    degree: "ICSE · Class 10 · Science & Computer Applications",
+    period: "2008 – 2021",
+    note: "89% in the ICSE board exams · school cricket and football teams, athletics, chess.",
+  },
 ];
 
 export const skills: { group: string; items: string[] }[] = [

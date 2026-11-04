@@ -12,6 +12,7 @@ import { CameraRig, Dust, MEDALS, Medals, Player, TargetMarker, Teammates } from
 import { Fireworks, LightShow, Searchlights } from "./Show";
 import People from "./People";
 import { Skyline, Traffic } from "./City";
+import { JourneyPlaza, Singapore } from "./Plaza";
 import { Rain, WeatherController } from "./Weather";
 import { endGala, GalaOverlay, startGala, startStory, StoryOverlay } from "./Story";
 import { setMusic, setSound, sfx } from "./audio";
@@ -72,6 +73,8 @@ function Scene() {
         <Searchlights />
         <People />
         <Traffic />
+        <JourneyPlaza />
+        <Singapore />
         <Skyline />
         <Rain />
       </Suspense>
