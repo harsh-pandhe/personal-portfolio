@@ -55,8 +55,8 @@ function Car({ kind, lane, speed, phase }: { kind: (typeof CARS)[number]; lane: 
   });
   return (
     <group ref={g}>
-      {/* KayKit cars are ~0.6 units long; at 4.2 they read as ~2.5 m next to the visitors */}
-      <group scale={4.2}>
+      {/* KayKit cars are ~0.6 units long; at 3.6 they read as ~2.2 m next to the visitors */}
+      <group scale={3.6}>
         <primitive object={model} />
         {[-0.1, 0.1].map((x) => (
           <group key={x}>

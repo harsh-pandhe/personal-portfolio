@@ -25,7 +25,7 @@ export const GALA_POS = new THREE.Vector3(-8, 30, 104);
 // The nightly show hangs at a fixed spot over the sea to the north, like a real show over a bay.
 // The overview camera turns to face it at night (Actors.tsx); the show itself never moves.
 export const AMBIENT_POS = new THREE.Vector3(30, 42, -88);
-export const GALA_CAM = { pos: [-2, 7, 22] as [number, number, number], look: [-8, 14, 104] as [number, number, number] };
+export const GALA_CAM = { pos: [-4, 15, 40] as [number, number, number], look: [-8, 16, 104] as [number, number, number] };
 
 // the nightly story, in order: launch, the work, Singapore, sign-off, land
 const AMBIENT: { key: string; hold: number; pal: string[] }[] = [

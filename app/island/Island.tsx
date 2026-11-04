@@ -3,7 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { Suspense, useEffect, useState } from "react";
-import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Shore, SkyDome, Terrain, Trees } from "./Env";
+import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
 import Decor from "./Decor";
 import Paths from "./Paths";
@@ -55,6 +55,7 @@ function Scene() {
         <Flowers />
         {!LITE && <Grass />}
         <Shore />
+        <Ships />
         <Birds />
         <Clouds />
         <Landmarks />

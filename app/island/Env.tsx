@@ -302,54 +302,75 @@ export function Lights() {
   );
 }
 
-/* ---------------- distant mountain ranges: three layers, low enough to keep the sky clear ---------------- */
+/* ---------------- distant mountain ranges: noise ridgelines with depth, haze and snow ---------------- */
+function rangeGeometry(d: number, depth: number, H: number, seed: number) {
+  const r = rng(seed);
+  // periodic ridged noise along the ring: integer harmonics so it closes seamlessly
+  const waves = Array.from({ length: 9 }, (_, i) => ({ k: [3, 5, 7, 11, 17, 23, 31, 43, 61][i], a: 1 / (1 + i * 0.9), p: r() * Math.PI * 2 }));
+  const ridge = (t: number, off: number) => {
+    let v = 0,
+      n = 0;
+    for (const w of waves) {
+      v += w.a * (1 - Math.abs(Math.sin(w.k * t + w.p + off * w.k * 0.02)));
+      n += w.a;
+    }
+    return Math.pow(v / n, 2.2);
+  };
+  const C = 720,
+    R = 7;
+  const pos: number[] = [],
+    col: number[] = [],
+    idx: number[] = [];
+  for (let i = 0; i <= C; i++) {
+    const t = (i / C) * Math.PI * 2;
+    for (let j = 0; j < R; j++) {
+      const u = j / (R - 1);
+      const rad = d - depth / 2 + u * depth;
+      const prof = Math.pow(Math.sin(Math.PI * Math.min(Math.max(u * 1.1 - 0.05, 0), 1)), 1.3);
+      const h = j === 0 || j === R - 1 ? -6 : H * ridge(t, j) * prof - 4;
+      pos.push(Math.cos(t) * rad, h, Math.sin(t) * rad);
+      const snow = h > H * 0.5 ? 1 : 0.5 + (h / H) * 0.35;
+      col.push(snow, snow, snow);
+    }
+  }
+  for (let i = 0; i < C; i++)
+    for (let j = 0; j < R - 1; j++) {
+      const a = i * R + j,
+        b = (i + 1) * R + j;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
 export function Mountains() {
   const layers = useMemo(
     () => [
-      { d: 205, h: [10, 20], day: "#9cc7dc", night: "#1a2244", n: 30, seed: 77 },
-      { d: 250, h: [16, 30], day: "#b4d4e6", night: "#141b38", n: 26, seed: 78 },
-      { d: 300, h: [22, 40], day: "#c9e1ee", night: "#10162e", n: 22, seed: 79 },
+      { d: 215, depth: 40, H: 26, day: "#8fbad0", night: "#1a2244", seed: 77 },
+      { d: 265, depth: 50, H: 40, day: "#a9cbe0", night: "#141b38", seed: 78 },
+      { d: 320, depth: 60, H: 58, day: "#c4dcea", night: "#10162e", seed: 79 },
     ],
     []
   );
-  const mats = useMemo(
-    () => layers.map((l) => ({ m: new THREE.MeshStandardMaterial({ color: l.day, roughness: 1, flatShading: true }), day: new THREE.Color(l.day), night: new THREE.Color(l.night) })),
-    [layers]
-  );
-  const snow = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9, flatShading: true }), []);
-  const snowNight = useMemo(() => new THREE.Color("#3a4470"), []);
-  const white = useMemo(() => new THREE.Color("#ffffff"), []);
-  useFrame(() => {
-    mats.forEach((q) => q.m.color.copy(q.day).lerp(q.night, world.night));
-    snow.color.copy(white).lerp(snowNight, world.night);
-  });
-  const peaks = useMemo(
+  const items = useMemo(
     () =>
-      layers.flatMap((l, li) => {
-        const r = rng(l.seed);
-        return Array.from({ length: l.n }, (_, i) => {
-          const a = (i / l.n) * Math.PI * 2 + r() * 0.12 + li * 0.07;
-          const d = l.d + r() * 25;
-          const h = l.h[0] + r() * (l.h[1] - l.h[0]);
-          const w = h * (1.4 + r() * 0.8);
-          return { li, x: Math.cos(a) * d, z: Math.sin(a) * d, h, w, rot: r() * Math.PI };
-        });
-      }),
+      layers.map((l) => ({
+        g: rangeGeometry(l.d, l.depth, l.H, l.seed),
+        m: new THREE.MeshStandardMaterial({ color: l.day, vertexColors: true, roughness: 1, flatShading: true }),
+        day: new THREE.Color(l.day),
+        night: new THREE.Color(l.night),
+      })),
     [layers]
   );
+  useFrame(() => items.forEach((q) => q.m.color.copy(q.day).lerp(q.night, world.night)));
   return (
     <group>
-      {peaks.map((q, i) => (
-        <group key={i} position={[q.x, -3, q.z]} rotation-y={q.rot}>
-          <mesh position={[0, q.h / 2, 0]} material={mats[q.li].m}>
-            <coneGeometry args={[q.w, q.h, 6]} />
-          </mesh>
-          {q.h > 24 && (
-            <mesh position={[0, q.h * 0.86, 0]} material={snow}>
-              <coneGeometry args={[q.w * 0.295, q.h * 0.28, 6]} />
-            </mesh>
-          )}
-        </group>
+      {items.map((q, i) => (
+        <mesh key={i} geometry={q.g} material={q.m} rotation-y={i * 0.7} />
       ))}
     </group>
   );
@@ -421,10 +442,23 @@ export function Grass({ count = 38000 }: { count?: number }) {
 /* ---------------- lighthouse, pier and sailboats on the shore ---------------- */
 export function Shore() {
   const beam = useRef<THREE.Group>(null);
-  const boats = useRef<THREE.Group>(null);
   const lampMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#fff2c4", emissive: "#ffe08a", emissiveIntensity: 0.4 }), []);
+  // open cone, 140 m long: alpha falls off along its length and toward its edges (cheap volumetric look)
+  const beamGeo = useMemo(() => new THREE.CylinderGeometry(0.35, 9, 140, 32, 24, true), []);
   const beamMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: "#fff3c2", transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        uniforms: { uOpacity: { value: 0 }, uColor: { value: new THREE.Color("#fff1c4") } },
+        vertexShader: `varying float vY; varying vec3 vN; varying vec3 vV;
+          void main(){ vY = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+        fragmentShader: `uniform float uOpacity; uniform vec3 uColor; varying float vY; varying vec3 vN; varying vec3 vV;
+          void main(){ float along = pow(vY, 1.6); float rim = pow(abs(dot(vN, vV)), 1.5);
+            gl_FragColor = vec4(uColor, uOpacity * along * rim); }`,
+      }),
     []
   );
   // lighthouse on the north-west point, pier on the south shore
@@ -438,19 +472,11 @@ export function Shore() {
     const a = (95 * Math.PI) / 180;
     return { a, x: Math.cos(a) * 50, z: Math.sin(a) * 50 };
   }, []);
-  useFrame(({ clock }, dt) => {
+  useFrame((_, dt) => {
     const n = world.night;
     lampMat.emissiveIntensity = 0.4 + n * 3;
-    beamMat.opacity = n * 0.22;
+    beamMat.uniforms.uOpacity.value = n * 0.5;
     if (beam.current) beam.current.rotation.y += dt * 0.8;
-    const t = clock.elapsedTime;
-    boats.current?.children.forEach((b, i) => {
-      const a = t * (0.025 + i * 0.008) * (i % 2 ? -1 : 1) + i * 2.1;
-      const r = 66 + i * 9;
-      b.position.set(Math.cos(a) * r, -0.25 + Math.sin(t * 1.2 + i) * 0.12, Math.sin(a) * r);
-      b.rotation.y = -a + (i % 2 ? 0 : Math.PI);
-      b.rotation.z = Math.sin(t * 1.1 + i) * 0.06;
-    });
   });
   const stripe = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e5322d", roughness: 0.5 }), []);
   const white = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f7f8fa", roughness: 0.5 }), []);
@@ -475,9 +501,10 @@ export function Shore() {
         </mesh>
         <group ref={beam} position={[0, 10.1, 0]}>
           {[0, Math.PI].map((r) => (
-            <mesh key={r} rotation={[0, r, Math.PI / 2]} position={[Math.cos(r) * 9, 0, -Math.sin(r) * 9]} material={beamMat}>
-              <coneGeometry args={[2.2, 18, 20, 1, true]} />
-            </mesh>
+            // a long beam tilted a few degrees down so it grazes the sea far out, fading along its length
+            <group key={r} rotation-y={r}>
+              <mesh rotation={[0, 0, Math.PI / 2 - 0.07]} position={[70, -4.9, 0]} geometry={beamGeo} material={beamMat} />
+            </group>
           ))}
         </group>
       </group>
@@ -492,25 +519,148 @@ export function Shore() {
           </mesh>
         ))}
       </group>
-      {/* sailboats circling the island */}
-      <group ref={boats}>
-        {[0, 1, 2].map((i) => (
-          <group key={i}>
-            <mesh position={[0, 0.2, 0]} material={white} castShadow>
-              <boxGeometry args={[1.0, 0.45, 2.8]} />
-            </mesh>
-            <mesh position={[0, 0.5, 0]} material={i === 1 ? stripe : wood}>
-              <boxGeometry args={[1.02, 0.1, 2.82]} />
-            </mesh>
-            <mesh position={[0, 2, 0]} material={wood}>
-              <cylinderGeometry args={[0.05, 0.05, 3.2, 6]} />
-            </mesh>
-            <mesh position={[0, 2.0, 0.55]} rotation-y={Math.PI / 2} material={sail}>
-              <shapeGeometry args={[new THREE.Shape([new THREE.Vector2(0, -1.2), new THREE.Vector2(0, 1.4), new THREE.Vector2(1.3, -1.2)])]} />
-            </mesh>
-          </group>
+    </group>
+  );
+}
+
+/* ---------------- shipping lanes: cargo ships, ferries and more sailboats, lit at night ---------------- */
+const NAV_GEO = new THREE.SphereGeometry(0.2, 8, 6);
+type Lane = { kind: "cargo" | "ferry" | "sail"; ang: number; off: number; len: number; speed: number; phase: number; tint: string };
+const LANES: Lane[] = [
+  { kind: "cargo", ang: 0.35, off: 118, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" },
+  { kind: "cargo", ang: 0.35, off: 132, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
+  { kind: "cargo", ang: 2.1, off: 150, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" },
+  { kind: "ferry", ang: 1.2, off: 92, len: 360, speed: 4.6, phase: 0.1, tint: "#ffffff" },
+  { kind: "ferry", ang: 2.9, off: 104, len: 380, speed: -4.0, phase: 0.6, tint: "#ffffff" },
+  { kind: "sail", ang: 0.9, off: 74, len: 220, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
+  { kind: "sail", ang: 1.7, off: 80, len: 220, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
+  { kind: "sail", ang: 2.5, off: 70, len: 200, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
+  { kind: "sail", ang: 3.8, off: 76, len: 220, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
+  { kind: "sail", ang: 4.6, off: 84, len: 240, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
+];
+
+function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: { red: THREE.Material; green: THREE.Material; white: THREE.Material; win: THREE.Material } }) {
+  const hull = useMemo(() => new THREE.MeshStandardMaterial({ color: tint, roughness: 0.6 }), [tint]);
+  const deck = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e9ecef", roughness: 0.7 }), []);
+  const dark = useMemo(() => new THREE.MeshStandardMaterial({ color: "#23282f", roughness: 0.7 }), []);
+  const boxes = useMemo(() => ["#d9822b", "#2d6cdf", "#c93c3c", "#3aa66b", "#e4c440", "#7a52c7"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })), []);
+  if (kind === "cargo")
+    return (
+      <group>
+        <mesh position={[0, 0.6, 0]} material={dark} castShadow>
+          <boxGeometry args={[5.2, 2.2, 26]} />
+        </mesh>
+        <mesh position={[0, 1.4, 12.6]} rotation-y={Math.PI / 4} material={dark}>
+          <boxGeometry args={[3.6, 2.2, 3.6]} />
+        </mesh>
+        <mesh position={[0, 1.75, 0]} material={hull}>
+          <boxGeometry args={[5.3, 0.25, 26.1]} />
+        </mesh>
+        {/* container stacks */}
+        {Array.from({ length: 18 }, (_, i) => (
+          <mesh key={i} position={[(i % 3) * 1.55 - 1.55, 2.6 + (i % 2) * 0.9, 6 - Math.floor(i / 3) * 2.3]} material={boxes[(i * 5) % boxes.length]} castShadow>
+            <boxGeometry args={[1.45, 0.85, 2.15]} />
+          </mesh>
         ))}
+        {/* bridge at the stern */}
+        <mesh position={[0, 4, -10.5]} material={deck} castShadow>
+          <boxGeometry args={[4.6, 4.2, 3.2]} />
+        </mesh>
+        <mesh position={[0, 5.2, -9.0]} material={nav.win}>
+          <boxGeometry args={[4.4, 0.6, 0.05]} />
+        </mesh>
+        <mesh position={[0, 7, -11]} material={hull}>
+          <cylinderGeometry args={[0.45, 0.55, 2, 10]} />
+        </mesh>
+        <mesh position={[2.7, 2, 9]} material={nav.green} geometry={NAV_GEO} />
+        <mesh position={[-2.7, 2, 9]} material={nav.red} geometry={NAV_GEO} />
+        <mesh position={[0, 8.3, -11]} material={nav.white}>
+          <sphereGeometry args={[0.22, 8, 6]} />
+        </mesh>
       </group>
+    );
+  if (kind === "ferry")
+    return (
+      <group>
+        <mesh position={[0, 0.5, 0]} material={deck} castShadow>
+          <boxGeometry args={[4, 1.6, 15]} />
+        </mesh>
+        <mesh position={[0, 0.2, 0]} material={hull}>
+          <boxGeometry args={[4.05, 0.4, 15.05]} />
+        </mesh>
+        <mesh position={[0, 0.45, 0]} material={dark}>
+          <boxGeometry args={[4.06, 0.15, 15.06]} />
+        </mesh>
+        <mesh position={[0, 2.1, -0.8]} material={deck} castShadow>
+          <boxGeometry args={[3.6, 1.6, 10]} />
+        </mesh>
+        {[-1, 1].map((sx) => (
+          <mesh key={sx} position={[sx * 1.82, 2.2, -0.8]} material={nav.win}>
+            <boxGeometry args={[0.04, 0.55, 9.4]} />
+          </mesh>
+        ))}
+        <mesh position={[0, 3.4, 1.5]} material={deck}>
+          <boxGeometry args={[2.6, 1, 2.6]} />
+        </mesh>
+        <mesh position={[0, 4.2, -2.5]} material={dark}>
+          <cylinderGeometry args={[0.35, 0.4, 1.4, 10]} />
+        </mesh>
+        <mesh position={[2, 1.4, 7]} material={nav.green} geometry={NAV_GEO} />
+        <mesh position={[-2, 1.4, 7]} material={nav.red} geometry={NAV_GEO} />
+      </group>
+    );
+  return (
+    <group scale={1.3}>
+      <mesh position={[0, 0.2, 0]} material={deck} castShadow>
+        <boxGeometry args={[1.0, 0.45, 2.8]} />
+      </mesh>
+      <mesh position={[0, 0.48, 0]} material={hull}>
+        <boxGeometry args={[1.02, 0.08, 2.82]} />
+      </mesh>
+      <mesh position={[0, 2, 0]} material={dark}>
+        <cylinderGeometry args={[0.05, 0.05, 3.2, 6]} />
+      </mesh>
+      <mesh position={[0, 2.0, 0.55]} rotation-y={Math.PI / 2} material={deck}>
+        <shapeGeometry args={[new THREE.Shape([new THREE.Vector2(0, -1.2), new THREE.Vector2(0, 1.4), new THREE.Vector2(1.3, -1.2)])]} />
+      </mesh>
+      <mesh position={[0, 3.65, 0]} material={nav.white}>
+        <sphereGeometry args={[0.08, 6, 4]} />
+      </mesh>
+    </group>
+  );
+}
+
+export function Ships() {
+  const g = useRef<THREE.Group>(null);
+  const nav = useMemo(() => {
+    const lamp = (c: string) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 });
+    return { red: lamp("#ff2d2d"), green: lamp("#2dff6a"), white: lamp("#fff6d8"), win: lamp("#ffd27a") };
+  }, []);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    const n = world.night;
+    nav.red.emissiveIntensity = nav.green.emissiveIntensity = 0.3 + n * 4;
+    nav.white.emissiveIntensity = 0.3 + n * 3;
+    (nav.win as THREE.MeshStandardMaterial).emissiveIntensity = 0.1 + n * 2.2;
+    g.current?.children.forEach((s, i) => {
+      const L = LANES[i];
+      // each lane is a straight line tangent to the island at distance `off`; ships wrap when they leave it
+      const u = ((((t * L.speed) / L.len + L.phase) % 1) + 1) % 1 - 0.5;
+      const dx = -Math.sin(L.ang),
+        dz = Math.cos(L.ang);
+      const along = u * L.len;
+      s.position.set(Math.cos(L.ang) * L.off + dx * along, -0.3 + Math.sin(t * 0.9 + i) * 0.08, Math.sin(L.ang) * L.off + dz * along);
+      s.rotation.y = Math.atan2(dx * Math.sign(L.speed), dz * Math.sign(L.speed));
+      s.rotation.z = Math.sin(t * 0.8 + i) * (L.kind === "sail" ? 0.06 : 0.015);
+    });
+  });
+  return (
+    <group ref={g}>
+      {LANES.map((l, i) => (
+        <group key={i}>
+          <Ship kind={l.kind} tint={l.tint} nav={nav} />
+        </group>
+      ))}
     </group>
   );
 }
