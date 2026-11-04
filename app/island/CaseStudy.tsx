@@ -433,6 +433,14 @@ export default function CaseStudy() {
   }, [ui.open]);
   const on = !!ui.open;
   const z = zoneById[id];
+  // only mount the page while it's open (plus the close animation), so its videos and
+  // live demos don't load behind the first screen
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (on) return setMounted(true);
+    const t = setTimeout(() => setMounted(false), 750);
+    return () => clearTimeout(t);
+  }, [on]);
 
   return (
     <>
@@ -465,7 +473,7 @@ export default function CaseStudy() {
           </span>
         </div>
 
-        <CaseBody key={id} id={id} onNext={(n) => setUI({ open: n })} />
+        {mounted && <CaseBody key={id} id={id} onNext={(n) => setUI({ open: n })} />}
       </div>
     </>
   );

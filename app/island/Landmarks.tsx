@@ -1467,6 +1467,152 @@ function rainTexture() {
   return { c, tex };
 }
 
+/* Morpheus Gate in projectmorpheus.in's own style: pixel-green CRT sign, a terminal kiosk and the
+   five "levels" (domains) as monoliths. */
+function crt(w: number, h: number) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.NearestFilter;
+  return { c, tex, mat: new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: "#ffffff", emissiveIntensity: 1, color: "#000000" }) };
+}
+const LEVELS = ["EDTECH", "HEALTHCARE", "WOMEN SAFETY", "AGRITECH", "FINTECH"];
+function MorpheusSigns() {
+  const pix = useMemo(() => {
+    const v = typeof document !== "undefined" ? getComputedStyle(document.body).getPropertyValue("--font-pixel").trim() : "";
+    return v || "monospace";
+  }, []);
+  const sign = useMemo(() => crt(1024, 256), []);
+  const term = useMemo(() => crt(512, 384), []);
+  const lv = useMemo(() => LEVELS.map(() => crt(256, 512)), []);
+  const scan = (g: CanvasRenderingContext2D, w: number, h: number) => {
+    g.fillStyle = "rgba(0,0,0,.35)";
+    for (let y = 0; y < h; y += 4) g.fillRect(0, y, w, 2);
+  };
+  useEffect(() => {
+    let live = true;
+    // the pixel font has to be loaded before it can be drawn into a canvas
+    document.fonts
+      .load(`20px ${pix}`)
+      .catch(() => [])
+      .then(() => live && paint());
+    return () => void (live = false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pix]);
+  const paint = () => {
+    const g = sign.c.getContext("2d")!;
+    g.fillStyle = "#020702";
+    g.fillRect(0, 0, 1024, 256);
+    g.font = `64px ${pix}`;
+    g.fillStyle = "#0a5a14";
+    g.fillText("PROJECT MORPHEUS", 46, 150);
+    g.fillStyle = "#22ff4c";
+    g.fillText("PROJECT MORPHEUS", 40, 144);
+    g.font = `18px ${pix}`;
+    g.fillStyle = "#ff2d2d";
+    g.fillText("[SENTINEL] ACTIVE · SIT LONAVALA · FEB 26 2026", 40, 214);
+    scan(g, 1024, 256);
+    sign.tex.needsUpdate = true;
+    lv.forEach((q, i) => {
+      const x = q.c.getContext("2d")!;
+      x.fillStyle = "#020702";
+      x.fillRect(0, 0, 256, 512);
+      x.strokeStyle = "#22ff4c";
+      x.lineWidth = 6;
+      x.strokeRect(10, 10, 236, 492);
+      x.fillStyle = "#22ff4c";
+      x.font = `20px ${pix}`;
+      x.fillText(`LEVEL 0${i + 1}`, 30, 70);
+      x.font = `16px ${pix}`;
+      LEVELS[i].split(" ").forEach((w, k) => x.fillText(w, 30, 260 + k * 34));
+      x.fillStyle = "rgba(34,255,76,.5)";
+      x.font = `12px ${pix}`;
+      x.fillText("> HOVER TO DECRYPT", 24, 470);
+      scan(x, 256, 512);
+      q.tex.needsUpdate = true;
+    });
+  };
+  const acc = useRef(0);
+  useFrame(({ clock }, dt) => {
+    const n = world.night;
+    sign.mat.emissiveIntensity = term.mat.emissiveIntensity = 0.9 + n * 1.2;
+    lv.forEach((q) => (q.mat.emissiveIntensity = 0.7 + n * 1.2));
+    acc.current += dt;
+    if (acc.current < 0.12) return;
+    acc.current = 0;
+    const t = clock.elapsedTime;
+    const line = "WAKE UP. BUILD THE FUTURE.";
+    const k = Math.floor(t * 8) % (line.length + 16);
+    const g = term.c.getContext("2d")!;
+    g.fillStyle = "#020702";
+    g.fillRect(0, 0, 512, 384);
+    g.fillStyle = "#22ff4c";
+    g.font = `14px ${pix}`;
+    g.fillText("oracle@morpheus:~$ ./wake.exe", 22, 44);
+    g.font = `18px ${pix}`;
+    g.fillText(line.slice(0, Math.min(k, line.length)) + (Math.floor(t * 2) % 2 ? "_" : " "), 22, 110);
+    const stats: [string, string][] = [
+      ["24", "HOURS"],
+      ["5", "DOMAINS"],
+      ["2L+", "PRIZES"],
+    ];
+    stats.forEach(([v, l], i) => {
+      g.fillStyle = "#22ff4c";
+      g.font = `30px ${pix}`;
+      g.fillText(v, 22 + i * 165, 220);
+      g.fillStyle = "rgba(34,255,76,.6)";
+      g.font = `12px ${pix}`;
+      g.fillText(l, 22 + i * 165, 250);
+    });
+    g.fillStyle = "#ff2d2d";
+    g.font = `12px ${pix}`;
+    g.fillText("RED PILL OR BLUE PILL?", 22, 330);
+    scan(g, 512, 384);
+    term.tex.needsUpdate = true;
+  });
+  return (
+    <group>
+      {/* the sign across the top of the arch */}
+      <mesh position={[0, 5.4, -1]} material={sign.mat}>
+        <planeGeometry args={[8, 2]} />
+      </mesh>
+      <mesh position={[0, 5.4, -1.06]} material={M.dark}>
+        <boxGeometry args={[8.3, 2.25, 0.08]} />
+      </mesh>
+      {/* terminal kiosk */}
+      <group position={[4.6, 0, 3.4]} rotation-y={-0.5}>
+        <mesh position={[0, 0.6, 0]} material={M.dark} castShadow>
+          <boxGeometry args={[1.6, 1.2, 0.8]} />
+        </mesh>
+        <mesh position={[0, 1.75, -0.1]} rotation-x={-0.2} material={term.mat}>
+          <planeGeometry args={[2, 1.5]} />
+        </mesh>
+        <mesh position={[0, 1.75, -0.15]} rotation-x={-0.2} material={M.dark}>
+          <boxGeometry args={[2.15, 1.65, 0.06]} />
+        </mesh>
+      </group>
+      {/* the five levels */}
+      {LEVELS.map((_, i) => {
+        const a = ((-60 + i * 30) * Math.PI) / 180;
+        const x = Math.sin(a) * 7.6,
+          z = -Math.cos(a) * 7.6 - 1;
+        return (
+          <group key={i} position={[x, 0, z]} rotation-y={-a}>
+            <mesh position={[0, 1.6, 0]} material={M.dark} castShadow>
+              <boxGeometry args={[1.5, 3.2, 0.5]} />
+            </mesh>
+            <mesh position={[0, 1.6, 0.26]} material={lv[i].mat}>
+              <planeGeometry args={[1.4, 3.05]} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 function Morpheus() {
   const { c, tex } = useMemo(rainTexture, []);
   const drops = useRef<number[]>(Array.from({ length: 16 }, () => Math.random() * 30));
@@ -1520,16 +1666,7 @@ function Morpheus() {
           <meshStandardMaterial color="#2b6bff" emissive="#2b6bff" emissiveIntensity={0.6} />
         </mesh>
       </group>
-      {[
-        [-6.5, -5],
-        [-3.5, -6.5],
-        [3.5, -6.5],
-        [6.5, -5],
-      ].map(([x, z], i) => (
-        <mesh key={i} position={[x, 1.1, z]} material={M.white} castShadow>
-          <coneGeometry args={[1.5, 2.2, 6]} />
-        </mesh>
-      ))}
+      <MorpheusSigns />
       <Billboard id="morpheus" pos={[0, 0, 5.5]} rotY={0} scale={0.85} />
     </ZoneGroup>
   );

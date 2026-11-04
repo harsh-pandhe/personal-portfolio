@@ -96,7 +96,7 @@ function Clip({ src, className = "" }: { src: string; className?: string }) {
     io.observe(v);
     return () => io.disconnect();
   }, []);
-  return <video ref={ref} src={src} poster={src.replace(".mp4", ".jpg")} muted loop playsInline preload="metadata" className={className} />;
+  return <video ref={ref} src={src} poster={src.replace(".mp4", ".jpg")} muted loop playsInline preload="none" className={className} />;
 }
 
 export function MediaHero({ id, accent }: { id: ZoneId; accent: string }) {
