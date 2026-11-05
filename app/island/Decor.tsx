@@ -3,9 +3,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { heightAt, ISLAND_EDGE, MARS_C, rng, ROAD_R } from "./terrain";
-import { zoneById, zonePos, type ZoneId } from "./zones";
-import { zoneToWorld } from "./colliders";
+import { heightAt, ISLAND_EDGE, MARS_C, MARS_R, rng, ROAD_HALF, ROAD_R, zoneFlatR } from "./terrain";
+import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
+import { addCollider, zoneToWorld } from "./colliders";
 import { Bench, Planter } from "./Props";
 
 const m4 = new THREE.Matrix4();
@@ -103,6 +103,46 @@ function PlazaFurniture() {
   );
 }
 
+/** Clipped hedges round every zone's plot, open toward HQ, so each section sits in its own green
+ *  room with lawn and trees between it and the next. They are solid. */
+function Hedges() {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const list = useMemo(() => {
+    const out: number[][] = [];
+    const ring = (cx: number, cz: number, R: number, gapDir: number, gap: number) => {
+      const n = Math.ceil((Math.PI * 2 * R) / 1.6);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const d = Math.atan2(Math.sin(a - gapDir), Math.cos(a - gapDir));
+        if (Math.abs(d) * R < gap) continue;
+        const x = cx + Math.cos(a) * R,
+          z = cz + Math.sin(a) * R;
+        if (Math.hypot(x, z) < ROAD_R + ROAD_HALF + 1.2) continue; // keep the sidewalk clear
+        out.push([x, heightAt(x, z) + 0.45, z, Math.PI / 2 - a, 1.75, 0.9, 0.85]);
+      }
+    };
+    for (const z of ZONES) {
+      if (!z.radius || z.id === "ropeway") continue;
+      const [x, zz] = zonePos(z);
+      const toHQ = Math.atan2(-zz, -x);
+      if (z.id === "marsyard") ring(MARS_C[0], MARS_C[1], MARS_R + 2.5, toHQ, 11);
+      else ring(x, zz, zoneFlatR(z.id) + 1.2, toHQ, z.id === "arena" ? 9 : 6.5);
+    }
+    return out;
+  }, []);
+  useInstances(ref, list, ["#3f8f45", "#47984b", "#3a8740"]);
+  useEffect(() => {
+    const off = list.map((v) => addCollider({ kind: "box", x: v[0], z: v[2], hw: v[4] / 2, hd: v[6] / 2, rot: v[3] }));
+    return () => off.forEach((f) => f());
+  }, [list]);
+  return (
+    <instancedMesh frustumCulled={false} ref={ref} args={[undefined, undefined, list.length]} castShadow receiveShadow>
+      <boxGeometry args={[1, 1, 1, 2, 2, 2]} />
+      <meshStandardMaterial roughness={0.9} flatShading />
+    </instancedMesh>
+  );
+}
+
 /** Pebbles and boulders along the beach. */
 function BeachRocks() {
   const ref = useRef<THREE.InstancedMesh>(null);
@@ -182,6 +222,7 @@ export default function Decor() {
     <>
       <RoadDashes />
       <PlazaFurniture />
+      <Hedges />
       <BeachRocks />
       <Rover />
     </>

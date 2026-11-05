@@ -1314,6 +1314,76 @@ function IndustrialArm() {
 
 const WS_GLB = "/models/workshop.glb";
 useGLTF.preload(WS_GLB, false, true);
+/* The Workshop yard: the sawtooth makerspace, the arm's work cell, workbenches with a drone
+   on the bench, a parts rack and pallets of crates by the roller door. */
+const CRATE = new THREE.MeshStandardMaterial({ color: "#b98a54", roughness: 0.9 });
+const CRATE_DARK = new THREE.MeshStandardMaterial({ color: "#8c6338", roughness: 0.9 });
+function Crate({ s = 0.9 }: { s?: number }) {
+  return (
+    <group scale={s}>
+      <mesh position={[0, 0.5, 0]} material={CRATE} castShadow receiveShadow>
+        <boxGeometry args={[1, 1, 1]} />
+      </mesh>
+      {/* slats */}
+      {[-0.51, 0.51].map((z) =>
+        [0.15, 0.5, 0.85].map((y) => (
+          <mesh key={`${z}${y}`} position={[0, y, z]} material={CRATE_DARK}>
+            <boxGeometry args={[1.02, 0.1, 0.02]} />
+          </mesh>
+        ))
+      )}
+      {[-0.51, 0.51].map((x) => (
+        <mesh key={x} position={[x, 0.5, 0]} rotation-z={0.78} material={CRATE_DARK}>
+          <boxGeometry args={[0.02, 1.3, 0.12]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+function Pallet({ crates }: { crates: [number, number, number][] }) {
+  return (
+    <group>
+      <mesh position={[0, 0.07, 0]} material={CRATE_DARK} castShadow receiveShadow>
+        <boxGeometry args={[2.2, 0.14, 2.2]} />
+      </mesh>
+      {crates.map(([x, y, z], i) => (
+        <group key={i} position={[x, 0.14 + y, z]}>
+          <Crate />
+        </group>
+      ))}
+    </group>
+  );
+}
+function Workbench() {
+  const top = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c7a06b", roughness: 0.8 }), []);
+  return (
+    <group>
+      <mesh position={[0, 0.95, 0]} material={top} castShadow receiveShadow>
+        <boxGeometry args={[3, 0.08, 1.1]} />
+      </mesh>
+      {[-1.4, 1.4].map((x) =>
+        [-0.45, 0.45].map((z) => (
+          <mesh key={`${x}${z}`} position={[x, 0.47, z]} material={M.dark}>
+            <boxGeometry args={[0.07, 0.94, 0.07]} />
+          </mesh>
+        ))
+      )}
+      <mesh position={[0, 0.3, 0]} material={M.dark}>
+        <boxGeometry args={[2.8, 0.05, 1.0]} />
+      </mesh>
+      {/* a pegboard of tools behind */}
+      <mesh position={[0, 1.7, -0.52]} material={M.white} castShadow>
+        <boxGeometry args={[3, 1.4, 0.05]} />
+      </mesh>
+      {[-1.1, -0.6, -0.1, 0.5, 1.0].map((x, i) => (
+        <mesh key={x} position={[x, 1.75 - (i % 2) * 0.25, -0.48]} material={i % 2 ? M.red : M.dark}>
+          <boxGeometry args={[0.08, 0.5 - (i % 3) * 0.1, 0.03]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Workshop() {
   const { scene: wsScene } = useGLTF(WS_GLB, false, true);
   const shed = useMemo(() => {
@@ -1321,28 +1391,43 @@ function Workshop() {
     c.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = o.receiveShadow = true) : null));
     return c;
   }, [wsScene]);
-  const crates = useMemo(() => {
-    const r = rng(9);
-    return Array.from({ length: 9 }, (_, i) => ({
-      p: [-6 + (i % 3) * 1.15, 0.5 + Math.floor(i / 3) * 0.0, -4 + Math.floor(i / 3) * 1.15] as [number, number, number],
-      s: 0.9 + r() * 0.15,
-      c: ["#7a4dff", "#2d5bff", "#f7f8fa", "#12f0c0"][i % 4],
-    }));
-  }, []);
+  const yard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9c6bf", roughness: 0.95 }), []);
+  const hazard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffd23f", roughness: 0.6 }), []);
   return (
     <ZoneGroup id="workshop">
-      {/* the makerspace, modelled in Blender (public/models/workshop.glb) */}
-      <primitive object={shed} position={[3.8, 0, -4]} />
-      <group position={[-1.5, 0, 1]} scale={1.15}>
-        <IndustrialArm />
-      </group>
-      {crates.map((q, i) => (
-        <mesh key={i} position={q.p} scale={q.s} castShadow>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={q.c} roughness={0.6} />
+      {/* a concrete yard in front of the building, with a painted walkway */}
+      <mesh position={[0, 0.03, -1]} rotation-x={-Math.PI / 2} material={yard} receiveShadow>
+        <planeGeometry args={[26, 17]} />
+      </mesh>
+      {[-1.6, 1.6].map((x) => (
+        <mesh key={x} position={[x, 0.04, 2.5]} rotation-x={-Math.PI / 2} material={hazard}>
+          <planeGeometry args={[0.12, 11]} />
         </mesh>
       ))}
-      <Billboard id="workshop" pos={[9, 0, 6]} rotY={-0.5} scale={0.9} />
+      {/* the makerspace, modelled in Blender (public/models/workshop.glb), at one and a half size */}
+      <primitive object={shed} position={[4.5, 0, -6.5]} scale={1.5} />
+      <group position={[-7.5, 0, -1]} scale={1.25}>
+        <IndustrialArm />
+      </group>
+      {[-1, 1].map((k) => (
+        <group key={k} position={[-9.5, 0, -7.5 + k * 1.8]}>
+          <Solid w={3} d={1.1} />
+          <Workbench />
+        </group>
+      ))}
+      {/* the bench drone, waiting for its props */}
+      <group position={[-9.6, 1.0, -5.9]} rotation-y={0.4}>
+        <Quad scale={2.6} spin={0} />
+      </group>
+      <group position={[9.5, 0, 3]} rotation-y={-0.3}>
+        <Solid w={2.3} d={2.3} />
+        <Pallet crates={[[-0.5, 0, -0.5], [0.5, 0, -0.5], [-0.5, 0, 0.5], [0.5, 0, 0.5], [0, 0.9, 0]]} />
+      </group>
+      <group position={[11.5, 0, -0.5]} rotation-y={0.2}>
+        <Solid w={2.3} d={2.3} />
+        <Pallet crates={[[-0.5, 0, 0], [0.5, 0, 0]]} />
+      </group>
+      <Billboard id="workshop" pos={[-11, 0, 7]} rotY={0.55} scale={0.9} />
     </ZoneGroup>
   );
 }

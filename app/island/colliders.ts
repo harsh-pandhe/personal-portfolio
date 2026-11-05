@@ -30,7 +30,7 @@ function build(): Collider[] {
     out.push({ kind: "box", x, z, hw: w / 2, hd: d / 2, rot: zoneYaw(id) });
   };
   box("trading", 0, -6.2, 17.6, 7.6); // tower and the market wall
-  box("workshop", 3.8, -4, 9.4, 6.4); // makerspace
+  box("workshop", 4.5, -6.5, 14.1, 9.6); // makerspace (scaled 1.5)
   box("home", 0.2, -4.2, 7.6, 5.2); // house
   box("library", -0.4, -6, 11, 16.8); // gothic hall and its tower
   const [bx, bz] = zoneToWorld("trading", -10.5, 0.5);
