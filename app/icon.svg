@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2d5bff"/>
+      <stop offset=".55" stop-color="#00d2ff"/>
+      <stop offset="1" stop-color="#12f0c0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="31" fill="url(#g)"/>
+  <circle cx="32" cy="32" r="27" fill="#121417"/>
+  <text x="32" y="41" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800" fill="#fff" letter-spacing="-1">HP</text>
+</svg>

@@ -1,103 +1,26 @@
 import type { Config } from "tailwindcss";
-const {
-	default: flattenColorPalette,
-} = require("tailwindcss/lib/util/flattenColorPalette");
 
+// Design tokens for Mission Island. Type: Inter Tight (sans), Instrument Serif (accent italics), DM Mono (labels).
 export default {
-	darkMode: ["class"],
-	content: [
-		"./pages/**/*.{js,ts,jsx,tsx,mdx}",
-		"./components/**/*.{js,ts,jsx,tsx,mdx}",
-		"./app/**/*.{js,ts,jsx,tsx,mdx}",
-	],
-	theme: {
-		extend: {
-			animation: {
-				"meteor-effect": "meteor 5s linear infinite",
-				shimmer: "shimmer 2s linear infinite",
-
-			},
-			keyframes: {
-				boot: { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } },
-				meteor: {
-					"0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },
-					"70%": { opacity: "1" },
-					"100%": {
-						transform: "rotate(215deg) translateX(-500px)",
-						opacity: "0",
-					},
-				},
-				shimmer: {
-					from: {
-						backgroundPosition: "0 0",
-					},
-					to: {
-						backgroundPosition: "-200% 0",
-					},
-				},
-			},
-			boxShadow: {
-				input: `0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)`,
-			},
-			colors: {
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
-				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
-				},
-				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
-				},
-				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
-				},
-				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
-				},
-				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
-				},
-				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
-				},
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				chart: {
-					'1': 'hsl(var(--chart-1))',
-					'2': 'hsl(var(--chart-2))',
-					'3': 'hsl(var(--chart-3))',
-					'4': 'hsl(var(--chart-4))',
-					'5': 'hsl(var(--chart-5))'
-				}
-			},
-			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
-			}
-		}
-	},
-	plugins: [require("tailwindcss-animate"), addVariablesForColors],
+  content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./lib/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
+      colors: {
+        ink: "#121417",
+        paper: "#f3f3f1",
+        brand: { blue: "#2d5bff", cyan: "#00d2ff", mint: "#12f0c0", go: "#22d36b", violet: "#7a4dff" },
+      },
+      keyframes: {
+        grow: { from: { width: "0%" }, to: { width: "100%" } },
+        rise: { from: { transform: "translateY(40%)", opacity: "0" }, to: { transform: "translateY(0)", opacity: "1" } },
+        pop: { from: { transform: "scale(.6) translateY(8px)", opacity: "0" }, to: { transform: "scale(1)", opacity: "1" } },
+      },
+    },
+  },
+  plugins: [],
 } satisfies Config;
-
-function addVariablesForColors({ addBase, theme }: any) {
-	let allColors = flattenColorPalette(theme("colors"));
-	let newVars = Object.fromEntries(
-		Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
-	);
-
-	addBase({
-		":root": newVars,
-	});
-}

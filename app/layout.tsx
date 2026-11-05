@@ -1,36 +1,43 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Mono, Instrument_Serif, Inter_Tight, Press_Start_2P } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600", "700"] });
+const serif = Instrument_Serif({ subsets: ["latin"], variable: "--font-serif", weight: "400", style: ["normal", "italic"] });
+const pixel = Press_Start_2P({ subsets: ["latin"], variable: "--font-pixel", weight: "400" });
+const mono = DM_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "Harsh Pandhe | Autonomous Systems & Research",
+  metadataBase: new URL("https://harshpandhe.com"),
+  title: "Harsh Pandhe — A portfolio you can fly through",
   description:
-    "Portfolio of Harsh Pandhe — SIH 2025 National Winner, Head of Cybersecurity & Blockchain @ IIC-SIT, Full-Stack & Web3 Developer building distributed systems, embedded AI, and blockchain solutions.",
+    "Harsh Pandhe builds autonomous drones, multi-robot swarms and evidence-first software. SIH 2025 National Winner, ISRO IRoC-U 2026 Finalist, Singapore–India Hackathon 2026 finalist, ex-Doppelmayr, 6 SSRN papers.",
   keywords: [
     "Harsh Pandhe",
+    "robotics",
+    "autonomous navigation",
+    "multi-agent reinforcement learning",
+    "MAPPO",
+    "drones",
+    "PX4",
+    "ROS 2",
     "SIH 2025",
-    "Full-Stack Developer",
-    "Web3",
-    "Blockchain",
-    "Robotics",
-    "Next.js",
-    "React",
-    "TypeScript",
-    "Embedded AI",
+    "IRoC-U",
+    "SSRN",
+    "SIT Lonavala",
   ],
-  authors: [{ name: "Harsh Pandhe" }],
+  authors: [{ name: "Harsh Pandhe", url: "https://github.com/harsh-pandhe" }],
   openGraph: {
-    title: "Harsh Pandhe | Autonomous Systems & Research",
+    title: "Harsh Pandhe — A portfolio you can fly through",
     description:
-      "SIH 2025 National Winner · Head of Cybersecurity & Blockchain @ IIC-SIT · Building distributed systems & blockchain solutions.",
+      "Drones that navigate without GPS, swarms that cover ground safely, and research that reports what didn't work.",
     type: "website",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Harsh Pandhe — Mission Island" }],
   },
+  twitter: { card: "summary_large_image", creator: "@HarshPandhe", images: ["/og.jpg"] },
 };
+
+export const viewport = { themeColor: "#05060a" };
 
 export default function RootLayout({
   children,
@@ -39,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans`}>
+      <body className={`${sans.variable} ${serif.variable} ${mono.variable} ${pixel.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>
