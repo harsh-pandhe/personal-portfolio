@@ -9,6 +9,7 @@ import { heightAt, ISLAND_EDGE, MARS_C, PLAZA_R, ridgeTop, ROAD_HALF, ROAD_R } f
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
 import { resolve } from "./colliders";
+import { REDUCED_MOTION } from "./device";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 
 const ROBOT = "/models/robot.glb";
@@ -244,7 +245,7 @@ export function CameraRig() {
         tmp.set(Math.sin(a) * 150, 50, Math.cos(a) * 150);
         tmp2.set(AMBIENT_POS.x * 0.15, 24, AMBIENT_POS.z * 0.6);
       } else {
-        const a = t * 0.035 + 0.6;
+        const a = (REDUCED_MOTION ? 0 : t * 0.035) + 0.6;
         tmp.set(Math.sin(a) * 172, 92, Math.cos(a) * 172);
         // aim past the centre so the island sits in the upper right, clear of the panel and headline;
         // on a portrait phone the headline is under the island, so lift the aim instead

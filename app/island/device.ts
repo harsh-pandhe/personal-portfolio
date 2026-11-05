@@ -37,6 +37,9 @@ if (typeof window !== "undefined") {
   addEventListener("orientationchange", update);
 }
 
+/** Visitors who asked their OS for less motion: the overview camera holds still. */
+export const REDUCED_MOTION = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 /** The device as it was when the page loaded (for renderer settings). */
 export const DEVICE = current;
 

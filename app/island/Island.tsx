@@ -405,7 +405,7 @@ function Panel() {
           </span>
           {ui.medals.length === MEDALS.length ? "All medals found" : `${ui.medals.length} of ${MEDALS.length} medals found`}
         </span>
-        <button onClick={() => setUI({ help: true })} className="rounded-md border border-white/20 px-1.5 font-mono text-[10px] text-white/80 hover:bg-white/10">
+        <button onClick={() => setUI({ help: true })} aria-label="How to get around" className="rounded-md border border-white/20 px-1.5 font-mono text-[10px] text-white/80 hover:bg-white/10">
           ?
         </button>
       </div>
