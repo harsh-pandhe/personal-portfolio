@@ -850,6 +850,8 @@ function Swarm() {
 }
 
 /* Ropeway Ridge: a multi-span gondola from the valley station over three coastal peaks. */
+const RW_GLB = "/models/ropeway.glb";
+useGLTF.preload(RW_GLB, false, true);
 function Ropeway() {
   const z = zoneById.ropeway;
   const [vx, vz] = zonePos(z);
@@ -911,82 +913,42 @@ function Ropeway() {
       const k = (((t * 0.012 + i * 0.1) % 1) + 1) % 1;
       const u = up ? k : 1 - k;
       const p = curve.getPointAt(u).add(side.clone().multiplyScalar(up ? -1 : 1));
-      cab.position.set(p.x, p.y - 1.6, p.z);
+      cab.position.set(p.x, p.y, p.z);
       curve.getTangentAt(u, tan);
       cab.rotation.y = Math.atan2(tan.x, tan.z);
       cab.rotation.z = Math.sin(t * 1.3 + i) * 0.03; // a little sway
     });
   });
-  const lamp = useGlow("#ffe8a3", 0.1, 2.5);
-  const cabinCols = useMemo(() => ["#e5322d", "#f7f8fa", "#e5322d", "#2d5bff", "#f7f8fa"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.2 })), []);
+  const { scene: rwScene } = useGLTF(RW_GLB, false, true);
+  const rw = useMemo(() => {
+    const get = (n: string) => {
+      const o = rwScene.getObjectByName(n)!.clone(true);
+      o.position.set(0, 0, 0);
+      o.traverse((m) => ((m as THREE.Mesh).isMesh ? (m.castShadow = true) : null));
+      return o;
+    };
+    const cabin = get("RwCabin");
+    return { tower: get("RwTower"), station: get("RwStation"), cabins: Array.from({ length: 10 }, () => cabin.clone(true)) };
+  }, [rwScene]);
   return (
     <group>
       {cables.map((g, i) => (
         <mesh key={i} geometry={g} material={M.dark} />
       ))}
+      {/* towers, stations and cabins modelled in Blender (public/models/ropeway.glb) */}
       {towers.map(({ p, g, yaw }, i) => (
-        <group key={i} position={[p.x, g, p.z]} rotation-y={yaw}>
-          {/* four tapered legs and a head frame */}
-          {[-1, 1].flatMap((sx) =>
-            [-1, 1].map((sz) => (
-              <mesh key={`${sx}${sz}`} position={[sx * 0.45, (p.y - g) / 2, sz * 0.45]} rotation={[sz * -0.06, 0, sx * 0.06]} material={M.metal} castShadow>
-                <boxGeometry args={[0.16, p.y - g, 0.16]} />
-              </mesh>
-            ))
-          )}
-          {Array.from({ length: Math.max(1, Math.floor((p.y - g) / 2.2)) }, (_, k) => (
-            <mesh key={k} position={[0, 1.6 + k * 2.2, 0]} material={M.metal}>
-              <boxGeometry args={[1.0, 0.08, 1.0]} />
-            </mesh>
-          ))}
-          <mesh position={[0, p.y - g, 0]} material={M.metal} castShadow>
-            <boxGeometry args={[3, 0.25, 0.5]} />
-          </mesh>
-        </group>
+        <primitive key={i} object={rw.tower.clone(true)} position={[p.x, g, p.z]} rotation-y={yaw} scale={[1, (p.y - g) / 10.55, 1]} />
       ))}
-      {/* stations: the valley terminal, two mid stations on the peaks and a top terminal */}
       {stops.map((p, i) => {
         const nxt = stops[Math.min(i + 1, stops.length - 1)],
           prv = stops[Math.max(i - 1, 0)];
         const yaw = Math.atan2(nxt.x - prv.x, nxt.z - prv.z);
         const big = i === 0 || i === stops.length - 1;
-        return (
-          <group key={i} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw}>
-            <mesh position={[0, 1.8, 0]} material={M.white} castShadow receiveShadow>
-              <boxGeometry args={[big ? 5 : 3.6, 3.6, big ? 4.6 : 3.4]} />
-            </mesh>
-            <mesh position={[0, 3.8, 0]} rotation-x={0.08} material={M.red} castShadow>
-              <boxGeometry args={[big ? 5.8 : 4.4, 0.35, big ? 5.6 : 4.4]} />
-            </mesh>
-            {/* bullwheel */}
-            <mesh position={[0, 4.3, 0]} rotation-x={Math.PI / 2} material={M.metal}>
-              <torusGeometry args={[1.15, 0.12, 8, 24]} />
-            </mesh>
-            <mesh position={[0, 2.3, (big ? 2.32 : 1.72) * (i === 0 ? 1 : -1)]} material={lamp}>
-              <boxGeometry args={[big ? 3.6 : 2.6, 0.7, 0.04]} />
-            </mesh>
-          </group>
-        );
+        return <primitive key={`s${i}`} object={rw.station.clone(true)} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw} scale={big ? 1 : 0.8} />;
       })}
       <group ref={cabins}>
         {Array.from({ length: 10 }, (_, i) => (
-          <group key={i}>
-            <mesh position={[0, 1.5, 0]} material={M.dark}>
-              <cylinderGeometry args={[0.04, 0.04, 1.2, 6]} />
-            </mesh>
-            <mesh position={[0, 2.1, 0]} material={M.metal}>
-              <boxGeometry args={[0.5, 0.18, 0.3]} />
-            </mesh>
-            <mesh material={cabinCols[i % cabinCols.length]} castShadow>
-              <boxGeometry args={[1.25, 1.05, 1.25]} />
-            </mesh>
-            <mesh position={[0, 0.15, 0]} material={M.glass}>
-              <boxGeometry args={[1.28, 0.48, 1.28]} />
-            </mesh>
-            <mesh position={[0, 0.56, 0]} material={M.dark}>
-              <boxGeometry args={[1.3, 0.08, 1.3]} />
-            </mesh>
-          </group>
+          <primitive key={i} object={rw.cabins[i]} scale={0.8} />
         ))}
       </group>
       <ZoneGroup id="ropeway">
