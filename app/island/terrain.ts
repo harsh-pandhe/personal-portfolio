@@ -126,8 +126,8 @@ function addPad(x: number, z: number, r: number, h?: number) {
   PADS.push({ x, z, r, h: h ?? baseHeight(x, z) });
 }
 // ropeway stations on the ridge and the two peaks
-addPad(RIDGE[0], RIDGE[1], 4.2);
-for (const [px, pz] of ROPE_PEAKS) addPad(px, pz, 4.2);
+addPad(RIDGE[0], RIDGE[1], 6.5);
+for (const [px, pz] of ROPE_PEAKS) addPad(px, pz, 6.5);
 /** The lighthouse stands on a rocky headland on the north-west point. */
 export const LIGHTHOUSE: [number, number] = polar(205, ISLAND_EDGE - 3);
 addPad(LIGHTHOUSE[0], LIGHTHOUSE[1], 4.5, PLATEAU + 1.2);
