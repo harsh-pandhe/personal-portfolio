@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://harshpandhe.com";
   return [
-    { url: `${base}/`, changeFrequency: "monthly", priority: 1 },
-    { url: `${base}/read`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/`, changeFrequency: "monthly", priority: 1 },
+    { url: `${SITE_URL}/read`, changeFrequency: "monthly", priority: 0.8 },
   ];
 }

@@ -293,7 +293,8 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
 }
 
 /** The long-form case study for one place; used by the island overlay and by /read. */
-export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) => void }) {
+export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: (next: ZoneId) => void; heading?: "h1" | "h2" }) {
+  const Title = heading;
   const z = zoneById[id];
   const c = CASES[id];
   const idx = ZONES.findIndex((q) => q.id === id);
@@ -303,7 +304,7 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           {/* hero */}
           <section className="px-10 pt-14">
             <div className="grid grid-cols-[1fr_minmax(220px,30%)] items-end gap-10">
-              <h1 className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
+              <Title className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
                 {c.titleLines.map((l, i) => (
                   <span
                     key={l}
@@ -313,7 +314,7 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
                     {l}
                   </span>
                 ))}
-              </h1>
+              </Title>
               {/* the zone's one-liner fills the space beside the title */}
               <aside className="mb-3 animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] border-l-2 pl-5 [animation-delay:250ms]" style={{ borderColor: z.accent }}>
                 <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: z.accent }}>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Mono, Instrument_Serif, Inter_Tight, Press_Start_2P } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600", "700"] });
 const serif = Instrument_Serif({ subsets: ["latin"], variable: "--font-serif", weight: "400", style: ["normal", "italic"] });
@@ -8,7 +9,8 @@ const pixel = Press_Start_2P({ subsets: ["latin"], variable: "--font-pixel", wei
 const mono = DM_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://harshpandhe.com"),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   title: "Harsh Pandhe — A portfolio you can fly through",
   description:
     "Harsh Pandhe builds autonomous drones, multi-robot swarms and evidence-first software. SIH 2025 National Winner, ISRO IRoC-U 2026 Finalist, Singapore–India Hackathon 2026 finalist, ex-Doppelmayr, 6 SSRN papers.",

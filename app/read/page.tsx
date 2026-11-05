@@ -27,13 +27,14 @@ export default function ReadPage() {
         </div>
       </header>
       <main>
+        <h1 className="sr-only">{profile.name}: work, research and wins</h1>
         {ZONES.map((z) => (
           <section key={z.id} id={z.id} className="scroll-mt-16 border-b border-white/10 pb-10" style={{ ["--accent" as string]: z.accent }}>
             <div className="flex items-center gap-2.5 px-10 pt-10 font-mono text-[12px] uppercase text-white/55">
               <i className="h-2.5 w-2.5 rounded-[3px]" style={{ background: z.accent }} />
               {z.name} · {z.team}
             </div>
-            <CaseBody id={z.id} onNext={(n) => document.getElementById(n)?.scrollIntoView({ behavior: "smooth" })} />
+            <CaseBody heading="h2" id={z.id} onNext={(n) => document.getElementById(n)?.scrollIntoView({ behavior: "smooth" })} />
           </section>
         ))}
       </main>

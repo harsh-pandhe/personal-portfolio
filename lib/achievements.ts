@@ -10,6 +10,8 @@ export const profile = {
     linkedin: "https://www.linkedin.com/in/harshpandhe/",
     x: "https://x.com/HarshPandhe",
     ssrn: "https://ssrn.com/author=12415688",
+    devto: "https://dev.to/harshpandhe",
+    zenodo: "https://doi.org/10.5281/zenodo.22758286",
   },
 };
 
