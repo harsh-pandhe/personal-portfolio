@@ -4,7 +4,9 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { heightAt, ISLAND_EDGE, MARS_C, rng, ROAD_R } from "./terrain";
-import { zonePos, ZONES } from "./zones";
+import { zoneById, zonePos, type ZoneId } from "./zones";
+import { zoneToWorld } from "./colliders";
+import { Bench, Planter } from "./Props";
 
 const m4 = new THREE.Matrix4();
 const q = new THREE.Quaternion();
@@ -51,63 +53,52 @@ function RoadDashes() {
   );
 }
 
-/** Benches and planters around every zone's plaza. */
+/** Benches at the front of each zone's plot, in zone-local metres (+z points at HQ), facing the
+ *  landmark. People.tsx seats visitors on these, so they are the single source of bench positions. */
+export const ZONE_BENCHES: Partial<Record<ZoneId, [number, number][]>> = {
+  marsyard: [[-7.5, 11.5]],
+  trading: [[-6.5, 10.5], [6.5, 10.5]],
+  workshop: [[-6.5, 12.5], [6.5, 12.5]],
+  library: [[-6, 10.5], [6, 10.5]],
+  morpheus: [[-7, 12.5], [7, 12.5]],
+  home: [[-6, 10.5], [6, 10.5]],
+};
+
+/** World position and yaw of a zone bench (yaw turns the bench's +z seat front toward the landmark). */
+export function benchAt(id: ZoneId, i: number) {
+  const [lx, lz] = ZONE_BENCHES[id]![i];
+  const [x, z] = zoneToWorld(id, lx, lz);
+  const [zx, zz] = zonePos(zoneById[id]);
+  return { x, z, yaw: Math.atan2(-zx, -zz) + Math.PI };
+}
+
 function PlazaFurniture() {
-  const seats = useRef<THREE.InstancedMesh>(null);
-  const legs = useRef<THREE.InstancedMesh>(null);
-  const pots = useRef<THREE.InstancedMesh>(null);
-  const blooms = useRef<THREE.InstancedMesh>(null);
-  const data = useMemo(() => {
-    const s: number[][] = [],
-      l: number[][] = [],
-      p: number[][] = [],
-      b: number[][] = [];
-    for (const z of ZONES) {
-      if (z.id === "ropeway" || z.id === "swarm" || z.id === "arena" || z.id === "hq") continue;
-      const [zx, zz] = zonePos(z);
-      const base = z.radius ? Math.atan2(zx, zz) : 0;
-      for (const k of [-1, 1]) {
-        // two benches either side of the approach road, facing the plaza
-        const a = base + k * 0.9 + Math.PI;
-        const bx = zx + Math.sin(a) * 6.2,
-          bz = zz + Math.cos(a) * 6.2;
-        const y = heightAt(bx, bz);
-        s.push([bx, y + 0.45, bz, a, 1.7, 0.1, 0.5]);
-        s.push([bx + Math.sin(a) * 0.22, y + 0.75, bz + Math.cos(a) * 0.22, a, 1.7, 0.45, 0.08]);
-        for (const e of [-0.7, 0.7]) l.push([bx + Math.cos(a) * e, y + 0.22, bz - Math.sin(a) * e, a, 0.08, 0.45, 0.4]);
-        // planters
-        const pa = base + k * 1.5 + Math.PI;
-        const px = zx + Math.sin(pa) * 5.4,
-          pz = zz + Math.cos(pa) * 5.4;
-        const py = heightAt(px, pz);
-        p.push([px, py + 0.3, pz, 0, 0.9, 0.6, 0.9]);
-        b.push([px, py + 0.75, pz, 0, 0.62, 0.42, 0.62]);
-      }
-    }
-    return { s, l, p, b };
-  }, []);
-  useInstances(seats, data.s);
-  useInstances(legs, data.l);
-  useInstances(pots, data.p);
-  useInstances(blooms, data.b, ["#ff8fb1", "#9b7bff", "#ffd23f", "#ff6b5b"]);
+  const leaf = useMemo(() => new THREE.MeshStandardMaterial({ color: "#3f9b4a", roughness: 0.85, flatShading: true }), []);
+  const list = useMemo(
+    () =>
+      (Object.keys(ZONE_BENCHES) as ZoneId[]).flatMap((id) =>
+        ZONE_BENCHES[id]!.map((_, i) => {
+          const b = benchAt(id, i);
+          // a planter at the outer end of every bench
+          const [lx, lz] = ZONE_BENCHES[id]![i];
+          const [px, pz] = zoneToWorld(id, lx + Math.sign(lx || 1) * 1.8, lz);
+          return { ...b, y: heightAt(b.x, b.z), px, pz, py: heightAt(px, pz), key: `${id}${i}` };
+        })
+      ),
+    []
+  );
   return (
     <>
-      <instancedMesh frustumCulled={false} ref={seats} args={[undefined, undefined, data.s.length]} castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#b07a4c" roughness={0.85} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={legs} args={[undefined, undefined, data.l.length]} castShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#2a2f36" roughness={0.5} metalness={0.4} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={pots} args={[undefined, undefined, data.p.length]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.5, 0.42, 1, 12]} />
-        <meshStandardMaterial color="#eef1f4" roughness={0.6} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={blooms} args={[undefined, undefined, data.b.length]} castShadow>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshStandardMaterial roughness={0.8} flatShading />
-      </instancedMesh>
+      {list.map((b) => (
+        <group key={b.key}>
+          <group position={[b.x, b.y, b.z]} rotation-y={b.yaw}>
+            <Bench />
+          </group>
+          <group position={[b.px, b.py, b.pz]}>
+            <Planter size={1.1} leaf={leaf} />
+          </group>
+        </group>
+      ))}
     </>
   );
 }

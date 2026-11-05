@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { Flag, Solid } from "./Props";
 import { Billboard, fontFamily, M, Quad, useGlow, ZoneGroup } from "./Landmarks";
 import { rng } from "./terrain";
 import { world } from "./store";
@@ -281,6 +282,8 @@ function GroundStation() {
       <mesh position={[0, 2.95, 0]} rotation-y={Math.PI / 4} material={canopy} castShadow>
         <coneGeometry args={[4.6, 0.9, 4, 1, true]} />
       </mesh>
+      <Solid w={5.2} d={1.5} position={[0, 0, -0.6]} />
+      <Solid w={3} d={0.6} position={[0, 0, -2.6]} />
       <mesh position={[0, 0.75, -0.6]} material={M.white} castShadow>
         <boxGeometry args={[5, 0.08, 1.3]} />
       </mesh>
@@ -325,6 +328,9 @@ function FinalsArch() {
   return (
     <group>
       {[-6.5, 6.5].map((x) => (
+        <Solid key={`s${x}`} r={0.45} position={[x, 0, 0]} />
+      ))}
+      {[-6.5, 6.5].map((x) => (
         <mesh key={x} position={[x, 2.6, 0]} material={M.white} castShadow>
           <boxGeometry args={[0.5, 5.2, 0.5]} />
         </mesh>
@@ -334,38 +340,6 @@ function FinalsArch() {
       </mesh>
       <mesh position={[0, 4.6, -0.02]} material={M.dark}>
         <boxGeometry args={[12.9, 2.1, 0.08]} />
-      </mesh>
-    </group>
-  );
-}
-
-function Flag({ x, z }: { x: number; z: number }) {
-  const cloth = useRef<THREE.Mesh>(null);
-  const mat = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 90;
-    c.height = 60;
-    const g = c.getContext("2d")!;
-    ["#ff9933", "#ffffff", "#138808"].forEach((col, i) => ((g.fillStyle = col), g.fillRect(0, i * 20, 90, 20)));
-    g.strokeStyle = "#000080";
-    g.lineWidth = 2;
-    g.beginPath();
-    g.arc(45, 30, 8, 0, Math.PI * 2);
-    g.stroke();
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide });
-  }, []);
-  useFrame(({ clock }) => {
-    if (cloth.current) cloth.current.rotation.y = Math.sin(clock.elapsedTime * 2 + x) * 0.25;
-  });
-  return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, 2.5, 0]} material={M.metal}>
-        <cylinderGeometry args={[0.05, 0.05, 5, 6]} />
-      </mesh>
-      <mesh ref={cloth} position={[0.75, 4.4, 0]} material={mat}>
-        <planeGeometry args={[1.5, 1]} />
       </mesh>
     </group>
   );
@@ -423,6 +397,7 @@ export function MarsYard() {
         // the HQ side stays open as the entrance
         i === 1 ? null : (
           <group key={i} position={[x, 0, z]} rotation-y={ry}>
+            <Solid w={len} d={0.35} />
             <mesh position={[0, 0.3, 0]} material={M.red}>
               <boxGeometry args={[len, 0.6, 0.12]} />
             </mesh>
@@ -438,6 +413,7 @@ export function MarsYard() {
       <Pad at={PADS.dock} label="DOCK" color="#12f0c0" seed={4} />
       {/* docking station on the final pad */}
       <group position={[PADS.dock[0] + 3.6, 0, PADS.dock[1]]}>
+        <Solid w={2.6} d={2.4} />
         <mesh position={[0, 0.8, 0]} material={M.white} castShadow>
           <boxGeometry args={[2.4, 1.6, 2.2]} />
         </mesh>
@@ -476,8 +452,11 @@ export function MarsYard() {
       <group position={[0, 0, FIELD.z1 + 0.5]}>
         <FinalsArch />
       </group>
-      <Flag x={-8.5} z={FIELD.z1 + 1.2} />
-      <Flag x={8.5} z={FIELD.z1 + 1.2} />
+      {[-8.5, 8.5].map((x, i) => (
+        <group key={x} position={[x, 0, FIELD.z1 + 1.4]}>
+          <Flag kind="india" height={6.5} width={2.1} phase={i * 1.3} />
+        </group>
+      ))}
       <Billboard id="marsyard" pos={[4.5, 0, 9.5]} rotY={-0.25} />
     </ZoneGroup>
   );

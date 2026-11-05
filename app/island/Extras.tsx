@@ -234,19 +234,6 @@ function Pages() {
           </mesh>
         ))}
       </group>
-      {/* reading benches */}
-      {[-3, 3].map((x) => (
-        <group key={x} position={[x, 0, 3.4]}>
-          <mesh position={[0, 0.45, 0]} castShadow>
-            <boxGeometry args={[2.2, 0.12, 0.6]} />
-            <meshStandardMaterial color="#b07a4c" roughness={0.85} />
-          </mesh>
-          <mesh position={[0, 0.2, 0]}>
-            <boxGeometry args={[1.8, 0.4, 0.4]} />
-            <meshStandardMaterial color="#eef1f4" />
-          </mesh>
-        </group>
-      ))}
     </At>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { buildTerrain, heightAt, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
 import { getUI, world } from "./store";
+import { addCollider } from "./colliders";
 
 /* ---------------- Sky dome (day ↔ night) ---------------- */
 export function SkyDome() {
@@ -137,6 +138,11 @@ export function Trees() {
     }
     return out;
   }, []);
+  // trunks are solid
+  useEffect(() => {
+    const off = data.map((t) => addCollider({ kind: "circle", x: t.x, z: t.z, r: 0.35 * t.s + 0.1 }));
+    return () => off.forEach((f) => f());
+  }, [data]);
   useEffect(() => {
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();

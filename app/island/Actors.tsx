@@ -229,7 +229,7 @@ export function CameraRig() {
       const lift = id === "hq" ? 16 : id === "arena" ? 18 : id === "marsyard" ? 24 : id === "trading" ? 17 : 12;
       // look at the zone from the island-centre side, slightly off-axis, so the billboard faces us
       tmp.set(x - ox * dist * 0.9 + oz * 6, y + lift, zz - oz * dist * 0.9 - ox * 6);
-      tmp2.set(x, y + (id === "hq" ? 5 : id === "trading" ? 11 : 2.5), zz);
+      tmp2.set(x, y + (id === "hq" ? 5 : id === "trading" ? 6 : 2.5), zz);
       if (id === "marsyard") tmp2.set(MARS_C[0], y + 1, MARS_C[1]);
       if (id === "ropeway") {
         // frame the whole line: aim between the valley station and the peaks, from higher up
@@ -377,7 +377,7 @@ const VILLAGERS: Villager[] = [
     ask: "Curious how we ran a national hackathon's hostels?",
   },
   {
-    key: "lib", zone: "library", role: "Librarian", tint: "#00d2ff", anim: "Sitting", side: 1,
+    key: "lib", zone: "library", role: "Librarian", tint: "#00d2ff", anim: "Idle", side: 1,
     thoughts: ["Half these papers say what didn't work.", "803 views and counting.", "Negative results are results.", "Shh. Someone's reading about CBFs."],
     ask: "Shall I pull the six SSRN papers for you?",
   },

@@ -2,7 +2,8 @@
 
 // Small street furniture shared by every zone: benches, flags, lamp posts, planters.
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { addCollider } from "./colliders";
 import * as THREE from "three";
 import { world } from "./store";
 
@@ -21,6 +22,7 @@ export const SEAT_Y = 0.5;
 export function Bench({ length = 1.9 }: { length?: number }) {
   return (
     <group>
+      <Solid w={length} d={0.65} />
       {[0, 1, 2].map((i) => (
         <mesh key={`s${i}`} position={[0, SEAT_Y - 0.03, 0.17 - i * 0.16]} material={MAT.slat} castShadow receiveShadow>
           <boxGeometry args={[length, 0.05, 0.13]} />
@@ -132,6 +134,7 @@ export function Flag({ kind = "india", height = 6, width = 1.8, phase = 0 }: { k
   });
   return (
     <group>
+      <Solid r={0.4} />
       <mesh position={[0, 0.15, 0]} material={MAT.stone} receiveShadow castShadow>
         <cylinderGeometry args={[0.32, 0.38, 0.3, 12]} />
       </mesh>
@@ -150,6 +153,7 @@ export function Flag({ kind = "india", height = 6, width = 1.8, phase = 0 }: { k
 export function LampPost({ glow, h = 3.6 }: { glow: THREE.Material; h?: number }) {
   return (
     <group>
+      <Solid r={0.25} />
       <mesh position={[0, 0.2, 0]} material={MAT.iron} castShadow>
         <cylinderGeometry args={[0.16, 0.2, 0.4, 8]} />
       </mesh>
@@ -173,6 +177,7 @@ export function LampPost({ glow, h = 3.6 }: { glow: THREE.Material; h?: number }
 export function Planter({ size = 1.4, leaf }: { size?: number; leaf: THREE.Material }) {
   return (
     <group>
+      <Solid w={size} d={size} />
       <mesh position={[0, 0.3, 0]} material={MAT.stone} castShadow receiveShadow>
         <boxGeometry args={[size, 0.6, size]} />
       </mesh>
@@ -196,4 +201,24 @@ export function useNightGlow(color: string, day = 0.05, night = 3) {
     r.current.emissiveIntensity = day + (night - day) * world.night;
   });
   return m;
+}
+
+const _p = new THREE.Vector3(),
+  _q = new THREE.Quaternion(),
+  _s = new THREE.Vector3(),
+  _e = new THREE.Euler();
+/** An invisible marker that makes the ground footprint around it solid for the player: a box
+ *  `w` x `d` (local x, z) or a circle of radius `r`, read from its own world transform on mount. */
+export function Solid({ w, d, r, position }: { w?: number; d?: number; r?: number; position?: [number, number, number] }) {
+  const ref = useRef<THREE.Group>(null);
+  useEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    g.updateWorldMatrix(true, false);
+    g.matrixWorld.decompose(_p, _q, _s);
+    const yaw = _e.setFromQuaternion(_q, "YXZ").y;
+    if (r) return addCollider({ kind: "circle", x: _p.x, z: _p.z, r: r * _s.x });
+    return addCollider({ kind: "box", x: _p.x, z: _p.z, hw: ((w ?? 1) * _s.x) / 2, hd: ((d ?? 1) * _s.z) / 2, rot: yaw });
+  }, [w, d, r]);
+  return <group ref={ref} position={position} />;
 }

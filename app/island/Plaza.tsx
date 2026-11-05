@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { heightAt, PLAZA_R, rng } from "./terrain";
 import { zonePos, ZONES } from "./zones";
-import { Bench, Flag, LampPost, useNightGlow } from "./Props";
+import { Bench, Flag, LampPost, Solid, useNightGlow } from "./Props";
 import { world } from "./store";
 
 // The city centre: a fountain around Mission Control and a ring of milestones, Nerul to Singapore.
@@ -137,6 +137,7 @@ function Fountain() {
   });
   return (
     <group>
+      <Solid r={OUTER + 0.7} />
       {/* outer basin: water, a seat-height rim and a dark stone apron ring */}
       <mesh position={[0, 0.38, 0]} rotation-x={-Math.PI / 2} material={water}>
         <ringGeometry args={[MID + 0.3, OUTER, 96, 3]} />
@@ -255,6 +256,7 @@ function Gardens() {
           d = (BED_R0 + BED_R1) / 2 + 1;
         return (
           <group key={`t${i}`} position={[Math.cos(a) * d, 0.38, Math.sin(a) * d]}>
+            <Solid r={0.6} />
             <mesh position={[0, 1.3, 0]} material={trunk} castShadow>
               <cylinderGeometry args={[0.16, 0.24, 2.6, 7]} />
             </mesh>
@@ -351,6 +353,7 @@ function Milestones() {
         return (
           // a granite stele standing in the front of each garden bed, readable from both sides
           <group key={m.title} position={[x, 0.36, z]} rotation-y={Math.atan2(-x, -z)}>
+            <Solid w={2.9} d={0.7} />
             <mesh position={[0, 0.2, 0]} material={plinth} castShadow receiveShadow>
               <boxGeometry args={[2.9, 0.4, 0.7]} />
             </mesh>
