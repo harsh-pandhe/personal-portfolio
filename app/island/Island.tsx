@@ -18,6 +18,8 @@ import { Rain, WeatherController } from "./Weather";
 import { endGala, GalaOverlay, startGala, startStory, StoryOverlay } from "./Story";
 import { setMusic, setSound, sfx } from "./audio";
 import { getUI, setUI, travel, TOUR, useUI, world } from "./store";
+import { DEVICE, useDevice } from "./device";
+import TouchControls from "./TouchControls";
 import { Help, Minimap, Settings, SoundEffects, Toast } from "./Hud";
 import CaseStudy from "./CaseStudy";
 import { zoneById, ZONES } from "./zones";
@@ -93,16 +95,19 @@ function FirstScreenReady() {
   return null;
 }
 
+// three render tiers: ?lite (oldest hardware), low (phones, small-memory devices), full
 const LITE = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
+const LOW = !LITE && DEVICE.low;
+const DPR_MAX = LITE ? 0.75 : LOW ? 1.5 : 1.75;
 
 function Scene() {
   // start crisp, step down if the frame rate drops
-  const [dpr, setDpr] = useState(LITE ? 0.75 : 1.5);
+  const [dpr, setDpr] = useState(LITE ? 0.75 : LOW ? 1.25 : 1.5);
   // shadows start at 2048 for a quick first screen and go to 4096 once the frame rate allows
   const [sharp, setSharp] = useState(false);
   return (
     <Canvas
-      shadows={!LITE}
+      shadows={!LITE && !LOW}
       dpr={dpr}
       camera={{ fov: 40, near: 0.1, far: 1100, position: [95, 80, 120] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
@@ -115,7 +120,7 @@ function Scene() {
           setSharp(false);
         }}
         onIncline={() => {
-          setDpr((d) => Math.min(LITE ? 0.75 : 1.75, d + 0.25));
+          setDpr((d) => Math.min(DPR_MAX, d + 0.25));
           setSharp(true);
         }}
         flipflops={4}
@@ -124,7 +129,7 @@ function Scene() {
       <fog attach="fog" args={["#cdeeff", 150, 430]} />
       <SkyDome />
       <Lights shadowSize={sharp ? 4096 : 2048} />
-      <Environment resolution={LITE ? 64 : 256} frames={1}>
+      <Environment resolution={LITE ? 64 : LOW ? 128 : 256} frames={1}>
         <Lightformer intensity={2.2} position={[0, 6, -9]} scale={[14, 4, 1]} color="#ffffff" />
         <Lightformer intensity={1.2} position={[-9, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 3, 1]} color="#bfe8ff" />
         <Lightformer intensity={1.2} position={[9, 2, 0]} rotation-y={-Math.PI / 2} scale={[10, 3, 1]} color="#ffffff" />
@@ -150,7 +155,7 @@ function Scene() {
       </Suspense>
       {/* everything decorative mounts after the hero has painted, a piece at a time, so the
           first screen doesn't stutter while ~40k grass blades, crowds and GLB clones compile */}
-      <Deferred step={1}>{!LITE && <Grass />}</Deferred>
+      <Deferred step={1}>{!LITE && <Grass count={LOW ? 20000 : 56000} />}</Deferred>
       <Deferred step={2}>
         <Flowers />
         <Clouds />
@@ -277,23 +282,28 @@ function MenuItem({ title, sub, icon, primary, onClick, active }: { title: strin
 /** Show/hide the sidebar; remembered per visitor, and exposed as --pl so overlays slide over. */
 function usePanelToggle() {
   const ui = useUI();
+  const { phone } = useDevice();
   useEffect(() => {
+    // on a phone the menu is a sheet that starts closed; on desktop the sidebar remembers its state
+    if (DEVICE.phone) return setUI({ panel: false });
     try {
       if (localStorage.getItem("panel") === "0") setUI({ panel: false });
     } catch {}
   }, []);
   useEffect(() => {
     const cinema = ui.story !== null || ui.gala !== null;
-    document.documentElement.style.setProperty("--pl", ui.panel && !cinema ? "376px" : "18px");
+    document.documentElement.style.setProperty("--pl", phone ? "0px" : ui.panel && !cinema ? "376px" : "18px");
+    if (phone) return;
     try {
       localStorage.setItem("panel", ui.panel ? "1" : "0");
     } catch {}
-  }, [ui.panel, ui.story, ui.gala]);
+  }, [ui.panel, ui.story, ui.gala, phone]);
 }
 
 function PanelToggle() {
   const ui = useUI();
-  if (ui.story !== null || ui.gala !== null) return null;
+  const { phone } = useDevice();
+  if (phone || ui.story !== null || ui.gala !== null) return null;
   return (
     <button
       onClick={() => setUI({ panel: !ui.panel })}
@@ -312,15 +322,31 @@ function PanelToggle() {
 
 function Panel() {
   const ui = useUI();
+  const { phone, touch } = useDevice();
   usePanelToggle();
   const exploring = ui.mode === "explore";
   const cinema = ui.story !== null || ui.gala !== null || !ui.panel;
+  // on a phone a menu choice should close the sheet so the island is visible again
+  const pick = (f: () => void) => () => {
+    f();
+    if (phone) setUI({ panel: false });
+  };
   return (
+    <>
+    {phone && !cinema && <div className="fixed inset-0 z-[29] bg-black/30" onClick={() => setUI({ panel: false })} />}
     <aside
-      className={`fixed bottom-[18px] left-[18px] top-[18px] z-30 flex w-[340px] flex-col rounded-[30px] border border-white/10 bg-[#1e2126]/[0.86] p-[18px] text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform [transition-duration:800ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
-        cinema ? "-translate-x-[120%]" : "translate-x-0"
-      }`}
+      aria-label="Menu"
+      className={
+        phone
+          ? `fixed inset-x-2 bottom-2 z-30 flex max-h-[82dvh] flex-col overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 bg-[#1e2126]/95 p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-white shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-transform [transition-duration:600ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+              cinema ? "translate-y-[115%]" : "translate-y-0"
+            }`
+          : `fixed bottom-[18px] left-[18px] top-[18px] z-30 flex w-[340px] flex-col rounded-[30px] border border-white/10 bg-[#1e2126]/[0.86] p-[18px] text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform [transition-duration:800ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+              cinema ? "-translate-x-[120%]" : "translate-x-0"
+            }`
+      }
     >
+      {phone && <div className="mx-auto mb-3 h-1.5 w-10 shrink-0 rounded-full bg-white/25" />}
       <div className="flex items-center gap-3 px-1 pb-4 pt-1">
         <div className="relative grid h-[52px] w-[52px] place-items-center rounded-full bg-[conic-gradient(from_200deg,#2d5bff,#00d2ff,#12f0c0,#22d36b,#2d5bff)] p-[2.5px]">
           <div className="grid h-full w-full place-items-center rounded-full bg-[#14171b] text-[17px] font-bold tracking-tight">HP</div>
@@ -333,15 +359,16 @@ function Panel() {
 
       <div className="flex flex-col gap-2">
         {exploring ? (
-          <MenuItem title="Back to overview" sub="See the whole island" icon={Icon.route} primary onClick={() => setUI({ mode: "intro", open: null })} />
+          <MenuItem title="Back to overview" sub="See the whole island" icon={Icon.route} primary onClick={pick(() => setUI({ mode: "intro", open: null }))} />
         ) : (
-          <MenuItem title="Enter the island" sub="Walk it at your own pace" icon={Icon.play} primary onClick={() => setUI({ mode: "explore", open: null })} />
+          <MenuItem title="Enter the island" sub="Walk it at your own pace" icon={Icon.play} primary onClick={pick(() => setUI({ mode: "explore", open: null }))} />
         )}
-        <MenuItem title="Watch the story" sub="Nine chapters, then the gala · M" icon={Icon.film} onClick={startStory} />
-        <MenuItem title="Guided tour" sub="Every place, one after another · T" icon={Icon.route} active={ui.mode === "tour"} onClick={() => setUI({ mode: "tour", tour: 0, open: null })} />
-        <MenuItem title="Gala night" sub="The drone show, with fireworks · G" icon={Icon.spark} onClick={startGala} />
-        <MenuItem title="About Harsh" sub="Work, research and path" icon={Icon.user} onClick={() => setUI({ open: "hq" })} />
-        <MenuItem title="Work with me" sub="Roles, projects or a hello" icon={Icon.case} onClick={() => setUI({ open: "home" })} />
+        <MenuItem title="Watch the story" sub={touch ? "Nine chapters, then the gala" : "Nine chapters, then the gala · M"} icon={Icon.film} onClick={pick(startStory)} />
+        <MenuItem title="Guided tour" sub={touch ? "Every place, one after another" : "Every place, one after another · T"} icon={Icon.route} active={ui.mode === "tour"} onClick={pick(() => setUI({ mode: "tour", tour: 0, open: null }))} />
+        <MenuItem title="Gala night" sub={touch ? "The drone show, with fireworks" : "The drone show, with fireworks · G"} icon={Icon.spark} onClick={pick(startGala)} />
+        <MenuItem title="About Harsh" sub="Work, research and path" icon={Icon.user} onClick={pick(() => setUI({ open: "hq" }))} />
+        <MenuItem title="Work with me" sub="Roles, projects or a hello" icon={Icon.case} onClick={pick(() => setUI({ open: "home" }))} />
+        {phone && <MenuItem title="Read as a page" sub="Every case study, no 3D" icon={Icon.case} onClick={() => (window.location.href = "/read")} />}
       </div>
 
       {exploring && (
@@ -351,7 +378,7 @@ function Panel() {
             {ZONES.map((z) => (
               <button
                 key={z.id}
-                onClick={() => travel(z.id)}
+                onClick={pick(() => travel(z.id))}
                 className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[12.5px] transition ${ui.near === z.id ? "bg-white/15 text-white" : "bg-white/[0.04] text-white/70 hover:bg-white/10"}`}
               >
                 <span className="font-mono text-[10px] text-white/40">{z.key}</span>
@@ -363,7 +390,7 @@ function Panel() {
         </div>
       )}
 
-      <div className="flex-1" />
+      <div className={phone ? "h-3 shrink-0" : "flex-1"} />
 
       <div className="mb-2 flex items-center justify-between rounded-[16px] bg-white/[0.05] px-3 py-2.5 text-[13px] text-white/75">
         <span className="flex items-center gap-2.5">
@@ -392,7 +419,7 @@ function Panel() {
             <Svg d={ui.night ? Icon.moon : Icon.sun} />
             {ui.night ? "Night" : "Day"} {ui.timeMode === "live" ? "· live IST" : ""}
           </span>
-          <kbd className="rounded-md border border-white/20 px-1.5 font-mono text-[10px]">L</kbd>
+          {!touch && <kbd className="rounded-md border border-white/20 px-1.5 font-mono text-[10px]">L</kbd>}
         </button>
         <button onClick={() => setUI({ settings: true })} aria-label="Settings" className="grid w-11 place-items-center rounded-[16px] bg-white/[0.05] text-white/75 transition hover:bg-white/10">
           <Svg d={Icon.gear} />
@@ -411,7 +438,7 @@ function Panel() {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[11.5px] text-white/50">
+      <div className={`mt-3 flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[11.5px] text-white/50 ${touch ? "hidden" : "flex"}`}>
         {[
           ["WASD", "walk"],
           ["E", "open"],
@@ -426,6 +453,38 @@ function Panel() {
         ))}
       </div>
     </aside>
+    </>
+  );
+}
+
+/* ---------------- phone: a dock of the four things people do most ---------------- */
+function MobileDock() {
+  const ui = useUI();
+  const { phone } = useDevice();
+  if (!phone || ui.story !== null || ui.gala !== null || ui.open || !ui.loaded) return null;
+  const exploring = ui.mode === "explore";
+  const btn = "flex flex-1 flex-col items-center gap-1 rounded-[18px] py-2 text-[11px] font-semibold transition active:scale-95";
+  return (
+    <nav aria-label="Quick actions" className="fixed inset-x-2 bottom-2 z-20 flex gap-1.5 rounded-[24px] border border-white/10 bg-[#1e2126]/90 p-1.5 pb-[max(6px,env(safe-area-inset-bottom))] text-white shadow-2xl backdrop-blur-xl">
+      <button className={`${btn} ${exploring ? "bg-white/10" : "bg-[#22d36b] text-[#06240f]"}`} onClick={() => setUI({ mode: exploring ? "intro" : "explore", open: null })}>
+        <Svg d={exploring ? Icon.route : Icon.play} />
+        {exploring ? "Overview" : "Explore"}
+      </button>
+      <button className={`${btn} bg-white/[0.06]`} onClick={startStory}>
+        <Svg d={Icon.film} />
+        Story
+      </button>
+      <button className={`${btn} bg-white/[0.06]`} onClick={startGala}>
+        <Svg d={Icon.spark} />
+        Gala
+      </button>
+      <button className={`${btn} bg-white/[0.06]`} onClick={() => setUI({ panel: true })} aria-expanded={ui.panel}>
+        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+        Menu
+      </button>
+    </nav>
   );
 }
 
@@ -433,7 +492,8 @@ function Panel() {
 /* ---------------- hero headline (overview) ---------------- */
 function Hero() {
   const ui = useUI();
-  const show = ui.mode === "intro" && !ui.open && ui.loaded && ui.story === null && ui.gala === null;
+  const { phone } = useDevice();
+  const show = ui.mode === "intro" && !ui.open && ui.loaded && ui.story === null && ui.gala === null && !(phone && ui.panel);
   return (
     <>
       <div
@@ -443,14 +503,14 @@ function Hero() {
           show ? "opacity-100" : "opacity-0"
         }`}
       />
-      <div className={`pointer-events-none fixed bottom-[46px] left-[calc(var(--pl,376px)+20px)] right-12 z-20 transition-all [transition-duration:1200ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${show ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
-        <div className={`mb-3 text-[15px] font-medium ${ui.night ? "text-white/80" : "text-neutral-800"}`}>Autonomous navigation & multi-agent robotics · SIT Lonavala</div>
-        <h1 className={`text-[clamp(72px,8.6vw,168px)] font-semibold leading-[0.86] tracking-[-0.065em] transition-colors duration-1000 ${ui.night ? "text-white" : "text-[#121417]"}`}>
+      <div className={`pointer-events-none fixed bottom-[104px] left-4 right-4 z-20 sm:bottom-[46px] sm:left-[calc(var(--pl,376px)+20px)] sm:right-12 transition-all [transition-duration:1200ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${show ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
+        <div className={`mb-3 text-[13px] font-medium sm:text-[15px] ${ui.night ? "text-white/80" : "text-neutral-800"}`}>Autonomous navigation & multi-agent robotics · SIT Lonavala</div>
+        <h1 className={`text-[clamp(46px,8.6vw,168px)] font-semibold leading-[0.86] tracking-[-0.065em] transition-colors duration-1000 ${ui.night ? "text-white" : "text-[#121417]"}`}>
           A portfolio
           <br />
           you can <span className={`font-serif font-normal italic tracking-[-0.03em] ${ui.night ? "text-[#2ee0ff]" : "text-[#2d5bff]"}`}>fly</span> through.
         </h1>
-        <p className={`mt-6 max-w-[620px] text-[18px] leading-snug ${ui.night ? "text-white/70" : "text-neutral-700"}`}>
+        <p className={`mt-4 max-w-[620px] text-[15px] leading-snug sm:mt-6 sm:text-[18px] ${ui.night ? "text-white/70" : "text-neutral-700"}`}>
           I build drones that navigate without GPS, robot swarms that cover ground safely, and research that reports what didn&rsquo;t work.
         </p>
       </div>
@@ -461,16 +521,25 @@ function Hero() {
 /* ---------------- explore HUD ---------------- */
 function Prompt() {
   const ui = useUI();
+  const { phone, touch } = useDevice();
   if (ui.mode !== "explore" || ui.open) return null;
   const z = ui.near ? zoneById[ui.near] : null;
   return (
-    <div className="pointer-events-none fixed bottom-8 left-[calc(50%+170px)] z-20 -translate-x-1/2">
-      <div className={`flex items-center gap-3 rounded-full bg-[#1e2126]/90 py-2 pl-2 pr-5 text-white shadow-2xl backdrop-blur transition-all duration-500 ${z ? "opacity-100" : "translate-y-3 opacity-0"}`}>
-        <kbd className="grid h-8 w-8 place-items-center rounded-full bg-white font-mono text-sm font-bold text-black">E</kbd>
+    <div className={`fixed z-20 -translate-x-1/2 ${phone ? "left-1/2 top-[136px]" : "pointer-events-none bottom-8 left-[calc(50%+170px)]"}`}>
+      <button
+        onClick={() => z && setUI({ open: z.id })}
+        tabIndex={z ? 0 : -1}
+        className={`flex items-center gap-3 whitespace-nowrap rounded-full bg-[#1e2126]/90 py-2 pl-2 pr-5 text-white shadow-2xl backdrop-blur transition-all duration-500 ${z ? "opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}
+      >
+        {touch ? (
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-sm font-bold text-black">↗</span>
+        ) : (
+          <kbd className="grid h-8 w-8 place-items-center rounded-full bg-white font-mono text-sm font-bold text-black">E</kbd>
+        )}
         <span className="text-[14px]">
-          <b className="font-semibold">{z?.name}</b> <span className="text-white/55">· {z?.team}</span>
+          <b className="font-semibold">{touch ? `Open ${z?.name ?? ""}` : z?.name}</b> <span className="hidden text-white/55 sm:inline">· {z?.team}</span>
         </span>
-      </div>
+      </button>
     </div>
   );
 }
@@ -487,7 +556,7 @@ function TourCard() {
   const z = zoneById[TOUR[ui.tour]];
   return (
     <div
-      className={`fixed bottom-[18px] left-[var(--pl,376px)] z-20 w-[520px] rounded-[28px] border border-white/60 bg-white/80 p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+      className={`fixed inset-x-2 bottom-2 z-20 rounded-[24px] border border-white/60 bg-white/85 p-5 sm:inset-x-auto sm:bottom-[18px] sm:left-[var(--pl,376px)] sm:w-[520px] sm:rounded-[28px] sm:p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
         on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
       }`}
     >
@@ -500,9 +569,9 @@ function TourCard() {
           {String(ui.tour + 1).padStart(2, "0")} / {String(TOUR.length).padStart(2, "0")}
         </span>
       </div>
-      <h2 className="mt-3 text-[40px] font-semibold leading-[0.95] tracking-[-0.05em]">{z.name}</h2>
-      <p className="mt-2 text-[18px] font-medium leading-snug tracking-[-0.02em] text-neutral-800">{z.headline}</p>
-      <p className="mt-3 text-[14px] leading-relaxed text-neutral-600">{z.blurb}</p>
+      <h2 className="mt-3 text-[30px] font-semibold sm:text-[40px] leading-[0.95] tracking-[-0.05em]">{z.name}</h2>
+      <p className="mt-2 text-[16px] font-medium leading-snug tracking-[-0.02em] text-neutral-800 sm:text-[18px]">{z.headline}</p>
+      <p className="mt-3 line-clamp-3 text-[14px] leading-relaxed text-neutral-600 sm:line-clamp-none">{z.blurb}</p>
       <div className="mt-5 flex items-center gap-2">
         <button onClick={() => setUI({ tour: (ui.tour - 1 + TOUR.length) % TOUR.length })} className="rounded-full border border-neutral-300 px-4 py-2 text-[13px] font-medium hover:bg-neutral-100">
           ← Prev
@@ -511,7 +580,10 @@ function TourCard() {
           Next →
         </button>
         <button onClick={() => setUI({ open: z.id })} className="ml-auto rounded-full bg-[#121417] px-5 py-2 text-[13px] font-semibold text-white hover:bg-black">
-          Open {z.name} ↗
+          Open<span className="hidden sm:inline"> {z.name}</span> ↗
+        </button>
+        <button onClick={() => setUI({ mode: "intro" })} aria-label="End the tour" className="rounded-full border border-neutral-300 px-3 py-2 text-[13px] hover:bg-neutral-100 sm:hidden">
+          ✕
         </button>
       </div>
       <div className="mt-5 flex gap-1">
@@ -534,15 +606,16 @@ function Corner() {
   const w = ui.weather;
   const hide = ui.open || ui.story !== null || ui.gala !== null;
   return (
-    <div className={`fixed right-[18px] top-[18px] z-20 flex items-center gap-2 transition-opacity duration-500 ${hide ? "pointer-events-none opacity-0" : "opacity-100"}`}>
+    <div className={`fixed right-3 top-[max(12px,env(safe-area-inset-top))] z-20 flex items-center gap-2 sm:right-[18px] sm:top-[18px] transition-opacity duration-500 ${hide ? "pointer-events-none opacity-0" : "opacity-100"}`}>
       <button
         onClick={() => setUI({ settings: true })}
         title="Live weather in Navi Mumbai"
-        className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[13px] font-medium text-neutral-900 shadow-lg backdrop-blur hover:bg-white"
+        className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 text-[13px] font-medium text-neutral-900 shadow-lg backdrop-blur hover:bg-white sm:px-4"
       >
         <span>{w ? w.icon : "📍"}</span>
-        <span>Navi Mumbai{w ? ` · ${w.temp}°C ${w.label}` : ""}</span>
-        <span className="font-mono text-[11px] text-neutral-500">
+        <span className="hidden sm:inline">Navi Mumbai{w ? ` · ${w.temp}°C ${w.label}` : ""}</span>
+        <span className="sm:hidden">{w ? `${w.temp}°` : "NMB"}</span>
+        <span className="hidden font-mono text-[11px] text-neutral-500 md:inline">
           <Clock />
         </span>
       </button>
@@ -628,6 +701,8 @@ export default function Island() {
       <Hero />
       <Panel />
       <PanelToggle />
+      <MobileDock />
+      <TouchControls />
       <Prompt />
       <TourCard />
       <Corner />
