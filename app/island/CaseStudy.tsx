@@ -302,17 +302,26 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
     <article className="pb-10">
           {/* hero */}
           <section className="px-10 pt-14">
-            <h1 className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
-              {c.titleLines.map((l, i) => (
-                <span
-                  key={l}
-                  className="block animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] bg-clip-text pb-[0.04em] text-transparent"
-                  style={{ animationDelay: `${i * 90}ms`, backgroundImage: `linear-gradient(180deg,#fff 40%, color-mix(in srgb, ${z.accent} 55%, #fff))` }}
-                >
-                  {l}
+            <div className="grid grid-cols-[1fr_minmax(220px,30%)] items-end gap-10">
+              <h1 className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
+                {c.titleLines.map((l, i) => (
+                  <span
+                    key={l}
+                    className="block animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] bg-clip-text pb-[0.04em] text-transparent"
+                    style={{ animationDelay: `${i * 90}ms`, backgroundImage: `linear-gradient(180deg,#fff 40%, color-mix(in srgb, ${z.accent} 55%, #fff))` }}
+                  >
+                    {l}
+                  </span>
+                ))}
+              </h1>
+              {/* the zone's one-liner fills the space beside the title */}
+              <aside className="mb-3 animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] border-l-2 pl-5 [animation-delay:250ms]" style={{ borderColor: z.accent }}>
+                <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: z.accent }}>
+                  {z.team}
                 </span>
-              ))}
-            </h1>
+                <p className="mt-2 text-[clamp(18px,1.6vw,26px)] font-semibold leading-snug tracking-[-0.02em] text-white">{z.headline}</p>
+              </aside>
+            </div>
             <div className="mb-10 mt-12 grid grid-cols-4 gap-2.5 font-mono text-[12.5px] uppercase leading-snug">
               {c.meta.map(([k, v], i) => (
                 <div
@@ -333,7 +342,10 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           </div>
 
           <Reveal>
-            <p className="max-w-[22ch] px-10 pb-16 pt-28 text-[clamp(36px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.045em]">{c.hook}</p>
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(220px,32%)] items-end gap-10 px-10 pb-16 pt-28">
+              <p className="max-w-[22ch] text-[clamp(36px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.045em]">{c.hook}</p>
+              <p className="mb-2 border-t border-white/15 pt-4 text-[16px] leading-relaxed text-white/65">{z.blurb}</p>
+            </div>
           </Reveal>
 
           <Gallery id={id} accent={z.accent} />
