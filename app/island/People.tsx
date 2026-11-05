@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { heightAt, ROAD_R, rng } from "./terrain";
+import { heightAt, ROAD_HALF, ROAD_R, rng } from "./terrain";
 import { zoneById, zonePos, type ZoneId } from "./zones";
 import { getUI, world } from "./store";
 
@@ -58,13 +58,13 @@ function buildPeople(): Person[] {
   out.push({ id: "pilot", body: "rogue", plan: { kind: "stand", ...nearZone("marsyard", 4.5, -4.2), anim: "Interact" }, line: "Pre-flight checks done. Kill switch armed." });
   // walkers on the outer pavement of the ring road
   [0, 1, 2, 3].forEach((i) =>
-    out.push({ id: `walk${i}`, body: b(i + 2), plan: { kind: "walk", r: ROAD_R + 2.4 + (i % 2) * 0.5, speed: (i % 2 ? -1 : 1) * (0.028 + i * 0.004), phase: i * 1.6 }, line: ["Lovely island.", "Which way to the lighthouse?", "Did you find a medal yet?", "The drone show is at night."][i] })
+    out.push({ id: `walk${i}`, body: b(i + 2), plan: { kind: "walk", r: ROAD_R + (i % 2 ? -1 : 1) * (ROAD_HALF - 1.1), speed: (i % 2 ? -1 : 1) * (0.028 + i * 0.004), phase: i * 1.6 }, line: ["Lovely island.", "Which way to the lighthouse?", "Did you find a medal yet?", "The drone show is at night."][i] })
   );
   // the gala crowd on the south beach by the pier
   const r = rng(61);
   for (let i = 0; i < 8; i++) {
     const a = ((88 + (i - 4) * 3.2) * Math.PI) / 180;
-    const d = 59 + r() * 2.5;
+    const d = 86 + r() * 3;
     const x = Math.cos(a) * d,
       z = Math.sin(a) * d;
     out.push({ id: `crowd${i}`, body: b(i), plan: { kind: "crowd", x, z, yaw: Math.atan2(x, z) }, line: "" });
@@ -100,7 +100,9 @@ function Human({ p, clips }: { p: Person; clips: THREE.AnimationClip[] }) {
     // offset each person's cycle so crowds don't move in lockstep
     mixer.setTime(Math.random() * 3);
     return () => {
+      // forget the action too, or a remount (StrictMode, HMR) thinks it is still playing and leaves a T-pose
       mixer.stopAllAction();
+      current.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mixer]);

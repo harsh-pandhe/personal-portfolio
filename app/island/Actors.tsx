@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { heightAt, ISLAND_EDGE, MARS_C, ridgeTop } from "./terrain";
+import { heightAt, ISLAND_EDGE, MARS_C, PLAZA_R, ridgeTop, ROAD_HALF, ROAD_R } from "./terrain";
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
 import { resolve } from "./colliders";
@@ -121,7 +121,7 @@ export function Player() {
     // nearest zone
     if (ui.mode === "explore") {
       let best: (typeof ZONES)[number] | null = null,
-        bd = 11;
+        bd = 16;
       for (const z of ZONES) {
         const [x, zz] = zonePos(z);
         const d = Math.hypot(p.x - x, p.z - zz);
@@ -206,13 +206,13 @@ export function CameraRig() {
         // night: hold a view across the island toward the fixed drone show over the northern sea,
         // drifting a little instead of orbiting away from it
         const a = Math.sin(t * 0.05) * 0.28;
-        tmp.set(Math.sin(a) * 112, 38, Math.cos(a) * 112);
+        tmp.set(Math.sin(a) * 150, 50, Math.cos(a) * 150);
         tmp2.set(AMBIENT_POS.x * 0.15, 24, AMBIENT_POS.z * 0.6);
       } else {
         const a = t * 0.035 + 0.6;
-        tmp.set(Math.sin(a) * 126, 68, Math.cos(a) * 126);
+        tmp.set(Math.sin(a) * 172, 92, Math.cos(a) * 172);
         // aim past the centre so the island sits in the upper right, clear of the panel and headline
-        tmp2.set(Math.sin(a - 0.5) * -10, -14, Math.cos(a - 0.5) * -10);
+        tmp2.set(Math.sin(a - 0.5) * -14, -19, Math.cos(a - 0.5) * -14);
       }
       ease = 1 - Math.pow(0.3, dt);
     } else if (ui.mode === "tour" || ui.open) {
@@ -383,19 +383,19 @@ const VILLAGERS: Villager[] = [
   },
   {
     key: "w1", zone: "workshop", role: "Courier bot", tint: "#7a4dff", anim: "Walking", side: 1,
-    walker: { r: 22.4, speed: 0.045, phase: 0 },
+    walker: { r: ROAD_R + ROAD_HALF - 0.9, speed: 0.032, phase: 0 },
     thoughts: ["Delivering crates to the Workshop.", "25 builds and counting.", "Left at the roundabout, then straight."],
     ask: "Lost? The Workshop has everything else he's built.",
   },
   {
     key: "w2", zone: "hq", role: "Campus guide", tint: "#2d5bff", anim: "Walking", side: 1,
-    walker: { r: 19.6, speed: -0.04, phase: 2.4 },
+    walker: { r: PLAZA_R + 1.4, speed: -0.04, phase: 2.4 },
     thoughts: ["Mission Control is at the centre.", "Press T for the guided tour.", "Five medals are hidden out here."],
     ask: "First time on the island? Mission Control has the whole story.",
   },
   {
     key: "w3", zone: "home", role: "Night owl", tint: "#ff7ac6", anim: "Walking", side: 1,
-    walker: { r: 23.6, speed: 0.035, phase: 4.1 },
+    walker: { r: ROAD_R - ROAD_HALF + 0.9, speed: 0.026, phase: 4.1 },
     thoughts: ["Press L. The drone show is worth it.", "The lighthouse turns on at night.", "Home's the pink-roofed one."],
     ask: "Want to get in touch with Harsh? Home has a message form.",
   },
@@ -569,11 +569,11 @@ export function Teammates() {
 
 /* ---------------- five hidden medals ---------------- */
 export const MEDALS = [
-  { name: "Smart India Hackathon 2025", note: "National Winner · ₹1,50,000", at: () => [9, -45] as [number, number] },
+  { name: "Smart India Hackathon 2025", note: "National Winner · ₹1,50,000", at: () => [Math.cos(-1.32) * 82, Math.sin(-1.32) * 82] as [number, number] },
   { name: "ISRO IRoC-U 2026", note: "Finalist · Team 10144", at: () => ridgeTop() },
-  { name: "RoboRashtra 2026", note: "1st Runner-Up · Chakravyuh", at: () => [44, -16] as [number, number] },
-  { name: "Singapore–India Hackathon 2026", note: "Selected for the Grand Finale at SMU", at: () => [Math.cos(1.66) * 63, Math.sin(1.66) * 63] as [number, number] },
-  { name: "PCU Ideathon 2.0", note: "Top 40 of 500+ teams", at: () => [Math.cos(3.45) * 49, Math.sin(3.45) * 49] as [number, number] },
+  { name: "RoboRashtra 2026", note: "1st Runner-Up · Chakravyuh", at: () => [Math.cos(-0.44) * 76, Math.sin(-0.44) * 76] as [number, number] },
+  { name: "Singapore–India Hackathon 2026", note: "Selected for the Grand Finale at SMU", at: () => [Math.cos(1.66) * 90, Math.sin(1.66) * 90] as [number, number] },
+  { name: "PCU Ideathon 2.0", note: "Top 40 of 500+ teams", at: () => [Math.cos(3.07) * 72, Math.sin(3.07) * 72] as [number, number] },
 ];
 
 function loadMedals(): number[] {

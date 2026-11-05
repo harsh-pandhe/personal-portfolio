@@ -1,9 +1,16 @@
 import * as THREE from "three";
 import { ZONES, zonePos } from "./zones";
 
-export const ISLAND_EDGE = 68; // where land meets the beach
-export const ROAD_R = 27;
+export const ISLAND_EDGE = 96; // where land meets the beach
+export const ROAD_R = 37;
+/** Ring road cross-section, from the centreline: 3.5 m lanes, a kerb, then a 2.3 m sidewalk. */
+export const LANE_W = 3.5;
+export const KERB_W = 0.3;
+export const WALK_W = 2.3;
+export const ROAD_HALF = LANE_W + KERB_W + WALK_W;
 export const PLATEAU = 1.6;
+/** Radius of the paved city-centre plaza around Mission Control. */
+export const PLAZA_R = 20;
 
 const ss = (a: number, b: number, x: number) => {
   const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
@@ -16,16 +23,24 @@ const MARS = zoneXZ.find((z) => z.id === "marsyard")!.p;
 const ML = Math.hypot(MARS[0], MARS[1]);
 export const MARS_C: [number, number] = [MARS[0] + (MARS[0] / ML) * 9, MARS[1] + (MARS[1] / ML) * 9];
 export const MARS_R = 19;
+
+/** Flat radius of each zone's plot (inside it the ground is level; it blends out over 4.5 m). */
+export function zoneFlatR(id: string) {
+  return id === "arena" ? 19 : id === "hq" ? PLAZA_R + 1 : id === "morpheus" || id === "workshop" ? 16 : 13.5;
+}
 const ROPE = zoneXZ.find((z) => z.id === "ropeway")!.p;
 // the ridge rises behind the ropeway valley station, toward the sea
-const RIDGE: [number, number] = [ROPE[0] * 1.42, ROPE[1] * 1.42];
+const RIDGE: [number, number] = [ROPE[0] * 1.4, ROPE[1] * 1.4];
 export const RIDGE_TOP = 13;
 // [x, z, height, spread]: hills in the gaps between zones, out toward the coast
 const HILLS: [number, number, number, number][] = ([
-  [-70, 56, 8, 7],
-  [-30, 57, 7, 6.5],
-  [130, 55, 9, 7.5],
-  [170, 54, 7, 6],
+  [-70, 80, 9, 9],
+  [-30, 80, 8, 8.5],
+  [50, 82, 8, 8],
+  [130, 80, 10, 9.5],
+  [170, 79, 8, 8],
+  [210, 78, 7, 8],
+  [250, 80, 9, 9],
 ] as const).map(([deg, r, hh, s]) => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r, hh, s]);
 
 export function ridgeTop(): [number, number] {
@@ -35,8 +50,8 @@ export function ridgeTop(): [number, number] {
 // two more coastal peaks beyond the ridge for the ropeway to cross: [x, z, height, spread]
 const polar = (deg: number, r: number): [number, number] => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r];
 export const ROPE_PEAKS: [number, number, number, number][] = [
-  [...polar(9, 60), 17, 7],
-  [...polar(-13, 59), 14.5, 6.5],
+  [...polar(10, 84), 17, 8],
+  [...polar(-12, 82), 14.5, 7.5],
 ];
 
 function distSeg(px: number, pz: number, ax: number, az: number, bx: number, bz: number) {
@@ -54,11 +69,16 @@ export function roadMask(x: number, z: number) {
     if (zz.id === "hq") continue;
     d = Math.min(d, distSeg(x, z, 0, 0, zz.p[0] * 0.82, zz.p[1] * 0.82));
   }
-  // the ring road (with sidewalks) is wider than the spokes
-  return 1 - ss(Math.abs(r - ROAD_R) === d ? 3.9 : 2.4, Math.abs(r - ROAD_R) === d ? 4.8 : 3.2, d);
+  // the ring road (carriageway, kerbs and sidewalks: ROAD_HALF either side) is wider than the boulevards
+  const ring = Math.abs(r - ROAD_R) === d;
+  return 1 - ss(ring ? ROAD_HALF + 0.4 : 3.6, ring ? ROAD_HALF + 2 : 5, d);
 }
 
-export function heightAt(x: number, z: number) {
+/** Level pads cut into slopes for things that need flat ground (ropeway stations, lighthouse). */
+type Pad = { x: number; z: number; r: number; h: number };
+const PADS: Pad[] = [];
+
+function baseHeight(x: number, z: number) {
   const r = Math.hypot(x, z);
   let h =
     PLATEAU +
@@ -78,7 +98,8 @@ export function heightAt(x: number, z: number) {
   // flat plateaus for zones and roads
   for (const zz of zoneXZ) {
     const d = Math.hypot(x - zz.p[0], z - zz.p[1]);
-    const w = zz.id === "arena" ? 1 - ss(14, 17.5, d) : 1 - ss(9.5, 14, d);
+    const f = zoneFlatR(zz.id);
+    const w = 1 - ss(f, f + 4.5, d);
     h = h + (PLATEAU - h) * w * (zz.id === "ropeway" ? 0.85 : 1);
   }
   // the Mars yard: one big flat test field, with a little dune roll
@@ -90,6 +111,26 @@ export function heightAt(x: number, z: number) {
   h = h * (1 - edge) + -2.5 * edge;
   return h;
 }
+
+export function heightAt(x: number, z: number) {
+  let h = baseHeight(x, z);
+  for (const p of PADS) {
+    const d = Math.hypot(x - p.x, z - p.z);
+    if (d < p.r + 3) h += (p.h - h) * (1 - ss(p.r, p.r + 3, d));
+  }
+  return h;
+}
+
+/** Cut a level pad of radius `r` at (x, z), at the ground height there (or `h`). */
+function addPad(x: number, z: number, r: number, h?: number) {
+  PADS.push({ x, z, r, h: h ?? baseHeight(x, z) });
+}
+// ropeway stations on the ridge and the two peaks
+addPad(RIDGE[0], RIDGE[1], 4.2);
+for (const [px, pz] of ROPE_PEAKS) addPad(px, pz, 4.2);
+/** The lighthouse stands on a rocky headland on the north-west point. */
+export const LIGHTHOUSE: [number, number] = polar(205, ISLAND_EDGE - 3);
+addPad(LIGHTHOUSE[0], LIGHTHOUSE[1], 4.5, PLATEAU + 1.2);
 
 const C = {
   grass: new THREE.Color("#7cc65a"),
@@ -103,7 +144,7 @@ const C = {
   plaza: new THREE.Color("#eef1f4"),
 };
 
-export function buildTerrain(size = 190, seg = 260) {
+export function buildTerrain(size = 260, seg = 330) {
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position as THREE.BufferAttribute;
@@ -124,8 +165,11 @@ export function buildTerrain(size = 190, seg = 260) {
       if (zz.id === "marsyard") {
         const k = 1 - ss(MARS_R - 2.5, MARS_R + 0.5, Math.hypot(x - MARS_C[0], z - MARS_C[1]));
         c.lerp(n > 0.5 ? C.mars : C.mars2, k);
+      } else if (zz.id === "hq") {
+        c.lerp(C.plaza, (1 - ss(PLAZA_R - 0.5, PLAZA_R + 0.5, d)) * 0.95);
       } else if (zz.id !== "ropeway" && zz.id !== "swarm") {
-        c.lerp(C.plaza, (1 - ss(zz.id === "arena" ? 12.5 : 8.6, zz.id === "arena" ? 13.5 : 9.8, d)) * 0.9);
+        const f = zoneFlatR(zz.id) - 3.5;
+        c.lerp(C.plaza, (1 - ss(f, f + 1, d)) * 0.9);
       }
     }
     c.lerp(C.road, roadMask(x, z) * 0.95);
@@ -153,11 +197,12 @@ export function rng(seed: number) {
 /** True where trees/props may grow (not on roads, plazas, beach or the ridge path). */
 export function isFreeLand(x: number, z: number) {
   const r = Math.hypot(x, z);
-  if (r > ISLAND_EDGE - 5 || r < 11) return false;
+  if (r > ISLAND_EDGE - 5 || r < PLAZA_R + 2.5) return false;
   if (roadMask(x, z) > 0.05) return false;
-  for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < (zz.id === "arena" ? 17 : 13)) return false;
-  if (Math.hypot(x - MARS_C[0], z - MARS_C[1]) < MARS_R + 2) return false;
+  for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < zoneFlatR(zz.id) + 1.5) return false;
+  if (Math.hypot(x - MARS_C[0], z - MARS_C[1]) < MARS_R + 3) return false;
   const [rx, rz] = RIDGE;
   if (distSeg(x, z, ROPE[0], ROPE[1], rx, rz) < 3) return false;
+  for (const p of PADS) if (Math.hypot(x - p.x, z - p.z) < p.r + 2) return false;
   return true;
 }

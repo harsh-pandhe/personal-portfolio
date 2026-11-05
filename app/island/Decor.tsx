@@ -33,12 +33,12 @@ function RoadDashes() {
   const ref = useRef<THREE.InstancedMesh>(null);
   const list = useMemo(() => {
     const out: number[][] = [];
-    const N = 150;
+    const N = 160;
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2;
       const x = Math.cos(a) * ROAD_R,
         z = Math.sin(a) * ROAD_R;
-      out.push([x, heightAt(x, z) + 0.1, z, -a, 0.14, 0.02, 0.8]);
+      out.push([x, heightAt(x, z) + 0.09, z, -a, 0.15, 0.02, 1.4]);
     }
     return out;
   }, []);
@@ -63,7 +63,7 @@ function PlazaFurniture() {
       p: number[][] = [],
       b: number[][] = [];
     for (const z of ZONES) {
-      if (z.id === "ropeway" || z.id === "swarm" || z.id === "arena") continue;
+      if (z.id === "ropeway" || z.id === "swarm" || z.id === "arena" || z.id === "hq") continue;
       const [zx, zz] = zonePos(z);
       const base = z.radius ? Math.atan2(zx, zz) : 0;
       for (const k of [-1, 1]) {
@@ -109,47 +109,6 @@ function PlazaFurniture() {
         <meshStandardMaterial roughness={0.8} flatShading />
       </instancedMesh>
     </>
-  );
-}
-
-/** Flags on poles around the HQ plaza, one per zone colour, waving. */
-function Flags() {
-  const g = useRef<THREE.Group>(null);
-  const flags = useMemo(() => ZONES.filter((z) => z.radius).map((z, i, arr) => ({ a: (i / arr.length) * Math.PI * 2 + 0.55, c: z.accent })), []);
-  const geo = useMemo(() => {
-    const g = new THREE.PlaneGeometry(1.3, 0.75, 8, 1);
-    g.translate(0.65, 0, 0);
-    return g;
-  }, []);
-  const base = useMemo(() => Float32Array.from(geo.attributes.position.array as Float32Array), [geo]);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < pos.count; i++) {
-      const x = base[i * 3];
-      pos.setZ(i, Math.sin(t * 4 - x * 3.2) * 0.12 * x);
-    }
-    pos.needsUpdate = true;
-  });
-  return (
-    <group ref={g}>
-      {flags.map((f, i) => {
-        const x = Math.cos(f.a) * 7.4,
-          z = Math.sin(f.a) * 7.4;
-        const y = heightAt(x, z);
-        return (
-          <group key={i} position={[x, y, z]} rotation-y={-f.a}>
-            <mesh position={[0, 2.2, 0]}>
-              <cylinderGeometry args={[0.04, 0.05, 4.4, 6]} />
-              <meshStandardMaterial color="#d9dde3" metalness={0.7} roughness={0.25} />
-            </mesh>
-            <mesh geometry={geo} position={[0.04, 3.9, 0]}>
-              <meshStandardMaterial color={f.c} side={THREE.DoubleSide} roughness={0.7} />
-            </mesh>
-          </group>
-        );
-      })}
-    </group>
   );
 }
 
@@ -232,7 +191,6 @@ export default function Decor() {
     <>
       <RoadDashes />
       <PlazaFurniture />
-      <Flags />
       <BeachRocks />
       <Rover />
     </>

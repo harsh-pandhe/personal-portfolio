@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildTerrain, heightAt, isFreeLand, rng } from "./terrain";
+import { buildTerrain, heightAt, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
 import { getUI, world } from "./store";
 
 /* ---------------- Sky dome (day ↔ night) ---------------- */
@@ -44,7 +44,7 @@ export function SkyDome() {
   });
   return (
     <mesh material={mat} renderOrder={-1}>
-      <sphereGeometry args={[400, 32, 16]} />
+      <sphereGeometry args={[480, 32, 16]} />
     </mesh>
   );
 }
@@ -76,12 +76,12 @@ export function Sea() {
           #include <fog_pars_fragment>
           void main(){
             vec3 shallow = vec3(0.35,0.85,0.92), deep = vec3(0.09,0.45,0.78);
-            vec3 col = mix(shallow, deep, smoothstep(68.0, 130.0, vD));
+            vec3 col = mix(shallow, deep, smoothstep(96.0, 175.0, vD));
             // concentric swell bands, like a toy ocean
             float band = sin(vD*1.25 - uTime*1.4 + sin(vXZ.x*0.05)*1.5);
             col += smoothstep(0.75, 1.0, band) * 0.10;
             // surf line
-            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 70.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
+            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 98.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
             col = mix(col, col*vec3(0.12,0.16,0.35), uNight);
             gl_FragColor = vec4(col,1.0);
             #include <fog_fragment>
@@ -95,7 +95,7 @@ export function Sea() {
   });
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={-0.35} material={mat}>
-      <planeGeometry args={[800, 800, 1, 1]} />
+      <planeGeometry args={[1000, 1000, 1, 1]} />
     </mesh>
   );
 }
@@ -127,9 +127,9 @@ export function Trees() {
     const r = rng(42);
     const out: { x: number; z: number; s: number; pine: boolean; hue: number }[] = [];
     let guard = 0;
-    while (out.length < 340 && guard++ < 20000) {
+    while (out.length < 720 && guard++ < 40000) {
       const a = r() * Math.PI * 2;
-      const d = 11 + Math.sqrt(r()) * 56;
+      const d = 20 + Math.sqrt(r()) * 76;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
       if (!isFreeLand(x, z)) continue;
@@ -186,7 +186,7 @@ export function Trees() {
 /* ---------------- Flower meadows (lavender + marigold) ---------------- */
 export function Flowers() {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const N = 2600;
+  const N = 4200;
   useEffect(() => {
     const r = rng(7);
     const m = new THREE.Matrix4();
@@ -196,10 +196,10 @@ export function Flowers() {
       guard = 0;
     while (i < N && guard++ < 60000) {
       // clustered patches
-      const pa = Math.floor(r() * 26);
+      const pa = Math.floor(r() * 44);
       const pr = rng(pa * 97 + 3);
       const a = pr() * Math.PI * 2,
-        d = 14 + pr() * 48;
+        d = 22 + pr() * 68;
       const x = Math.cos(a) * d + (r() - 0.5) * 7,
         z = Math.sin(a) * d + (r() - 0.5) * 7;
       if (!isFreeLand(x, z)) continue;
@@ -230,9 +230,9 @@ export function Clouds() {
     const out: number[][] = [];
     for (let i = 0; i < 16; i++) {
       const a = r() * Math.PI * 2,
-        d = 70 + r() * 120;
+        d = 110 + r() * 150;
       const cx = Math.cos(a) * d,
-        cy = 30 + r() * 22,
+        cy = 36 + r() * 26,
         cz = Math.sin(a) * d;
       for (let j = 0; j < 6; j++) out.push([cx + (r() - 0.5) * 11, cy + (r() - 0.5) * 2.2, cz + (r() - 0.5) * 6, 2.4 + r() * 3.4]);
     }
@@ -277,8 +277,8 @@ export function Lights() {
       const f = scene.fog as THREE.Fog;
       const g = world.rain;
       f.color.setRGB(0.8 - 0.74 * n - 0.12 * g * (1 - n), 0.93 - 0.84 * n - 0.16 * g * (1 - n), 1 - 0.78 * n - 0.2 * g * (1 - n));
-      f.near = 110 - g * 70;
-      f.far = 330 - g * 170;
+      f.near = 150 - g * 90;
+      f.far = 430 - g * 220;
     }
   });
   return (
@@ -286,15 +286,15 @@ export function Lights() {
       <hemisphereLight ref={hemi} args={["#dff4ff", "#6a8f4e", 1.25]} />
       <directionalLight
         ref={sun}
-        position={[40, 60, 25]}
+        position={[55, 85, 35]}
         intensity={2.6}
         castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-82}
-        shadow-camera-right={82}
-        shadow-camera-top={82}
-        shadow-camera-bottom={-82}
-        shadow-camera-far={200}
+        shadow-mapSize={[4096, 4096]}
+        shadow-camera-left={-112}
+        shadow-camera-right={112}
+        shadow-camera-top={112}
+        shadow-camera-bottom={-112}
+        shadow-camera-far={280}
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
       />
@@ -350,9 +350,9 @@ function rangeGeometry(d: number, depth: number, H: number, seed: number) {
 export function Mountains() {
   const layers = useMemo(
     () => [
-      { d: 215, depth: 40, H: 26, day: "#8fbad0", night: "#1a2244", seed: 77 },
-      { d: 265, depth: 50, H: 40, day: "#a9cbe0", night: "#141b38", seed: 78 },
-      { d: 320, depth: 60, H: 58, day: "#c4dcea", night: "#10162e", seed: 79 },
+      { d: 255, depth: 44, H: 28, day: "#8fbad0", night: "#1a2244", seed: 77 },
+      { d: 310, depth: 54, H: 44, day: "#a9cbe0", night: "#141b38", seed: 78 },
+      { d: 370, depth: 64, H: 62, day: "#c4dcea", night: "#10162e", seed: 79 },
     ],
     []
   );
@@ -377,7 +377,7 @@ export function Mountains() {
 }
 
 /* ---------------- wind-blown grass (instanced blades, sway in the vertex shader) ---------------- */
-export function Grass({ count = 38000 }: { count?: number }) {
+export function Grass({ count = 56000 }: { count?: number }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const { geo, mat } = useMemo(() => {
     const g = new THREE.PlaneGeometry(0.09, 0.55, 1, 3);
@@ -420,7 +420,7 @@ export function Grass({ count = 38000 }: { count?: number }) {
       guard = 0;
     while (i < count && guard++ < count * 6) {
       const a = r() * Math.PI * 2,
-        d = 10 + Math.sqrt(r()) * 58;
+        d = 20 + Math.sqrt(r()) * 76;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
       if (!isFreeLand(x, z)) continue;
@@ -462,15 +462,10 @@ export function Shore() {
     []
   );
   // lighthouse on the north-west point, pier on the south shore
-  const LH = useMemo(() => {
-    const a = (205 * Math.PI) / 180;
-    const x = Math.cos(a) * 67,
-      z = Math.sin(a) * 67;
-    return [x, heightAt(x, z), z] as const;
-  }, []);
+  const LH = useMemo(() => [LIGHTHOUSE[0], heightAt(...LIGHTHOUSE), LIGHTHOUSE[1]] as const, []);
   const PIER = useMemo(() => {
     const a = (95 * Math.PI) / 180;
-    return { a, x: Math.cos(a) * 64, z: Math.sin(a) * 64 };
+    return { a, x: Math.cos(a) * 91, z: Math.sin(a) * 91 };
   }, []);
   useFrame((_, dt) => {
     const n = world.night;
@@ -527,16 +522,16 @@ export function Shore() {
 const NAV_GEO = new THREE.SphereGeometry(0.2, 8, 6);
 type Lane = { kind: "cargo" | "ferry" | "sail"; ang: number; off: number; len: number; speed: number; phase: number; tint: string };
 const LANES: Lane[] = [
-  { kind: "cargo", ang: 3.5, off: 120, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" }, // west, clear of both far shores
-  { kind: "cargo", ang: 3.5, off: 134, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
-  { kind: "cargo", ang: 2.1, off: 108, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" }, // inside Singapore's bay, never through it
-  { kind: "ferry", ang: 1.75, off: 100, len: 260, speed: 4.6, phase: 0.1, tint: "#ffffff" },
-  { kind: "ferry", ang: 3.9, off: 110, len: 260, speed: -4.0, phase: 0.6, tint: "#ffffff" },
-  { kind: "sail", ang: 0.9, off: 90, len: 160, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
-  { kind: "sail", ang: 1.7, off: 96, len: 160, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
-  { kind: "sail", ang: 2.5, off: 86, len: 160, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
-  { kind: "sail", ang: 3.8, off: 92, len: 160, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
-  { kind: "sail", ang: 4.6, off: 100, len: 160, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
+  { kind: "cargo", ang: 3.5, off: 163, len: 560, speed: 3.2, phase: 0, tint: "#c2382f" }, // west, clear of both far shores
+  { kind: "cargo", ang: 3.5, off: 182, len: 560, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
+  { kind: "cargo", ang: 2.1, off: 147, len: 600, speed: 2.4, phase: 0.2, tint: "#2c7a4b" }, // inside Singapore's bay, never through it
+  { kind: "ferry", ang: 1.75, off: 136, len: 340, speed: 4.6, phase: 0.1, tint: "#ffffff" },
+  { kind: "ferry", ang: 3.9, off: 150, len: 340, speed: -4.0, phase: 0.6, tint: "#ffffff" },
+  { kind: "sail", ang: 0.9, off: 122, len: 210, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
+  { kind: "sail", ang: 1.7, off: 131, len: 210, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
+  { kind: "sail", ang: 2.5, off: 117, len: 210, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
+  { kind: "sail", ang: 3.8, off: 125, len: 210, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
+  { kind: "sail", ang: 4.6, off: 136, len: 210, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
 ];
 
 function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: { red: THREE.Material; green: THREE.Material; white: THREE.Material; win: THREE.Material } }) {
@@ -684,7 +679,7 @@ export function Birds() {
     g.current?.children.forEach((b, i) => {
       const q = flock[i];
       const a = t * (0.07 + q.f * 0.02) + q.f * 2.2;
-      const R = 30 + q.f * 12;
+      const R = 42 + q.f * 16;
       b.position.set(Math.cos(a) * R + q.dx, 22 + q.f * 4 + q.dy + Math.sin(t + q.ph) * 0.6, Math.sin(a) * R + q.dz);
       b.rotation.y = -a;
       const flap = Math.sin(t * 9 + q.ph) * 0.7;

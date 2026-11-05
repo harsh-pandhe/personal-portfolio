@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ARENA, zoneToWorld } from "./colliders";
 import { MarsYard } from "./MarsYard";
-import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R, ROPE_PEAKS } from "./terrain";
+import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_HALF, ROAD_R, ROPE_PEAKS } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
 import { papers } from "@/lib/achievements";
@@ -348,10 +348,7 @@ function HQ() {
   });
   return (
     <ZoneGroup id="hq">
-      <mesh position={[0, 0.2, 0]} material={M.white} receiveShadow>
-        <cylinderGeometry args={[6.2, 6.6, 0.4, 48]} />
-      </mesh>
-      {/* the base doubles as the fountain basin (Plaza.tsx) */}
+      {/* the tower rises from the stone island in the middle of the fountain (Plaza.tsx) */}
       <mesh position={[0, 7, 0]} material={M.metal} castShadow>
         <cylinderGeometry args={[0.9, 1.4, 14, 24]} />
       </mesh>
@@ -372,7 +369,7 @@ function HQ() {
         </mesh>
       </group>
       <ControlRing />
-      <Billboard id="hq" pos={[0, 0, 8.2]} rotY={0} scale={0.9} />
+      <Billboard id="hq" pos={[3.5, 0, 15.6]} rotY={0.12} scale={0.9} />
     </ZoneGroup>
   );
 }
@@ -1745,13 +1742,15 @@ function Lamps() {
   const poles = useRef<THREE.InstancedMesh>(null);
   const bulbs = useRef<THREE.InstancedMesh>(null);
   const glow = useGlow("#ffe3a1", 0.05, 3.2);
-  const N = 28;
+  const N = 40;
   useEffect(() => {
     const m = new THREE.Matrix4();
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2;
-      const x = Math.cos(a) * (ROAD_R + 2.1),
-        z = Math.sin(a) * (ROAD_R + 2.1);
+      // alternate sides, on the back edge of each sidewalk
+      const rr = ROAD_R + (i % 2 ? -1 : 1) * (ROAD_HALF - 0.35);
+      const x = Math.cos(a) * rr,
+        z = Math.sin(a) * rr;
       const y = heightAt(x, z);
       m.makeTranslation(x, y + 1.3, z);
       poles.current!.setMatrixAt(i, m);
@@ -1776,7 +1775,7 @@ function Lamps() {
 /* ---------------- delivery drones between zones ---------------- */
 function Couriers() {
   const g = useRef<THREE.Group>(null);
-  const routes = useMemo(() => [0.9, 1.25, 1.6].map((s, i) => ({ r: 18 + i * 9, h: 13 + i * 2.5, s: 0.08 * s * (i % 2 ? -1 : 1), o: i * 2 })), []);
+  const routes = useMemo(() => [0.9, 1.25, 1.6].map((s, i) => ({ r: 26 + i * 13, h: 15 + i * 2.5, s: 0.06 * s * (i % 2 ? -1 : 1), o: i * 2 })), []);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     g.current?.children.forEach((d, i) => {

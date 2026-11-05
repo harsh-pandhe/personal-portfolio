@@ -90,7 +90,7 @@ type Shot = { pos: [number, number, number]; look: [number, number, number] };
 function shotFor(c: Chapter, t: number): Shot {
   if (!c.zone) {
     const a = 0.9 + t * 0.05;
-    return { pos: [Math.sin(a) * 140, 100, Math.cos(a) * 140], look: [0, -8, 0] };
+    return { pos: [Math.sin(a) * 190, 132, Math.cos(a) * 190], look: [0, -10, 0] };
   }
   const z = zoneById[c.zone];
   const [x, zz] = zonePos(z);
