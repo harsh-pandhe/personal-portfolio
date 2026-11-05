@@ -11,7 +11,7 @@ import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_HALF, ROAD_R, ROPE_PEAKS } fro
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
 import { papers } from "@/lib/achievements";
-import { Solid } from "./Props";
+import { bakeStatic, Solid, Static } from "./Props";
 
 /* ---------------- shared materials ---------------- */
 export const M = {
@@ -504,7 +504,13 @@ function Crowd() {
   const e = useMemo(() => new THREE.Euler(), []);
   const v = useMemo(() => new THREE.Vector3(), []);
   const one = useMemo(() => new THREE.Vector3(1, 1, 1), []);
-  useFrame(({ clock }) => {
+  const here = useMemo(() => {
+    const [x, z] = zonePos(zoneById.arena);
+    return new THREE.Vector3(x, heightAt(x, z), z);
+  }, []);
+  useFrame(({ clock, camera }) => {
+    // the wave is only animated while the stadium is close enough to see it
+    if (camera.position.distanceTo(here) > 95) return;
     const t = clock.elapsedTime;
     const cheer = world.gala > 0.5 ? 1 : 0;
     for (let i = 0; i < N; i++) {
@@ -1038,6 +1044,7 @@ function Ropeway() {
         <mesh key={i} geometry={g} material={M.dark} />
       ))}
       {/* towers, stations and cabins modelled in Blender (public/models/ropeway.glb) */}
+      <Static>
       {towers.map(({ p, g, yaw }, i) => (
         <group key={i} position={[p.x, g, p.z]} rotation-y={yaw}>
           <primitive object={rw.tower.clone(true)} scale={[1, (p.y - g) / 10.55, 1]} />
@@ -1056,6 +1063,7 @@ function Ropeway() {
           </group>
         );
       })}
+      </Static>
       <group ref={cabins}>
         {Array.from({ length: 10 }, (_, i) => (
           <primitive key={i} object={rw.cabins[i]} scale={0.8} />
@@ -1389,6 +1397,7 @@ function Workshop() {
   const shed = useMemo(() => {
     const c = wsScene.clone(true);
     c.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = o.receiveShadow = true) : null));
+    bakeStatic(c);
     return c;
   }, [wsScene]);
   const yard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9c6bf", roughness: 0.95 }), []);
@@ -1409,6 +1418,7 @@ function Workshop() {
       <group position={[-7.5, 0, -1]} scale={1.25}>
         <IndustrialArm />
       </group>
+      <Static>
       {[-1, 1].map((k) => (
         <group key={k} position={[-9.5, 0, -7.5 + k * 1.8]}>
           <Solid w={3} d={1.1} />
@@ -1427,6 +1437,7 @@ function Workshop() {
         <Solid w={2.3} d={2.3} />
         <Pallet crates={[[-0.5, 0, 0], [0.5, 0, 0]]} />
       </group>
+      </Static>
       <Billboard id="workshop" pos={[-11, 0, 7]} rotY={0.55} scale={0.9} />
     </ZoneGroup>
   );
@@ -1683,6 +1694,7 @@ function Library() {
       } else m.geometry = fitUV(m.geometry);
       m.material = q.mat;
     });
+    bakeStatic(c);
     return { c, glow };
   }, [scene]);
   const sheets = useMemo(() => papers.map((p) => new THREE.MeshStandardMaterial({ map: paperTexture(p.title, p.area), emissive: "#ffcf7a", emissiveIntensity: 0.15, side: THREE.DoubleSide, roughness: 0.9 })), []);

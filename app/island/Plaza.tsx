@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { heightAt, PLAZA_R, rng } from "./terrain";
 import { zonePos, ZONES } from "./zones";
-import { Bench, Flag, LampPost, Solid, useNightGlow } from "./Props";
+import { Bench, Flag, LampPost, Solid, Static, useNightGlow } from "./Props";
 import { world } from "./store";
 
 // The city centre: a fountain around Mission Control and a ring of milestones, Nerul to Singapore.
@@ -184,7 +184,7 @@ function Fountain() {
         const a = (i / 8) * Math.PI * 2;
         return <mesh key={i} position={[Math.cos(a) * 3.4, 2.6, Math.sin(a) * 3.4]} geometry={bubbler} material={stream} />;
       })}
-      <group ref={rings}>
+      <group ref={rings} userData={{ dynamic: true }}>
         {Array.from({ length: JETS }, (_, j) => {
           const a = (j / JETS) * Math.PI * 2;
           return (
@@ -343,7 +343,7 @@ function Milestones() {
   return (
     <group>
       <mesh geometry={trailGeo} material={trailMat} />
-      <mesh ref={traveller} material={trailMat}>
+      <mesh ref={traveller} material={trailMat} userData={{ dynamic: true }}>
         <sphereGeometry args={[0.26, 16, 12]} />
       </mesh>
       {MILESTONES.map((m, i) => {
@@ -438,13 +438,13 @@ function Paving() {
 
 export function JourneyPlaza() {
   return (
-    <group position={[0, heightAt(0, 0), 0]}>
+    <Static position={[0, heightAt(0, 0), 0]}>
       <Paving />
       <Fountain />
       <Gardens />
       <Milestones />
       <PlazaFlags />
-    </group>
+    </Static>
   );
 }
 
