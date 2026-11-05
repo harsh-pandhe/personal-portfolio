@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import Cover from "./Cover";
 import { Quad } from "./Landmarks";
@@ -417,16 +417,45 @@ function Hover() {
     </group>
   );
 }
+/** Catches a failed WebGL context (or any render error) and shows the static cover instead. */
+class GLBoundary extends Component<{ fallback: React.ReactNode; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+function hasWebGL() {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
 function MarsHero() {
+  // /read is also where browsers without WebGL land, so the live drone must degrade, not crash
+  const [gl, setGl] = useState<boolean | null>(null);
+  useEffect(() => setGl(hasWebGL()), []);
+  const still = <Cover id="marsyard" accent="#ff5a36" />;
+  if (gl === false) return still;
   return (
     <div className="relative aspect-[16/7] w-full bg-[radial-gradient(ellipse_at_50%_80%,#5a1d10,#0b0604_70%)]">
-      <Canvas camera={{ position: [0, 2.2, 6.5], fov: 40 }} dpr={[1, 1.75]}>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[4, 6, 3]} intensity={2.2} />
-        <pointLight position={[-3, 1, 2]} color="#ff5a36" intensity={6} />
-        <Hover />
-        <ScanCloud />
-      </Canvas>
+      {gl && (
+        <GLBoundary fallback={<div className="absolute inset-0">{still}</div>}>
+          <Canvas camera={{ position: [0, 2.2, 6.5], fov: 40 }} dpr={[1, 1.75]}>
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[4, 6, 3]} intensity={2.2} />
+            <pointLight position={[-3, 1, 2]} color="#ff5a36" intensity={6} />
+            <Hover />
+            <ScanCloud />
+          </Canvas>
+        </GLBoundary>
+      )}
       <div className="pointer-events-none absolute bottom-4 left-5 right-5 flex justify-between font-mono text-[11px] uppercase text-white/70">
         <span>FAST-LIO · Livox MID-360 · EKF2 · PX4 · no GPS</span>
         <span className="text-white/40">Live 3D · props spinning · simulated LiDAR sweep</span>
