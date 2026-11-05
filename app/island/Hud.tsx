@@ -86,12 +86,12 @@ export function Toast() {
   }, [t]);
   return (
     <div
-      className={`pointer-events-none fixed left-[calc(50%+170px)] top-[26px] z-50 -translate-x-1/2 transition-all duration-500 ${
+      className={`pointer-events-none fixed left-1/2 top-[64px] z-50 w-max max-w-[calc(100vw-24px)] -translate-x-1/2 transition-all duration-500 sm:left-[calc(50%+170px)] sm:top-[26px] ${
         t ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex items-center gap-3 rounded-full bg-[#121417]/95 py-2 pl-2 pr-6 text-white shadow-2xl backdrop-blur">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-[#f5b301] text-[18px]">★</span>
+      <div className="flex items-center gap-3 rounded-[22px] bg-[#121417]/95 py-2 pl-2 pr-5 text-white shadow-2xl backdrop-blur sm:rounded-full sm:pr-6">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5b301] text-[18px]">★</span>
         <span>
           <span className="block text-[14px] font-semibold tracking-[-0.01em]">{t?.title}</span>
           {t?.body && <span className="block text-[12.5px] text-white/60">{t.body}</span>}

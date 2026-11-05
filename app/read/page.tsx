@@ -8,10 +8,10 @@ import { profile } from "@/lib/achievements";
 /** Every case study on one page: no WebGL, readable anywhere, indexable by search engines. */
 export default function ReadPage() {
   return (
-    <div className="min-h-screen bg-[#0a0f1d] text-white">
+    <div className="min-h-screen overflow-x-clip bg-[#0a0f1d] text-white">
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0a0f1d]/80 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-10 sm:py-4">
-          <Link href="/" className="text-[18px] font-semibold tracking-[-0.03em]">
+          <Link href="/" className="font-display text-[18px] font-semibold tracking-[-0.02em]">
             {profile.name}
           </Link>
           <nav className="hidden flex-wrap gap-x-5 gap-y-1 font-mono text-[11.5px] uppercase text-white/60 lg:flex">
@@ -22,7 +22,7 @@ export default function ReadPage() {
             ))}
           </nav>
           <Link href="/" className="shrink-0 rounded-full bg-[#22d36b] px-4 py-2 text-[13px] font-semibold text-[#06240f] hover:bg-[#2be277]">
-            Explore the island →
+            Explore<span className="hidden sm:inline"> the island</span> →
           </Link>
         </div>
       </header>

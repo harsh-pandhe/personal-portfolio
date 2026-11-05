@@ -556,7 +556,7 @@ function TourCard() {
   const z = zoneById[TOUR[ui.tour]];
   return (
     <div
-      className={`fixed inset-x-2 bottom-2 z-20 rounded-[24px] border border-white/60 bg-white/85 p-5 sm:inset-x-auto sm:bottom-[18px] sm:left-[var(--pl,376px)] sm:w-[520px] sm:rounded-[28px] sm:p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
+      className={`fixed inset-x-2 bottom-2 z-20 rounded-[24px] border border-white/60 bg-white/85 p-5 sm:inset-x-auto sm:bottom-[18px] sm:left-[var(--pl,376px)] sm:w-[min(520px,calc(100vw-var(--pl,376px)-18px))] sm:rounded-[28px] sm:p-6 text-neutral-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-700 [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${
         on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
       }`}
     >

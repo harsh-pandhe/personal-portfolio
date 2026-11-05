@@ -300,7 +300,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
   const idx = ZONES.findIndex((q) => q.id === id);
   const next = ZONES[(idx + 1) % ZONES.length];
   return (
-    <article className="pb-10">
+    <article className="overflow-x-clip pb-10">
           {/* hero */}
           <section className="px-4 pt-8 sm:px-10 sm:pt-14">
             <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-[1fr_minmax(220px,30%)] md:gap-10">
