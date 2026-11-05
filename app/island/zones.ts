@@ -46,7 +46,7 @@ export type Zone = {
   blocks: Block[];
 };
 
-const ISLAND_R = 41;
+const ISLAND_R = 58;
 
 export const ZONES: Zone[] = [
   {

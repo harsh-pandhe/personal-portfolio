@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { heightAt, ROAD_R, rng } from "./terrain";
+import { heightAt, LANE_W, ROAD_R, rng } from "./terrain";
 import { world } from "./store";
 
 // KayKit City Builder Bits (CC0): cars on the ring road and the Navi Mumbai skyline across the water.
@@ -77,7 +77,7 @@ export function Traffic() {
   return (
     <>
       {CARS.map((k, i) => (
-        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - 1.15 : ROAD_R + 1.15} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
+        <Car key={i} kind={k} lane={i % 2 ? ROAD_R - LANE_W / 2 : ROAD_R + LANE_W / 2} speed={(i % 2 ? -1 : 1) * (3.2 + i * 0.35)} phase={i * 1.25} />
       ))}
     </>
   );
@@ -94,9 +94,9 @@ export function Skyline() {
     // an arc of the far shore to the east-north-east
     for (let i = 0; i < 46; i++) {
       const a = ((-38 + i * 1.5 + (r() - 0.5)) * Math.PI) / 180;
-      const d = 148 + r() * 22;
+      const d = 196 + r() * 26;
       out.push({ k: Math.floor(r() * BUILDINGS.length), x: Math.cos(a) * d, z: Math.sin(a) * d, s: 5 + r() * 4.5, rot: r() * Math.PI * 2 });
-      // (all of these now stand on the shore mesh below, which spans r 138-200 over this arc)
+      // (all of these stand on the shore mesh below, which spans r 186-255 over this arc)
     }
     return out;
   }, []);
@@ -132,8 +132,8 @@ export function Skyline() {
     const a0 = (-46 * Math.PI) / 180,
       a1 = (40 * Math.PI) / 180;
     return {
-      land: ring(140, 205, a0, a1, 0.6),
-      sand: ring(135, 141, a0, a1, 0.35),
+      land: ring(186, 255, a0, a1, 0.6),
+      sand: ring(181, 187, a0, a1, 0.35),
       landMat: new THREE.MeshStandardMaterial({ color: "#8fa98a", roughness: 1, side: THREE.DoubleSide }),
       sandMat: new THREE.MeshStandardMaterial({ color: "#e8d9ae", roughness: 1, side: THREE.DoubleSide }),
     };
@@ -144,7 +144,7 @@ export function Skyline() {
     const r = rng(77);
     return Array.from({ length: 7 }, (_, i) => {
       const a = ((-6 + i * 4.5 + (r() - 0.5) * 2) * Math.PI) / 180,
-        d = 150 + r() * 8;
+        d = 198 + r() * 8;
       return { x: Math.cos(a) * d, z: Math.sin(a) * d, h: 34 + r() * 30, w: 7 + r() * 3, rot: r() * Math.PI };
     });
   }, []);
@@ -173,7 +173,7 @@ export function Skyline() {
         <primitive key={i} object={clones[i]} position={[it.x, 0.6, it.z]} scale={it.s} rotation-y={it.rot} />
       ))}
       {/* a creek bridge on concrete piers */}
-      <group position={[118, 0, 38]} rotation-y={-0.9}>
+      <group position={[160, 0, 52]} rotation-y={-0.9}>
         <mesh position={[0, 3.2, 0]}>
           <boxGeometry args={[70, 0.8, 4]} />
           <meshStandardMaterial color="#d6d9de" roughness={0.8} />

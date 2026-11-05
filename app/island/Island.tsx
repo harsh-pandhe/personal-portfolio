@@ -1,6 +1,7 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { Suspense, useEffect, useState } from "react";
 import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
@@ -16,7 +17,7 @@ import { JourneyPlaza, Singapore, SingaporeCorner } from "./Plaza";
 import { Rain, WeatherController } from "./Weather";
 import { endGala, GalaOverlay, startGala, startStory, StoryOverlay } from "./Story";
 import { setMusic, setSound, sfx } from "./audio";
-import { getUI, setUI, travel, TOUR, useUI } from "./store";
+import { getUI, setUI, travel, TOUR, useUI, world } from "./store";
 import { Help, Minimap, Settings, SoundEffects, Toast } from "./Hud";
 import CaseStudy from "./CaseStudy";
 import { zoneById, ZONES } from "./zones";
@@ -36,6 +37,15 @@ function Deferred({ step, children }: { step: number; children: React.ReactNode 
   return on ? <Suspense fallback={null}>{children}</Suspense> : null;
 }
 
+/** dev only: expose the three.js scene to the console for measuring and debugging */
+function DevHandle() {
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __scene: scene, __THREE: THREE });
+  }, [scene]);
+  return null;
+}
+
 const LITE = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
 
 function Scene() {
@@ -45,14 +55,14 @@ function Scene() {
     <Canvas
       shadows={!LITE}
       dpr={dpr}
-      camera={{ fov: 40, near: 0.1, far: 900, position: [70, 60, 90] }}
+      camera={{ fov: 40, near: 0.1, far: 1100, position: [95, 80, 120] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       style={{ position: "fixed", inset: 0 }}
       onPointerMissed={() => (document.body.style.cursor = "")}
     >
       <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(0.8, d - 0.25))} onIncline={() => setDpr((d) => Math.min(LITE ? 0.75 : 1.75, d + 0.25))} flipflops={4} />
       <AdaptiveDpr pixelated={false} />
-      <fog attach="fog" args={["#cdeeff", 110, 330]} />
+      <fog attach="fog" args={["#cdeeff", 150, 430]} />
       <SkyDome />
       <Lights />
       <Environment resolution={LITE ? 64 : 256} frames={1}>
@@ -108,6 +118,7 @@ function Scene() {
         <Rain />
       </Deferred>
       <CameraRig />
+      <DevHandle />
     </Canvas>
   );
 }
@@ -511,6 +522,10 @@ export default function Island() {
     } catch {
       window.location.replace("/read");
     }
+  }, []);
+  // dev only: a handle for driving the island from the console
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __island: { world, travel, setUI, getUI } });
   }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

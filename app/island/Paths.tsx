@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { heightAt, ridgeTop, rng, ROAD_R } from "./terrain";
+import { heightAt, KERB_W, LANE_W, PLAZA_R, ridgeTop, rng, ROAD_HALF, ROAD_R, zoneFlatR } from "./terrain";
 import { zonePos, ZONES } from "./zones";
 import { MEDALS } from "./Actors";
 
@@ -59,40 +59,191 @@ function curve(points: [number, number][], seg = 60) {
   return c.getPoints(seg).map((p) => new THREE.Vector2(p.x, p.z));
 }
 
-const asphalt = new THREE.MeshStandardMaterial({ color: "#3b4048", roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -2 });
-const curb = new THREE.MeshStandardMaterial({ color: "#f2f3f5", roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -3 });
-const paving = new THREE.MeshStandardMaterial({ color: "#e9e2d0", roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2 });
-const lineMat = new THREE.MeshStandardMaterial({ color: "#f4f4f0", roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4 });
+/** A raised slab along a polyline: top face from offset `a` to `b` (metres from the centreline,
+ *  + is left), `h` above the ground, with vertical faces down into the ground on both edges.
+ *  UVs are in metres so tiled textures keep their scale. */
+function slab(pts: THREE.Vector2[], a: number, b: number, h: number, closed = false) {
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const idx: number[] = [];
+  const n = pts.length;
+  const rows: { x: number; z: number; y: number }[][] = [];
+  let run = 0;
+  const runs: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = pts[i];
+    const pa = pts[closed ? (i - 1 + n) % n : Math.max(i - 1, 0)];
+    const pb = pts[closed ? (i + 1) % n : Math.min(i + 1, n - 1)];
+    const t = new THREE.Vector2().subVectors(pb, pa).normalize();
+    if (i > 0) run += p.distanceTo(pts[i - 1]);
+    runs.push(run);
+    rows.push(
+      [a, b].map((o) => {
+        const x = p.x - t.y * o,
+          z = p.y + t.x * o;
+        return { x, z, y: heightAt(x, z) };
+      })
+    );
+  }
+  // four strips per row: outer side (down), top, inner side (down)
+  const push = (x: number, y: number, z: number, u: number, v: number) => {
+    pos.push(x, y, z);
+    uv.push(u, v);
+    return pos.length / 3 - 1;
+  };
+  const strip = (get: (i: number) => [number, number, number, number, number][]) => {
+    let prev: number[] | null = null;
+    for (let i = 0; i < n + (closed ? 1 : 0); i++) {
+      const k = i % n;
+      const cur = get(k).map(([x, y, z, u, v]) => push(x, y, z, u, i === n ? run + pts[n - 1].distanceTo(pts[0]) : v));
+      if (prev) idx.push(prev[0], cur[0], prev[1], prev[1], cur[0], cur[1]);
+      prev = cur;
+    }
+  };
+  const w = Math.abs(b - a);
+  strip((i) => [
+    [rows[i][0].x, rows[i][0].y + h, rows[i][0].z, 0, runs[i]],
+    [rows[i][1].x, rows[i][1].y + h, rows[i][1].z, w, runs[i]],
+  ]);
+  if (h > 0.02)
+    for (const e of [0, 1]) {
+      const sgn = e ? 1 : -1;
+      strip((i) => {
+        const q = rows[i][e];
+        const top: [number, number, number, number, number] = [q.x, q.y + h, q.z, 0, runs[i]];
+        const bot: [number, number, number, number, number] = [q.x, q.y - 0.25, q.z, h + 0.25, runs[i]];
+        return sgn > 0 === b > a ? [top, bot] : [bot, top];
+      });
+    }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Tileable canvas textures (1 texture repeat = `metres` on the ground). */
+function tex(draw: (g: CanvasRenderingContext2D, S: number) => void, metres: number) {
+  const S = 256;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  draw(c.getContext("2d")!, S);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1 / metres, 1 / metres);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+function speckle(g: CanvasRenderingContext2D, S: number, base: string, dots: string[], n: number, seed: number) {
+  const r = rng(seed);
+  g.fillStyle = base;
+  g.fillRect(0, 0, S, S);
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = dots[i % dots.length];
+    g.fillRect(r() * S, r() * S, 1 + r() * 2, 1 + r() * 2);
+  }
+}
+function useRoadMaterials() {
+  return useMemo(() => {
+    const asphaltTex = tex((g, S) => speckle(g, S, "#4a4f57", ["#3a3e45", "#5a6069", "#43474e", "#666b73"], 5200, 3), 4);
+    // concrete slabs with expansion joints every 1.5 m and a brushed finish
+    const concreteTex = tex((g, S) => {
+      speckle(g, S, "#d3d1cb", ["#c7c5bf", "#dcdad4", "#bfbdb6"], 3800, 5);
+      g.fillStyle = "rgba(0,0,0,.035)";
+      for (let y = 0; y < S; y += 3) g.fillRect(0, y, S, 1);
+      g.fillStyle = "#a9a7a0";
+      g.fillRect(0, 0, S, 3);
+      g.fillRect(0, 0, 3, S);
+    }, 1.5);
+    // plaza and boulevard pavers: running bond of warm stone
+    const paverTex = tex((g, S) => {
+      speckle(g, S, "#e4dccb", ["#d9d0bd", "#ece5d6"], 2000, 7);
+      g.fillStyle = "#c9bfaa";
+      const h = S / 8;
+      for (let row = 0; row < 8; row++) {
+        g.fillRect(0, row * h, S, 2);
+        for (let k = 0; k < 4; k++) g.fillRect(((k + (row % 2) * 0.5) * S) / 4, row * h, 2, h);
+      }
+    }, 2.4);
+    const kerbTex = tex((g, S) => {
+      speckle(g, S, "#e9e8e4", ["#d8d7d2", "#f3f2ee"], 1600, 9);
+      g.fillStyle = "#b8b6b0";
+      g.fillRect(0, 0, 3, S);
+    }, 1);
+    const std = (map: THREE.Texture, rough: number, off: number) =>
+      new THREE.MeshStandardMaterial({ map, roughness: rough, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: off, polygonOffsetUnits: off });
+    return {
+      asphalt: std(asphaltTex, 0.95, -1),
+      concrete: std(concreteTex, 0.9, -2),
+      paver: std(paverTex, 0.92, -1),
+      kerb: std(kerbTex, 0.75, -3),
+      line: new THREE.MeshStandardMaterial({ color: "#f4f4f0", roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+      yellow: new THREE.MeshStandardMaterial({ color: "#f2c230", roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+    };
+  }, []);
+}
+
 const dirt = new THREE.MeshStandardMaterial({ color: "#d8c49a", roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 });
 
+/** Split a closed ring into arcs that skip a gap of `half` metres around each boulevard. */
+function ringArcs(R: number, half: number) {
+  const angs = ZONES.filter((z) => z.radius).map((z) => Math.atan2(zonePos(z)[1], zonePos(z)[0]));
+  const gap = half / R;
+  const sorted = angs.map((a) => (a + Math.PI * 2) % (Math.PI * 2)).sort((p, q) => p - q);
+  return sorted.map((a, i) => {
+    const b = sorted[(i + 1) % sorted.length] + (i === sorted.length - 1 ? Math.PI * 2 : 0);
+    const a0 = a + gap,
+      a1 = b - gap;
+    const n = Math.max(4, Math.ceil(((a1 - a0) * R) / 1.2));
+    return Array.from({ length: n + 1 }, (_, k) => {
+      const t = a0 + ((a1 - a0) * k) / n;
+      return new THREE.Vector2(Math.cos(t) * R, Math.sin(t) * R);
+    });
+  });
+}
+
 function Roads() {
+  const M = useRoadMaterials();
   const geos = useMemo(() => {
     const out: { g: THREE.BufferGeometry; m: THREE.Material }[] = [];
-    // two-lane ring road: asphalt, solid edge lines, raised kerbs and a sidewalk either side
-    out.push({ g: ribbon(circle(ROAD_R, 220), 4.6, 0.05, true), m: asphalt });
+    const ring = circle(ROAD_R, 300);
+    // carriageway: two 3.5 m lanes, solid white edge lines
+    out.push({ g: slab(ring, -LANE_W, LANE_W, 0.04, true), m: M.asphalt });
+    for (const s of [-1, 1]) out.push({ g: slab(ring, s * (LANE_W - 0.35), s * (LANE_W - 0.2), 0.05, true), m: M.line });
+    // raised kerbs and concrete sidewalks, broken where each boulevard crosses at a zebra
     for (const s of [-1, 1]) {
-      out.push({ g: ribbon(circle(ROAD_R + s * 2.0, 220), 0.12, 0.08, true), m: lineMat });
-      out.push({ g: ribbon(circle(ROAD_R + s * 2.42, 220), 0.25, 0.14, true), m: curb });
-      out.push({ g: ribbon(circle(ROAD_R + s * 3.2, 220), 1.3, 0.12, true), m: paving });
+      for (const arc of ringArcs(ROAD_R + s * (LANE_W + KERB_W / 2), 3.2)) {
+        out.push({ g: slab(arc, -KERB_W / 2, KERB_W / 2, 0.18), m: M.kerb });
+      }
     }
-    // a paved promenade ring around the fountain plaza
-    out.push({ g: ribbon(circle(13.4, 120), 2.6, 0.05, true), m: paving });
-    out.push({ g: ribbon(circle(14.75, 120), 0.2, 0.1, true), m: curb });
-    // spokes: paved promenades from the roundabout to each zone
+    for (const s of [-1, 1]) out.push({ g: slab(ring, -s * (LANE_W + KERB_W), -s * ROAD_HALF, 0.16, true), m: M.concrete });
+    // the city-centre plaza edge: a kerb ring and a concrete promenade around the paved plaza
+    const edge = circle(PLAZA_R, 200);
+    out.push({ g: slab(edge, 0, -2.6, 0.12, true), m: M.concrete });
+    out.push({ g: slab(edge, -2.6, -2.9, 0.2, true), m: M.kerb });
+    // boulevards: paved promenade with kerbs, from the plaza to each zone's plot, broken at the ring road
     for (const z of ZONES) {
       if (!z.radius) continue;
       const [x, zz] = zonePos(z);
       const u = new THREE.Vector2(x, zz).normalize();
-      // wide promenade with kerbed edges
-      const pts = line(u.x * 13.4, u.y * 13.4, x * 0.8, zz * 0.8);
-      out.push({ g: ribbon(pts, 4.2, 0.06), m: paving });
-      for (const s of [-1, 1]) {
-        const off = pts.map((p) => new THREE.Vector2(p.x - u.y * s * 2.15, p.y + u.x * s * 2.15));
-        out.push({ g: ribbon(off, 0.18, 0.12), m: curb });
+      const end = z.radius - zoneFlatR(z.id) + 3.5;
+      for (const [r0, r1] of [
+        [PLAZA_R + 2.9, ROAD_R - ROAD_HALF],
+        [ROAD_R + ROAD_HALF, end],
+      ]) {
+        const pts = line(u.x * r0, u.y * r0, u.x * r1, u.y * r1, 1);
+        out.push({ g: slab(pts, -2.4, 2.4, 0.12), m: M.paver });
+        for (const s of [-1, 1]) out.push({ g: slab(pts, s * 2.4, s * 2.7, 0.2), m: M.kerb });
       }
+      // across the carriageway: a raised crossing table between the sidewalks
+      const xa = ROAD_R - ROAD_HALF,
+        xb = ROAD_R + ROAD_HALF;
+      out.push({ g: slab(line(u.x * xa, u.y * xa, u.x * xb, u.y * xb, 0.5), -2.6, 2.6, 0.1), m: M.concrete });
     }
     return out;
-  }, []);
+  }, [M]);
   return (
     <>
       {geos.map((q, i) => (
@@ -102,7 +253,7 @@ function Roads() {
   );
 }
 
-/** Zebra crossings where each promenade meets the ring road. */
+/** Zebra crossings where each boulevard meets the ring road. */
 function Crossings() {
   const ref = useRef<THREE.InstancedMesh>(null);
   const list = useMemo(() => {
@@ -111,16 +262,17 @@ function Crossings() {
       if (!z.radius) continue;
       const [x, zz] = zonePos(z);
       const a = Math.atan2(zz, x);
-      for (let k = -3; k <= 3; k++) {
-        const t = new THREE.Vector2(-Math.sin(a), Math.cos(a));
-        const cx = Math.cos(a) * ROAD_R + t.x * k * 0.45,
-          cz = Math.sin(a) * ROAD_R + t.y * k * 0.45;
-        const m = new THREE.Matrix4().compose(
-          new THREE.Vector3(cx, heightAt(cx, cz) + 0.1, cz),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -a),
-          new THREE.Vector3(4.2, 0.02, 0.3)
+      const t = new THREE.Vector2(-Math.sin(a), Math.cos(a));
+      for (let k = -4; k <= 4; k++) {
+        const cx = Math.cos(a) * ROAD_R + t.x * k * 0.55,
+          cz = Math.sin(a) * ROAD_R + t.y * k * 0.55;
+        out.push(
+          new THREE.Matrix4().compose(
+            new THREE.Vector3(cx, heightAt(cx, cz) + 0.12, cz),
+            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -a),
+            new THREE.Vector3(LANE_W * 2 - 0.8, 0.02, 0.32)
+          )
         );
-        out.push(m);
       }
     }
     return out;
@@ -130,7 +282,7 @@ function Crossings() {
     ref.current!.instanceMatrix.needsUpdate = true;
   }, [list]);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, list.length]}>
+    <instancedMesh ref={ref} args={[undefined, undefined, list.length]} receiveShadow>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ffffff" roughness={0.6} />
     </instancedMesh>
@@ -146,11 +298,11 @@ function Footpaths() {
     const sih = MEDALS[0].at(),
       robo = MEDALS[2].at();
     const routes: [number, number][][] = [
-      [at(200, ROAD_R + 1.5), at(203, 40), at(208, 53), at(205, 64)], // lighthouse
-      [at(97, ROAD_R + 1.5), at(93, 43), at(96, 54), at(95, 63)], // pier
+      [at(200, ROAD_R + 4), at(203, 56), at(208, 74), at(205, 88)], // lighthouse
+      [at(97, ROAD_R + 4), at(93, 60), at(96, 76), at(95, 90)], // pier
       [[ropeA[0] * 1.08, ropeA[1] * 1.08], [ropeA[0] * 1.2 + 2, ropeA[1] * 1.2 - 2], [rx - 2, rz + 1.5]], // up the ridge
-      [at(-80, ROAD_R + 1.5), at(-78, 48), [sih[0] - 2, sih[1] + 3]], // behind the arena
-      [at(-25, ROAD_R + 1.5), at(-22, 46), [robo[0] - 3, robo[1] + 2]], // past the swarm field
+      [at(-70, ROAD_R + 4), at(-72, 62), [sih[0] - 2, sih[1] + 3]], // between the arena and the Mars yard
+      [at(-30, ROAD_R + 4), at(-28, 60), [robo[0] - 3, robo[1] + 2]], // past the swarm field
     ];
     const r = rng(12);
     const g: THREE.BufferGeometry[] = [];
@@ -240,8 +392,8 @@ function Signposts() {
         const a = Math.atan2(zz, x);
         // stand on the inner verge, to the right of the promenade
         const t = new THREE.Vector2(-Math.sin(a), Math.cos(a));
-        const px = Math.cos(a) * (ROAD_R - 2.6) + t.x * 1.9,
-          pz = Math.sin(a) * (ROAD_R - 2.6) + t.y * 1.9;
+        const px = Math.cos(a) * (ROAD_R - ROAD_HALF - 1.2) + t.x * 3.6,
+          pz = Math.sin(a) * (ROAD_R - ROAD_HALF - 1.2) + t.y * 3.6;
         const y = heightAt(px, pz);
         return (
           <group key={z.id} position={[px, y, pz]} rotation-y={Math.PI / 2 - a}>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getUI, setUI, toast, useUI, world } from "./store";
 import { zoneById, zonePos, type ZoneId } from "./zones";
-import { heightAt } from "./terrain";
+import { heightAt, MARS_C } from "./terrain";
 import { GALA_CAM, GALA_STEPS } from "./Show";
 import { sfx } from "./audio";
 
@@ -23,8 +23,8 @@ export const CHAPTERS: Chapter[] = [
     title: "Solapur to Lonavala",
     lines: ["Thirteen years at Presentation Convent, Nerul. Then a diploma in Computer Engineering in Solapur — and a Head Boy's badge.", "Then a B.Tech at SIT Lonavala, on the edge of the Sahyadris."],
     clip: "story-1-campus",
-    dist: 24,
-    height: 12,
+    dist: 34,
+    height: 15,
   },
   {
     zone: "arena",
@@ -33,12 +33,16 @@ export const CHAPTERS: Chapter[] = [
     lines: ["A hardware idea gets rejected. Over Diwali, a software problem called Telhan Sathi turns up instead.", "December 2025: 10,000+ teams. Team Algo Sapiens wins the Smart India Hackathon."],
     clip: "arena-trophy",
     swing: 0.5,
+    dist: 30,
+    height: 10,
   },
   {
     zone: "morpheus",
     kicker: "Chapter 3",
     title: "Running the show",
     lines: ["Head of Web, Cybersecurity & Blockchain at IIC-SIT.", "He builds Project Morpheus — a national hackathon, its platform and its hostel allocator — from scratch."],
+    dist: 27,
+    height: 9,
   },
   {
     zone: "swarm",
@@ -47,6 +51,7 @@ export const CHAPTERS: Chapter[] = [
     lines: ["A maze-solving neural net on a 600 MHz Teensy: 1st Runner-Up at RoboRashtra.", "Then swarms: robots that cover ground, with a safety filter that keeps them apart."],
     clip: "story-4-builds",
     swing: -0.4,
+    dist: 24,
   },
   {
     zone: "marsyard",
@@ -54,7 +59,8 @@ export const CHAPTERS: Chapter[] = [
     title: "No GPS on Mars",
     lines: ["ISRO's robotics challenge: a drone that has to know where it is without satellites.", "LiDAR, an IMU, careful frame maths — and a finalist's place in IRoC-U 2026."],
     clip: "mars-drone",
-    height: 9,
+    height: 10,
+    dist: 34,
   },
   {
     zone: "ropeway",
@@ -62,7 +68,8 @@ export const CHAPTERS: Chapter[] = [
     title: "On the ropes",
     lines: ["Six months at Doppelmayr, the Austrian ropeway company.", "RopeIQ: two coordinates in, a permit-grade alignment out — checked against 12 real installations."],
     clip: "ropeway-aerial",
-    dist: 32,
+    dist: 42,
+    height: 12,
   },
   {
     zone: "trading",
@@ -70,6 +77,8 @@ export const CHAPTERS: Chapter[] = [
     title: "Being wrong, honestly",
     lines: ["A trading system built to falsify its own ideas: ten upgrades tested, ten rejected.", "Six SSRN papers — and half of them are about what didn't work."],
     clip: "story-3-markets",
+    dist: 28,
+    height: 9,
   },
   {
     zone: "home",
@@ -77,6 +86,7 @@ export const CHAPTERS: Chapter[] = [
     title: "Next stop: Singapore",
     lines: ["Selected for the Singapore–India Hackathon Grand Finale, 15–17 November 2026.", "But first, the island throws a party."],
     clip: "story-6-singapore",
+    dist: 26,
   },
 ];
 
@@ -90,11 +100,14 @@ type Shot = { pos: [number, number, number]; look: [number, number, number] };
 function shotFor(c: Chapter, t: number): Shot {
   if (!c.zone) {
     const a = 0.9 + t * 0.05;
-    return { pos: [Math.sin(a) * 140, 100, Math.cos(a) * 140], look: [0, -8, 0] };
+    return { pos: [Math.sin(a) * 190, 132, Math.cos(a) * 190], look: [0, -10, 0] };
   }
   const z = zoneById[c.zone];
-  const [x, zz] = zonePos(z);
+  // frame the Mars yard on its field, which sits out toward the coast from the zone point
+  const [x, zz] = c.zone === "marsyard" ? MARS_C : zonePos(z);
   const y = heightAt(x, zz);
+  // never put the camera inside a hill, a hedge or the tree line between zones
+  const lift = (p: [number, number, number]): Shot["pos"] => [p[0], Math.max(p[1], heightAt(p[0], p[2]) + 3.5), p[2]];
   const out = z.radius ? { x: x / z.radius, z: zz / z.radius } : { x: 0.35, z: 0.94 };
   const k = Math.floor(t / SHOT_SECONDS) % 4;
   const u = (t % SHOT_SECONDS) / SHOT_SECONDS; // 0..1 inside the shot
@@ -105,21 +118,21 @@ function shotFor(c: Chapter, t: number): Shot {
     // wide: high and far, slow push in
     const o = rot(base);
     const dd = d * (1.9 - u * 0.25);
-    return { pos: [x - o.x * dd, y + (c.height ?? 8) * 2.2, zz - o.z * dd], look: [x, y + 1, zz] };
+    return { pos: lift([x - o.x * dd, y + (c.height ?? 8) * 2.2, zz - o.z * dd]), look: [x, y + 1, zz] };
   }
   if (k === 1) {
-    // tracking: low, sliding sideways across the subject
-    const o = rot(base + 0.9 - u * 0.9);
-    return { pos: [x - o.x * d * 0.9, y + 2.6, zz - o.z * d * 0.9], look: [x, y + 3, zz] };
+    // tracking: low, sliding sideways across the subject, from inside the plot's open front
+    const o = rot(base + 0.5 - u * 0.8);
+    return { pos: lift([x - o.x * d * 0.6, y + 4.5, zz - o.z * d * 0.6]), look: [x, y + 3, zz] };
   }
   if (k === 2) {
     // close: tight on the landmark, a gentle arc
     const o = rot(base - 0.5 + u * 0.35);
-    return { pos: [x - o.x * d * 0.62, y + 5, zz - o.z * d * 0.62], look: [x, y + 3.5, zz] };
+    return { pos: lift([x - o.x * d * 0.45, y + 5.5, zz - o.z * d * 0.45]), look: [x, y + 3.5, zz] };
   }
   // drone POV: straight-down-ish, descending and turning
   const o = rot(base + u * 0.6);
-  return { pos: [x - o.x * 3, y + 34 - u * 12, zz - o.z * 3], look: [x, y, zz] };
+  return { pos: [x - o.x * 3, y + d * 1.4 - u * 10, zz - o.z * 3], look: [x, y, zz] };
 }
 
 /** Typewriter for subtitle lines. */

@@ -1,10 +1,13 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildTerrain, heightAt, isFreeLand, rng } from "./terrain";
+import { buildTerrain, heightAt, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
 import { getUI, world } from "./store";
+import { addCollider } from "./colliders";
+import { Solid } from "./Props";
 
 /* ---------------- Sky dome (day ↔ night) ---------------- */
 export function SkyDome() {
@@ -44,7 +47,7 @@ export function SkyDome() {
   });
   return (
     <mesh material={mat} renderOrder={-1}>
-      <sphereGeometry args={[400, 32, 16]} />
+      <sphereGeometry args={[480, 32, 16]} />
     </mesh>
   );
 }
@@ -76,12 +79,12 @@ export function Sea() {
           #include <fog_pars_fragment>
           void main(){
             vec3 shallow = vec3(0.35,0.85,0.92), deep = vec3(0.09,0.45,0.78);
-            vec3 col = mix(shallow, deep, smoothstep(68.0, 130.0, vD));
+            vec3 col = mix(shallow, deep, smoothstep(96.0, 175.0, vD));
             // concentric swell bands, like a toy ocean
             float band = sin(vD*1.25 - uTime*1.4 + sin(vXZ.x*0.05)*1.5);
             col += smoothstep(0.75, 1.0, band) * 0.10;
             // surf line
-            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 70.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
+            col = mix(col, vec3(1.0), smoothstep(1.2, 0.0, abs(vD - 98.5 - sin(uTime*0.8 + vXZ.x*0.2)*0.6)) * 0.85);
             col = mix(col, col*vec3(0.12,0.16,0.35), uNight);
             gl_FragColor = vec4(col,1.0);
             #include <fog_fragment>
@@ -95,7 +98,7 @@ export function Sea() {
   });
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={-0.35} material={mat}>
-      <planeGeometry args={[800, 800, 1, 1]} />
+      <planeGeometry args={[1000, 1000, 1, 1]} />
     </mesh>
   );
 }
@@ -118,67 +121,90 @@ export function Terrain() {
   );
 }
 
-/* ---------------- Trees: low-poly, instanced ---------------- */
-export function Trees() {
-  const trunks = useRef<THREE.InstancedMesh>(null);
-  const crowns = useRef<THREE.InstancedMesh>(null);
-  const pines = useRef<THREE.InstancedMesh>(null);
-  const data = useMemo(() => {
-    const r = rng(42);
-    const out: { x: number; z: number; s: number; pine: boolean; hue: number }[] = [];
-    let guard = 0;
-    while (out.length < 340 && guard++ < 20000) {
-      const a = r() * Math.PI * 2;
-      const d = 11 + Math.sqrt(r()) * 56;
-      const x = Math.cos(a) * d,
-        z = Math.sin(a) * d;
-      if (!isFreeLand(x, z)) continue;
-      out.push({ x, z, s: 0.7 + r() * 0.8, pine: r() < 0.38, hue: r() });
-    }
-    return out;
-  }, []);
+/* ---------------- Trees: four species modelled in Blender (public/models/trees.glb), instanced ---------------- */
+const TREES_GLB = "/models/trees.glb";
+useGLTF.preload(TREES_GLB);
+const SPECIES = ["Oak", "Pine", "Cypress", "Palm"] as const;
+type TreeSpot = { x: number; z: number; s: number; sp: number; hue: number; yaw: number };
+/** Where the trees stand (deterministic; colliders.ts-style solids are added from the same list). */
+export function treeSpots(): TreeSpot[] {
+  const r = rng(42);
+  const out: TreeSpot[] = [];
+  let guard = 0;
+  while (out.length < 720 && guard++ < 40000) {
+    const a = r() * Math.PI * 2;
+    const d = 20 + Math.sqrt(r()) * 76;
+    const x = Math.cos(a) * d,
+      z = Math.sin(a) * d;
+    if (!isFreeLand(x, z)) continue;
+    // palms toward the coast, pines and cypresses on the hills, broadleaf everywhere else
+    const k = r();
+    const h = heightAt(x, z);
+    const sp = d > 80 && k < 0.45 ? 3 : h > 5 && k < 0.55 ? 1 : k < 0.18 ? 2 : k < 0.42 ? 1 : 0;
+    out.push({ x, z, s: 0.75 + r() * 0.7, sp, hue: r(), yaw: r() * Math.PI * 2 });
+  }
+  return out;
+}
+const CROWN_HSL: [number, number, number][] = [
+  [0.27, 0.5, 0.4], // oak
+  [0.38, 0.42, 0.3], // pine
+  [0.33, 0.45, 0.33], // cypress
+  [0.28, 0.55, 0.42], // palm
+];
+
+function TreeSpecies({ sp, list, gltf }: { sp: number; list: TreeSpot[]; gltf: { scene: THREE.Group } }) {
+  const trunk = useRef<THREE.InstancedMesh>(null);
+  const crown = useRef<THREE.InstancedMesh>(null);
+  const geos = useMemo(() => {
+    gltf.scene.updateMatrixWorld(true);
+    const get = (n: string) => {
+      const m = gltf.scene.getObjectByName(n) as THREE.Mesh;
+      return m.geometry.clone().applyMatrix4(m.matrixWorld);
+    };
+    return { trunk: get(`${SPECIES[sp]}_Trunk`), crown: get(`${SPECIES[sp]}_Crown`) };
+  }, [gltf, sp]);
   useEffect(() => {
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const c = new THREE.Color();
-    let ti = 0,
-      ci = 0,
-      pi = 0;
-    data.forEach((t) => {
-      const y = heightAt(t.x, t.z);
-      m.compose(new THREE.Vector3(t.x, y + 0.7 * t.s, t.z), q, new THREE.Vector3(t.s, t.s, t.s));
-      trunks.current!.setMatrixAt(ti++, m);
-      if (t.pine) {
-        m.compose(new THREE.Vector3(t.x, y + 2.3 * t.s, t.z), q, new THREE.Vector3(t.s, t.s * 1.3, t.s));
-        pines.current!.setMatrixAt(pi, m);
-        pines.current!.setColorAt(pi++, c.setHSL(0.36 + t.hue * 0.05, 0.45, 0.28 + t.hue * 0.08));
-      } else {
-        m.compose(new THREE.Vector3(t.x, y + 2.1 * t.s, t.z), q, new THREE.Vector3(t.s * 1.1, t.s, t.s * 1.1));
-        crowns.current!.setMatrixAt(ci, m);
-        crowns.current!.setColorAt(ci++, c.setHSL(0.27 + t.hue * 0.08, 0.55, 0.38 + t.hue * 0.1));
-      }
+    const up = new THREE.Vector3(0, 1, 0);
+    const [hh, ss, ll] = CROWN_HSL[sp];
+    list.forEach((t, i) => {
+      q.setFromAxisAngle(up, t.yaw);
+      m.compose(new THREE.Vector3(t.x, heightAt(t.x, t.z) - 0.05, t.z), q, new THREE.Vector3(t.s, t.s * (0.9 + t.hue * 0.25), t.s));
+      trunk.current!.setMatrixAt(i, m);
+      crown.current!.setMatrixAt(i, m);
+      crown.current!.setColorAt(i, c.setHSL(hh + (t.hue - 0.5) * 0.06, ss, ll + (t.hue - 0.5) * 0.1));
     });
-    for (const im of [trunks.current!, crowns.current!, pines.current!]) {
+    for (const im of [trunk.current!, crown.current!]) {
       im.instanceMatrix.needsUpdate = true;
       if (im.instanceColor) im.instanceColor.needsUpdate = true;
     }
-    crowns.current!.count = ci;
-    pines.current!.count = pi;
-  }, [data]);
+  }, [list, sp]);
   return (
     <group>
-      <instancedMesh ref={trunks} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
-        <cylinderGeometry args={[0.12, 0.18, 1.4, 6]} />
-        <meshStandardMaterial color="#7a5638" roughness={1} />
+      <instancedMesh ref={trunk} args={[geos.trunk, undefined, list.length]} castShadow frustumCulled={false}>
+        <meshStandardMaterial color="#7a5638" roughness={1} flatShading />
       </instancedMesh>
-      <instancedMesh ref={crowns} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
-        <icosahedronGeometry args={[1.1, 1]} />
-        <meshStandardMaterial roughness={0.9} flatShading />
+      <instancedMesh ref={crown} args={[geos.crown, undefined, list.length]} castShadow frustumCulled={false}>
+        <meshStandardMaterial roughness={0.9} flatShading side={THREE.DoubleSide} />
       </instancedMesh>
-      <instancedMesh ref={pines} args={[undefined, undefined, data.length]} castShadow frustumCulled={false}>
-        <coneGeometry args={[0.9, 2.6, 7]} />
-        <meshStandardMaterial roughness={0.9} flatShading />
-      </instancedMesh>
+    </group>
+  );
+}
+
+export function Trees() {
+  const gltf = useGLTF(TREES_GLB);
+  const data = useMemo(treeSpots, []);
+  // trunks are solid
+  useEffect(() => {
+    const off = data.map((t) => addCollider({ kind: "circle", x: t.x, z: t.z, r: 0.3 * t.s + 0.1 }));
+    return () => off.forEach((f) => f());
+  }, [data]);
+  const bySp = useMemo(() => SPECIES.map((_, i) => data.filter((t) => t.sp === i)), [data]);
+  return (
+    <group>
+      {bySp.map((list, i) => (list.length ? <TreeSpecies key={i} sp={i} list={list} gltf={gltf} /> : null))}
     </group>
   );
 }
@@ -186,7 +212,7 @@ export function Trees() {
 /* ---------------- Flower meadows (lavender + marigold) ---------------- */
 export function Flowers() {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const N = 2600;
+  const N = 4200;
   useEffect(() => {
     const r = rng(7);
     const m = new THREE.Matrix4();
@@ -196,10 +222,10 @@ export function Flowers() {
       guard = 0;
     while (i < N && guard++ < 60000) {
       // clustered patches
-      const pa = Math.floor(r() * 26);
+      const pa = Math.floor(r() * 44);
       const pr = rng(pa * 97 + 3);
       const a = pr() * Math.PI * 2,
-        d = 14 + pr() * 48;
+        d = 22 + pr() * 68;
       const x = Math.cos(a) * d + (r() - 0.5) * 7,
         z = Math.sin(a) * d + (r() - 0.5) * 7;
       if (!isFreeLand(x, z)) continue;
@@ -230,9 +256,9 @@ export function Clouds() {
     const out: number[][] = [];
     for (let i = 0; i < 16; i++) {
       const a = r() * Math.PI * 2,
-        d = 70 + r() * 120;
+        d = 110 + r() * 150;
       const cx = Math.cos(a) * d,
-        cy = 30 + r() * 22,
+        cy = 36 + r() * 26,
         cz = Math.sin(a) * d;
       for (let j = 0; j < 6; j++) out.push([cx + (r() - 0.5) * 11, cy + (r() - 0.5) * 2.2, cz + (r() - 0.5) * 6, 2.4 + r() * 3.4]);
     }
@@ -277,8 +303,8 @@ export function Lights() {
       const f = scene.fog as THREE.Fog;
       const g = world.rain;
       f.color.setRGB(0.8 - 0.74 * n - 0.12 * g * (1 - n), 0.93 - 0.84 * n - 0.16 * g * (1 - n), 1 - 0.78 * n - 0.2 * g * (1 - n));
-      f.near = 110 - g * 70;
-      f.far = 330 - g * 170;
+      f.near = 150 - g * 90;
+      f.far = 430 - g * 220;
     }
   });
   return (
@@ -286,15 +312,15 @@ export function Lights() {
       <hemisphereLight ref={hemi} args={["#dff4ff", "#6a8f4e", 1.25]} />
       <directionalLight
         ref={sun}
-        position={[40, 60, 25]}
+        position={[55, 85, 35]}
         intensity={2.6}
         castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-82}
-        shadow-camera-right={82}
-        shadow-camera-top={82}
-        shadow-camera-bottom={-82}
-        shadow-camera-far={200}
+        shadow-mapSize={[4096, 4096]}
+        shadow-camera-left={-112}
+        shadow-camera-right={112}
+        shadow-camera-top={112}
+        shadow-camera-bottom={-112}
+        shadow-camera-far={280}
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
       />
@@ -350,9 +376,9 @@ function rangeGeometry(d: number, depth: number, H: number, seed: number) {
 export function Mountains() {
   const layers = useMemo(
     () => [
-      { d: 215, depth: 40, H: 26, day: "#8fbad0", night: "#1a2244", seed: 77 },
-      { d: 265, depth: 50, H: 40, day: "#a9cbe0", night: "#141b38", seed: 78 },
-      { d: 320, depth: 60, H: 58, day: "#c4dcea", night: "#10162e", seed: 79 },
+      { d: 255, depth: 44, H: 28, day: "#8fbad0", night: "#1a2244", seed: 77 },
+      { d: 310, depth: 54, H: 44, day: "#a9cbe0", night: "#141b38", seed: 78 },
+      { d: 370, depth: 64, H: 62, day: "#c4dcea", night: "#10162e", seed: 79 },
     ],
     []
   );
@@ -377,7 +403,7 @@ export function Mountains() {
 }
 
 /* ---------------- wind-blown grass (instanced blades, sway in the vertex shader) ---------------- */
-export function Grass({ count = 38000 }: { count?: number }) {
+export function Grass({ count = 56000 }: { count?: number }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const { geo, mat } = useMemo(() => {
     const g = new THREE.PlaneGeometry(0.09, 0.55, 1, 3);
@@ -420,7 +446,7 @@ export function Grass({ count = 38000 }: { count?: number }) {
       guard = 0;
     while (i < count && guard++ < count * 6) {
       const a = r() * Math.PI * 2,
-        d = 10 + Math.sqrt(r()) * 58;
+        d = 20 + Math.sqrt(r()) * 76;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
       if (!isFreeLand(x, z)) continue;
@@ -462,15 +488,10 @@ export function Shore() {
     []
   );
   // lighthouse on the north-west point, pier on the south shore
-  const LH = useMemo(() => {
-    const a = (205 * Math.PI) / 180;
-    const x = Math.cos(a) * 67,
-      z = Math.sin(a) * 67;
-    return [x, heightAt(x, z), z] as const;
-  }, []);
+  const LH = useMemo(() => [LIGHTHOUSE[0], heightAt(...LIGHTHOUSE), LIGHTHOUSE[1]] as const, []);
   const PIER = useMemo(() => {
     const a = (95 * Math.PI) / 180;
-    return { a, x: Math.cos(a) * 64, z: Math.sin(a) * 64 };
+    return { a, x: Math.cos(a) * 91, z: Math.sin(a) * 91 };
   }, []);
   useFrame((_, dt) => {
     const n = world.night;
@@ -481,10 +502,47 @@ export function Shore() {
   const stripe = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e5322d", roughness: 0.5 }), []);
   const white = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f7f8fa", roughness: 0.5 }), []);
   const wood = useMemo(() => new THREE.MeshStandardMaterial({ color: "#9c6b43", roughness: 0.9 }), []);
-  const sail = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.8, side: THREE.DoubleSide }), []);
+  const rock = useMemo(() => new THREE.MeshStandardMaterial({ color: "#8d918a", roughness: 1, flatShading: true }), []);
+  const boulders = useMemo(() => {
+    const r = rng(207);
+    // outward (toward the sea) is the direction from the island centre to the lighthouse
+    const out = new THREE.Vector2(LIGHTHOUSE[0], LIGHTHOUSE[1]).normalize();
+    return Array.from({ length: 16 }, (_, i) => {
+      const a = (i / 16) * Math.PI * 2 + r() * 0.3;
+      const seaward = Math.max(0, Math.cos(a) * out.x + Math.sin(a) * out.y);
+      const d = 2.8 + r() * 1.6 + seaward * 2.5;
+      return { p: [Math.cos(a) * d, -0.7 - seaward * 1.6 + r() * 0.4, Math.sin(a) * d] as [number, number, number], s: 0.9 + r() * 1.1 + seaward, r: r() * 3 };
+    });
+  }, []);
   return (
     <group>
       <group position={[LH[0], LH[1], LH[2]]}>
+        <Solid r={2.6} />
+        {/* the headland: a stone plinth with steps, on a skirt of boulders running down into the surf */}
+        <mesh position={[0, -0.6, 0]} material={rock} castShadow receiveShadow>
+          <cylinderGeometry args={[2.3, 2.9, 1.6, 10]} />
+        </mesh>
+        <mesh position={[0, 0.25, 0]} material={white} receiveShadow>
+          <cylinderGeometry args={[2.0, 2.2, 0.3, 24]} />
+        </mesh>
+        {boulders.map((b, i) => (
+          <mesh key={i} position={b.p} rotation={[b.r, b.r * 2, 0]} scale={b.s} material={rock} castShadow receiveShadow>
+            <dodecahedronGeometry args={[1, 0]} />
+          </mesh>
+        ))}
+        {/* keeper's hut beside the tower */}
+        <group position={[-3.6, 0, 1.2]} rotation-y={0.5}>
+          <Solid w={2.6} d={2.2} />
+          <mesh position={[0, 1.0, 0]} material={white} castShadow receiveShadow>
+            <boxGeometry args={[2.4, 2, 2]} />
+          </mesh>
+          <mesh position={[0, 2.35, 0]} rotation-y={Math.PI / 4} material={stripe} castShadow>
+            <coneGeometry args={[1.9, 0.9, 4]} />
+          </mesh>
+          <mesh position={[0, 0.75, 1.01]} material={wood}>
+            <planeGeometry args={[0.7, 1.4]} />
+          </mesh>
+        </group>
         {[0, 1, 2, 3, 4].map((i) => (
           <mesh key={i} position={[0, 0.9 + i * 1.8, 0]} material={i % 2 ? stripe : white} castShadow>
             <cylinderGeometry args={[1.25 - (i + 1) * 0.09, 1.25 - i * 0.09, 1.8, 20]} />
@@ -524,115 +582,52 @@ export function Shore() {
 }
 
 /* ---------------- shipping lanes: cargo ships, ferries and more sailboats, lit at night ---------------- */
-const NAV_GEO = new THREE.SphereGeometry(0.2, 8, 6);
 type Lane = { kind: "cargo" | "ferry" | "sail"; ang: number; off: number; len: number; speed: number; phase: number; tint: string };
 const LANES: Lane[] = [
-  { kind: "cargo", ang: 3.5, off: 120, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" }, // west, clear of both far shores
-  { kind: "cargo", ang: 3.5, off: 134, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
-  { kind: "cargo", ang: 2.1, off: 108, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" }, // inside Singapore's bay, never through it
-  { kind: "ferry", ang: 1.75, off: 100, len: 260, speed: 4.6, phase: 0.1, tint: "#ffffff" },
-  { kind: "ferry", ang: 3.9, off: 110, len: 260, speed: -4.0, phase: 0.6, tint: "#ffffff" },
-  { kind: "sail", ang: 0.9, off: 90, len: 160, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
-  { kind: "sail", ang: 1.7, off: 96, len: 160, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
-  { kind: "sail", ang: 2.5, off: 86, len: 160, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
-  { kind: "sail", ang: 3.8, off: 92, len: 160, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
-  { kind: "sail", ang: 4.6, off: 100, len: 160, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
+  { kind: "cargo", ang: 3.5, off: 163, len: 560, speed: 3.2, phase: 0, tint: "#c2382f" }, // west, clear of both far shores
+  { kind: "cargo", ang: 3.5, off: 182, len: 560, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
+  { kind: "cargo", ang: 2.1, off: 147, len: 600, speed: 2.4, phase: 0.2, tint: "#2c7a4b" }, // inside Singapore's bay, never through it
+  { kind: "ferry", ang: 1.75, off: 136, len: 340, speed: 4.6, phase: 0.1, tint: "#ffffff" },
+  { kind: "ferry", ang: 3.9, off: 150, len: 340, speed: -4.0, phase: 0.6, tint: "#ffffff" },
+  { kind: "sail", ang: 0.9, off: 122, len: 210, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
+  { kind: "sail", ang: 1.7, off: 131, len: 210, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
+  { kind: "sail", ang: 2.5, off: 117, len: 210, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
+  { kind: "sail", ang: 3.8, off: 125, len: 210, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
+  { kind: "sail", ang: 4.6, off: 136, len: 210, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
 ];
 
-function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: { red: THREE.Material; green: THREE.Material; white: THREE.Material; win: THREE.Material } }) {
-  const hull = useMemo(() => new THREE.MeshStandardMaterial({ color: tint, roughness: 0.6 }), [tint]);
-  const deck = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e9ecef", roughness: 0.7 }), []);
-  const dark = useMemo(() => new THREE.MeshStandardMaterial({ color: "#23282f", roughness: 0.7 }), []);
-  const boxes = useMemo(() => ["#d9822b", "#2d6cdf", "#c93c3c", "#3aa66b", "#e4c440", "#7a52c7"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })), []);
-  if (kind === "cargo")
-    return (
-      <group>
-        <mesh position={[0, 0.6, 0]} material={dark} castShadow>
-          <boxGeometry args={[5.2, 2.2, 26]} />
-        </mesh>
-        <mesh position={[0, 1.4, 12.6]} rotation-y={Math.PI / 4} material={dark}>
-          <boxGeometry args={[3.6, 2.2, 3.6]} />
-        </mesh>
-        <mesh position={[0, 1.75, 0]} material={hull}>
-          <boxGeometry args={[5.3, 0.25, 26.1]} />
-        </mesh>
-        {/* container stacks */}
-        {Array.from({ length: 18 }, (_, i) => (
-          <mesh key={i} position={[(i % 3) * 1.55 - 1.55, 2.6 + (i % 2) * 0.9, 6 - Math.floor(i / 3) * 2.3]} material={boxes[(i * 5) % boxes.length]} castShadow>
-            <boxGeometry args={[1.45, 0.85, 2.15]} />
-          </mesh>
-        ))}
-        {/* bridge at the stern */}
-        <mesh position={[0, 4, -10.5]} material={deck} castShadow>
-          <boxGeometry args={[4.6, 4.2, 3.2]} />
-        </mesh>
-        <mesh position={[0, 5.2, -9.0]} material={nav.win}>
-          <boxGeometry args={[4.4, 0.6, 0.05]} />
-        </mesh>
-        <mesh position={[0, 7, -11]} material={hull}>
-          <cylinderGeometry args={[0.45, 0.55, 2, 10]} />
-        </mesh>
-        <mesh position={[2.7, 2, 9]} material={nav.green} geometry={NAV_GEO} />
-        <mesh position={[-2.7, 2, 9]} material={nav.red} geometry={NAV_GEO} />
-        <mesh position={[0, 8.3, -11]} material={nav.white}>
-          <sphereGeometry args={[0.22, 8, 6]} />
-        </mesh>
-      </group>
-    );
-  if (kind === "ferry")
-    return (
-      <group>
-        <mesh position={[0, 0.5, 0]} material={deck} castShadow>
-          <boxGeometry args={[4, 1.6, 15]} />
-        </mesh>
-        <mesh position={[0, 0.2, 0]} material={hull}>
-          <boxGeometry args={[4.05, 0.4, 15.05]} />
-        </mesh>
-        <mesh position={[0, 0.45, 0]} material={dark}>
-          <boxGeometry args={[4.06, 0.15, 15.06]} />
-        </mesh>
-        <mesh position={[0, 2.1, -0.8]} material={deck} castShadow>
-          <boxGeometry args={[3.6, 1.6, 10]} />
-        </mesh>
-        {[-1, 1].map((sx) => (
-          <mesh key={sx} position={[sx * 1.82, 2.2, -0.8]} material={nav.win}>
-            <boxGeometry args={[0.04, 0.55, 9.4]} />
-          </mesh>
-        ))}
-        <mesh position={[0, 3.4, 1.5]} material={deck}>
-          <boxGeometry args={[2.6, 1, 2.6]} />
-        </mesh>
-        <mesh position={[0, 4.2, -2.5]} material={dark}>
-          <cylinderGeometry args={[0.35, 0.4, 1.4, 10]} />
-        </mesh>
-        <mesh position={[2, 1.4, 7]} material={nav.green} geometry={NAV_GEO} />
-        <mesh position={[-2, 1.4, 7]} material={nav.red} geometry={NAV_GEO} />
-      </group>
-    );
-  return (
-    <group scale={1.3}>
-      <mesh position={[0, 0.2, 0]} material={deck} castShadow>
-        <boxGeometry args={[1.0, 0.45, 2.8]} />
-      </mesh>
-      <mesh position={[0, 0.48, 0]} material={hull}>
-        <boxGeometry args={[1.02, 0.08, 2.82]} />
-      </mesh>
-      <mesh position={[0, 2, 0]} material={dark}>
-        <cylinderGeometry args={[0.05, 0.05, 3.2, 6]} />
-      </mesh>
-      <mesh position={[0, 2.0, 0.55]} rotation-y={Math.PI / 2} material={deck}>
-        <shapeGeometry args={[new THREE.Shape([new THREE.Vector2(0, -1.2), new THREE.Vector2(0, 1.4), new THREE.Vector2(1.3, -1.2)])]} />
-      </mesh>
-      <mesh position={[0, 3.65, 0]} material={nav.white}>
-        <sphereGeometry args={[0.08, 6, 4]} />
-      </mesh>
-    </group>
-  );
+const SHIP_GLB = { cargo: "/models/ship-cargo.glb", ferry: "/models/ship-ferry.glb", sail: "/models/ship-sail.glb" } as const;
+Object.values(SHIP_GLB).forEach((u) => useGLTF.preload(u));
+
+type Nav = { red: THREE.MeshStandardMaterial; green: THREE.MeshStandardMaterial; white: THREE.MeshStandardMaterial; win: THREE.MeshStandardMaterial };
+/** A ship modelled in Blender (assets-src/scripts/island_props.py); the lane's tint recolours the
+ *  hull (cargo), stripe (ferry) or sheer line (sailboat), and the nav lights share materials. */
+function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: Nav }) {
+  const { scene } = useGLTF(SHIP_GLB[kind]);
+  const model = useMemo(() => {
+    const c = scene.clone(true);
+    c.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = true;
+      const name = (m.material as THREE.Material).name;
+      if (name === "NavRed") m.material = nav.red;
+      else if (name === "NavGreen") m.material = nav.green;
+      else if (name === "NavWhite") m.material = nav.white;
+      else if (name === "ShipWindows") m.material = nav.win;
+      else if ((kind === "cargo" && name === "ShipHull") || name === "FerryStripe" || name === "SailTrim") {
+        m.material = (m.material as THREE.MeshStandardMaterial).clone();
+        (m.material as THREE.MeshStandardMaterial).color.set(tint);
+      }
+    });
+    return c;
+  }, [scene, kind, tint, nav]);
+  return <primitive object={model} />;
 }
 
 export function Ships() {
   const g = useRef<THREE.Group>(null);
-  const nav = useMemo(() => {
+  const nav = useMemo<Nav>(() => {
     const lamp = (c: string) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 });
     return { red: lamp("#ff2d2d"), green: lamp("#2dff6a"), white: lamp("#fff6d8"), win: lamp("#ffd27a") };
   }, []);
@@ -641,7 +636,7 @@ export function Ships() {
     const n = world.night;
     nav.red.emissiveIntensity = nav.green.emissiveIntensity = 0.3 + n * 4;
     nav.white.emissiveIntensity = 0.3 + n * 3;
-    (nav.win as THREE.MeshStandardMaterial).emissiveIntensity = 0.1 + n * 2.2;
+    nav.win.emissiveIntensity = 0.1 + n * 2.2;
     g.current?.children.forEach((s, i) => {
       const L = LANES[i];
       // each lane is a straight line tangent to the island at distance `off`; ships wrap when they leave it
@@ -657,7 +652,7 @@ export function Ships() {
   return (
     <group ref={g}>
       {LANES.map((l, i) => (
-        <group key={i}>
+        <group key={i} scale={l.kind === "sail" ? 1.2 : 1}>
           <Ship kind={l.kind} tint={l.tint} nav={nav} />
         </group>
       ))}
@@ -684,7 +679,7 @@ export function Birds() {
     g.current?.children.forEach((b, i) => {
       const q = flock[i];
       const a = t * (0.07 + q.f * 0.02) + q.f * 2.2;
-      const R = 30 + q.f * 12;
+      const R = 42 + q.f * 16;
       b.position.set(Math.cos(a) * R + q.dx, 22 + q.f * 4 + q.dy + Math.sin(t + q.ph) * 0.6, Math.sin(a) * R + q.dz);
       b.rotation.y = -a;
       const flap = Math.sin(t * 9 + q.ph) * 0.7;

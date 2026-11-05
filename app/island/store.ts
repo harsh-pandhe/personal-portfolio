@@ -7,7 +7,7 @@ export type Mode = "intro" | "explore" | "tour";
 export const world = {
   night: 0, // 0 = day, 1 = night (eased)
   nightTarget: 0,
-  player: { x: 0, z: 9, yaw: Math.PI, speed: 0 },
+  player: { x: 0, z: 23, yaw: Math.PI, speed: 0 },
   keys: new Set<string>(),
   camYaw: 0,
   camPitch: 0.42,
@@ -103,9 +103,9 @@ export const TOUR: ZoneId[] = ["hq", "arena", "marsyard", "swarm", "ropeway", "t
 export function travel(id: ZoneId) {
   const z = zoneById[id];
   const [x, zz] = zonePos(z);
-  const k = z.radius ? (z.radius - 9) / z.radius : 0;
+  const k = z.radius ? (z.radius - 15) / z.radius : 0;
   world.player.x = z.radius ? x * k : 0;
-  world.player.z = z.radius ? zz * k : 10;
+  world.player.z = z.radius ? zz * k : 23;
   world.player.yaw = Math.atan2(x - world.player.x, zz - world.player.z) || Math.PI;
   world.camYaw = world.player.yaw + Math.PI;
   world.target = null;

@@ -24,13 +24,13 @@ function build(): Collider[] {
   const out: Collider[] = [];
   const [ax, az] = zonePos(zoneById.arena);
   out.push({ kind: "ring", x: ax, z: az, r0: ARENA.r0, r1: ARENA.r1, gap: Math.atan2(-ax, -az), gapHalf: ARENA.gapHalf });
-  out.push({ kind: "circle", x: ax, z: az, r: 1.3 }); // trophy plinth
+  out.push({ kind: "circle", x: ax, z: az, r: 1.5 }); // trophy plinth
   const box = (id: ZoneId, lx: number, lz: number, w: number, d: number) => {
     const [x, z] = zoneToWorld(id, lx, lz);
     out.push({ kind: "box", x, z, hw: w / 2, hd: d / 2, rot: zoneYaw(id) });
   };
-  box("trading", 0, -1.5, 9.2, 4.2); // tower
-  box("workshop", 3.8, -4, 9.4, 6.4); // makerspace
+  box("trading", 0, -6.2, 17.6, 7.6); // tower and the market wall
+  box("workshop", 4.5, -6.5, 14.1, 9.6); // makerspace (scaled 1.5)
   box("home", 0.2, -4.2, 7.6, 5.2); // house
   box("library", -0.4, -6, 11, 16.8); // gothic hall and its tower
   const [bx, bz] = zoneToWorld("trading", -10.5, 0.5);
@@ -39,6 +39,15 @@ function build(): Collider[] {
 }
 
 export const COLLIDERS = build();
+
+/** Add a collider at runtime (see <Solid> in Props.tsx); returns a remover. */
+export function addCollider(c: Collider) {
+  COLLIDERS.push(c);
+  return () => {
+    const i = COLLIDERS.indexOf(c);
+    if (i >= 0) COLLIDERS.splice(i, 1);
+  };
+}
 
 /** Push a point (player radius `pr`) out of every collider. */
 export function resolve(x: number, z: number, pr = 0.45): [number, number] {

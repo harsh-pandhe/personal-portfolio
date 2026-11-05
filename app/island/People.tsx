@@ -5,13 +5,19 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { clone as skClone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { heightAt, ROAD_R, rng } from "./terrain";
+import { heightAt, ROAD_HALF, ROAD_R, rng } from "./terrain";
 import { zoneById, zonePos, type ZoneId } from "./zones";
 import { getUI, world } from "./store";
+import { benchAt } from "./Decor";
+import { plazaSeat } from "./Plaza";
 
 // Human visitors: KayKit Adventurers bodies (CC0) sharing one animation library.
 const BODIES = ["knight", "mage", "rogue", "barbarian"] as const;
 const ANIMS = "/models/people/people-anims.glb";
+// KayKit bodies are chibi-sized; at this scale an adult stands ~1.45 m and sits at SEAT_Y (Props.tsx)
+const HUMAN_SCALE = 1.05;
+// in Sit_Chair_Idle the hips sit this far behind the root, so shift the body to put them on the seat
+const SIT_BACK = 0.36;
 BODIES.forEach((b) => useGLTF.preload(`/models/people/${b}.glb`, false, true));
 useGLTF.preload(ANIMS, false, true);
 
@@ -22,15 +28,6 @@ type Plan =
   | { kind: "crowd"; x: number; z: number; yaw: number };
 
 type Person = { id: string; body: (typeof BODIES)[number]; plan: Plan; line: string };
-
-/** Benches sit 6.2 m from a zone's centre, either side of its approach (same rule as Decor). */
-function bench(id: ZoneId, k: -1 | 1) {
-  const z = zoneById[id];
-  const [zx, zz] = zonePos(z);
-  const base = z.radius ? Math.atan2(zx, zz) : 0;
-  const a = base + k * 0.9 + Math.PI;
-  return { x: zx + Math.sin(a) * 6.2 - Math.sin(a) * 0.12, z: zz + Math.cos(a) * 6.2 - Math.cos(a) * 0.12, yaw: a + Math.PI };
-}
 
 function nearZone(id: ZoneId, inward: number, side: number) {
   const [zx, zz] = zonePos(zoneById[id]);
@@ -50,21 +47,26 @@ function buildPeople(): Person[] {
   });
   // people on benches
   (["library", "home", "trading", "morpheus"] as ZoneId[]).forEach((id, i) => {
-    const q = bench(id, i % 2 ? 1 : -1);
-    out.push({ id: `sit${i}`, body: b(i + 1), plan: { kind: "sit", ...q, y: 0.02 }, line: ["Reading the MARS paper.", "Nice evening for it.", "Momentum, huh?", "Waiting for registrations."][i] });
+    const q = benchAt(id, i % 2);
+    out.push({ id: `sit${i}`, body: b(i + 1), plan: { kind: "sit", ...q, y: 0 }, line: ["Reading the MARS paper.", "Nice evening for it.", "Momentum, huh?", "Waiting for registrations."][i] });
+  });
+  // and two in the city-centre plaza, by the fountain
+  ([[0, -1], [5, 1]] as const).forEach(([slot, side], i) => {
+    const q = plazaSeat(slot, side);
+    out.push({ id: `psit${i}`, body: b(i + 3), plan: { kind: "sit", ...q, y: heightAt(0, 0) - heightAt(q.x, q.z) }, line: ["The fountain's new.", "Eight stops from school to Singapore."][i] });
   });
   // workers
   out.push({ id: "maker", body: "barbarian", plan: { kind: "stand", ...nearZone("workshop", 1.5, -4.5), anim: "Interact" }, line: "This crate goes to the Mars yard." });
   out.push({ id: "pilot", body: "rogue", plan: { kind: "stand", ...nearZone("marsyard", 4.5, -4.2), anim: "Interact" }, line: "Pre-flight checks done. Kill switch armed." });
   // walkers on the outer pavement of the ring road
   [0, 1, 2, 3].forEach((i) =>
-    out.push({ id: `walk${i}`, body: b(i + 2), plan: { kind: "walk", r: ROAD_R + 2.4 + (i % 2) * 0.5, speed: (i % 2 ? -1 : 1) * (0.028 + i * 0.004), phase: i * 1.6 }, line: ["Lovely island.", "Which way to the lighthouse?", "Did you find a medal yet?", "The drone show is at night."][i] })
+    out.push({ id: `walk${i}`, body: b(i + 2), plan: { kind: "walk", r: ROAD_R + (i % 2 ? -1 : 1) * (ROAD_HALF - 1.1), speed: (i % 2 ? -1 : 1) * (0.028 + i * 0.004), phase: i * 1.6 }, line: ["Lovely island.", "Which way to the lighthouse?", "Did you find a medal yet?", "The drone show is at night."][i] })
   );
   // the gala crowd on the south beach by the pier
   const r = rng(61);
   for (let i = 0; i < 8; i++) {
     const a = ((88 + (i - 4) * 3.2) * Math.PI) / 180;
-    const d = 59 + r() * 2.5;
+    const d = 86 + r() * 3;
     const x = Math.cos(a) * d,
       z = Math.sin(a) * d;
     out.push({ id: `crowd${i}`, body: b(i), plan: { kind: "crowd", x, z, yaw: Math.atan2(x, z) }, line: "" });
@@ -100,7 +102,9 @@ function Human({ p, clips }: { p: Person; clips: THREE.AnimationClip[] }) {
     // offset each person's cycle so crowds don't move in lockstep
     mixer.setTime(Math.random() * 3);
     return () => {
+      // forget the action too, or a remount (StrictMode, HMR) thinks it is still playing and leaves a T-pose
       mixer.stopAllAction();
+      current.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mixer]);
@@ -148,9 +152,9 @@ function Human({ p, clips }: { p: Person; clips: THREE.AnimationClip[] }) {
   }, [p.plan]);
   return (
     <group ref={group} position={[start.x, heightAt(start.x, start.z) + start.y, start.z]} rotation-y={start.yaw}>
-      <primitive object={model} scale={0.62} />
+      <primitive object={model} scale={HUMAN_SCALE} position-z={p.plan.kind === "sit" ? SIT_BACK : 0} />
       {near && (
-        <Html position={[0, 1.75, 0]} center zIndexRange={[25, 0]} style={{ pointerEvents: "none" }}>
+        <Html position={[0, 2.3, 0]} center zIndexRange={[25, 0]} style={{ pointerEvents: "none" }}>
           <div className="animate-[pop_.35s_cubic-bezier(.16,1,.3,1)] whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-[12.5px] font-medium text-neutral-900 shadow-lg">{p.line}</div>
         </Html>
       )}

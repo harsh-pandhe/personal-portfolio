@@ -7,10 +7,11 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ARENA, zoneToWorld } from "./colliders";
 import { MarsYard } from "./MarsYard";
-import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_R, ROPE_PEAKS } from "./terrain";
+import { heightAt, ridgeTop, RIDGE_TOP, rng, ROAD_HALF, ROAD_R, ROPE_PEAKS } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { setUI, TOUR, useUI, world } from "./store";
 import { papers } from "@/lib/achievements";
+import { Solid } from "./Props";
 
 /* ---------------- shared materials ---------------- */
 export const M = {
@@ -162,6 +163,7 @@ export function Billboard({ id, pos, rotY, scale = 1 }: { id: ZoneId; pos: [numb
       >
         <planeGeometry args={[5.1, 3.0]} />
       </mesh>
+      <Solid w={5.4} d={0.7} position={[0, 0, -0.25]} />
       {/* little concrete footings */}
       {[-2.2, 2.2].map((x) => (
         <mesh key={`f${x}`} position={[x, 0.08, -0.32]} material={M.white} receiveShadow>
@@ -348,10 +350,7 @@ function HQ() {
   });
   return (
     <ZoneGroup id="hq">
-      <mesh position={[0, 0.2, 0]} material={M.white} receiveShadow>
-        <cylinderGeometry args={[6.2, 6.6, 0.4, 48]} />
-      </mesh>
-      {/* the base doubles as the fountain basin (Plaza.tsx) */}
+      {/* the tower rises from the stone island in the middle of the fountain (Plaza.tsx) */}
       <mesh position={[0, 7, 0]} material={M.metal} castShadow>
         <cylinderGeometry args={[0.9, 1.4, 14, 24]} />
       </mesh>
@@ -372,30 +371,88 @@ function HQ() {
         </mesh>
       </group>
       <ControlRing />
-      <Billboard id="hq" pos={[0, 0, 8.2]} rotY={0} scale={0.9} />
+      <Billboard id="hq" pos={[3.5, 0, 15.6]} rotY={0.12} scale={0.9} />
     </ZoneGroup>
   );
 }
 
+/* The SIH trophy: a two-handled cup with a lip, a knotted stem and a stepped ebony base with a
+   gold plaque, standing on a stone plinth in the centre circle. */
 function Trophy() {
   const g = useRef<THREE.Group>(null);
-  const cup = useMemo(() => {
-    const pts = [
-      [0, 0], [1.1, 0], [1.1, 0.25], [0.35, 0.4], [0.25, 1.4], [0.5, 1.7], [1.25, 2.1], [1.5, 3.4], [1.45, 3.5], [1.2, 2.3], [0, 2.1],
-    ].map(([x, y]) => new THREE.Vector2(x, y));
-    return new THREE.LatheGeometry(pts, 48);
+  const { cup, stem, handle } = useMemo(() => {
+    const v = (pts: number[][]) => pts.map(([x, y]) => new THREE.Vector2(x, y));
+    const cup = new THREE.LatheGeometry(
+      v([[0.0, 1.55], [0.32, 1.58], [0.62, 1.72], [0.86, 1.98], [1.02, 2.32], [1.1, 2.7], [1.14, 3.05], [1.22, 3.14], [1.2, 3.2], [1.06, 3.12], [1.0, 2.75], [0.9, 2.4], [0.7, 2.1], [0.0, 1.95]]),
+      64
+    );
+    const stem = new THREE.LatheGeometry(
+      v([[0.0, 0.62], [0.5, 0.62], [0.52, 0.7], [0.2, 0.78], [0.14, 0.95], [0.26, 1.08], [0.3, 1.16], [0.24, 1.26], [0.15, 1.36], [0.22, 1.5], [0.34, 1.58], [0.0, 1.6]]),
+      48
+    );
+    // a handle: an S-curve tube from the bowl's shoulder out and down to its waist
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.0, 2.95, 0),
+      new THREE.Vector3(1.55, 3.0, 0),
+      new THREE.Vector3(1.75, 2.6, 0),
+      new THREE.Vector3(1.45, 2.15, 0),
+      new THREE.Vector3(0.95, 2.05, 0),
+    ]);
+    return { cup, stem, handle: new THREE.TubeGeometry(curve, 32, 0.07, 10, false) };
+  }, []);
+  const ebony = useMemo(() => new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.25, metalness: 0.3 }), []);
+  const plaque = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 128;
+    const x = c.getContext("2d")!;
+    x.fillStyle = "#c99a12";
+    x.fillRect(0, 0, 512, 128);
+    x.fillStyle = "#3a2a00";
+    x.font = "700 40px serif";
+    x.textAlign = "center";
+    x.fillText("SMART INDIA HACKATHON 2025", 256, 58);
+    x.font = "600 30px serif";
+    x.fillText("Winner · Team Algo Sapiens", 256, 102);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ map: t, metalness: 0.6, roughness: 0.35 });
   }, []);
   useFrame((_, dt) => {
-    if (g.current) g.current.rotation.y += dt * 0.35;
+    if (g.current) g.current.rotation.y += dt * 0.3;
   });
   return (
-    <group ref={g} position={[0, 2.2, 0]}>
-      <mesh geometry={cup} material={M.gold} castShadow />
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 1.55, 2.7, 0]} rotation-y={s > 0 ? 0 : Math.PI} material={M.gold}>
-          <torusGeometry args={[0.45, 0.09, 8, 24, Math.PI]} />
+    <group>
+      {/* plinth */}
+      <mesh position={[0, 0.6, 0]} material={M.white} castShadow receiveShadow>
+        <cylinderGeometry args={[1.25, 1.4, 1.2, 32]} />
+      </mesh>
+      <mesh position={[0, 1.23, 0]} material={M.metal}>
+        <cylinderGeometry args={[1.3, 1.3, 0.06, 32]} />
+      </mesh>
+      <group ref={g} position={[0, 1.26, 0]} scale={1.15}>
+        {/* stepped base */}
+        <mesh position={[0, 0.16, 0]} material={ebony} castShadow>
+          <boxGeometry args={[1.3, 0.32, 1.3]} />
         </mesh>
-      ))}
+        <mesh position={[0, 0.45, 0]} material={ebony} castShadow>
+          <boxGeometry args={[1.0, 0.26, 1.0]} />
+        </mesh>
+        {[0, Math.PI].map((r) => (
+          <mesh key={r} position={[Math.sin(r) * 0.66, 0.16, Math.cos(r) * 0.66]} rotation-y={r} material={plaque}>
+            <planeGeometry args={[1.1, 0.27]} />
+          </mesh>
+        ))}
+        <mesh geometry={stem} material={M.gold} castShadow />
+        <mesh geometry={cup} material={M.gold} castShadow />
+        {[0, Math.PI].map((r) => (
+          <mesh key={r} geometry={handle} rotation-y={r} material={M.gold} castShadow />
+        ))}
+        {/* a star finial on the lid */}
+        <mesh position={[0, 3.32, 0]} material={M.gold} castShadow>
+          <octahedronGeometry args={[0.22, 0]} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -539,11 +596,9 @@ function Arena() {
         </mesh>
       ))}
       <Crowd />
-      <mesh position={[0, 0.5, 0]} material={M.white}>
-        <cylinderGeometry args={[0.9, 1.1, 1.2, 24]} />
-      </mesh>
       <Trophy />
-      <Billboard id="arena" pos={[-9.5, 0, ARENA.r1 + 1]} rotY={0.45} />
+      {/* on the plot's front lawn, clear of the stands and of the ring road's sidewalk */}
+      <Billboard id="arena" pos={[-11.5, 0, 12.5]} rotY={0.7} />
     </ZoneGroup>
   );
 }
@@ -836,22 +891,65 @@ function Swarm() {
           <boxGeometry args={[2.75, 1.45, 0.06]} />
         </mesh>
       </group>
-      {Array.from({ length: 20 }, (_, i) => {
-        const a = (i / 20) * Math.PI * 2;
-        return (
-          <mesh key={i} position={[Math.cos(a) * (half + 1.1), 0.5, Math.sin(a) * (half + 1.1)]} material={M.metal} castShadow>
-            <boxGeometry args={[0.12, 1, 0.12]} />
-          </mesh>
-        );
-      })}
-      <Billboard id="swarm" pos={[2, 0, half + 4.2]} rotY={0} />
+      <SwarmFence half={half + 1.1} />
+      <Billboard id="swarm" pos={[7, 0, half + 3]} rotY={-0.4} />
     </ZoneGroup>
+  );
+}
+
+/** A square safety fence round the test grid: posts every ~2 m, two rails and a kick board,
+ *  with a 4 m gate in the side facing HQ (+z). */
+function SwarmFence({ half }: { half: number }) {
+  const runs = useMemo(() => {
+    const G = 2; // gate half-width
+    const out: { a: [number, number]; b: [number, number] }[] = [
+      { a: [-half, -half], b: [half, -half] },
+      { a: [half, -half], b: [half, half] },
+      { a: [-half, half], b: [-half, -half] },
+      { a: [half, half], b: [G, half] },
+      { a: [-G, half], b: [-half, half] },
+    ];
+    return out.map(({ a, b }) => {
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const n = Math.max(1, Math.round(len / 2));
+      return { a, b, len, n, mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] as [number, number], yaw: Math.atan2(b[0] - a[0], b[1] - a[1]) };
+    });
+  }, [half]);
+  const rail = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffd23f", roughness: 0.5, metalness: 0.3 }), []);
+  return (
+    <group>
+      {runs.map((r, i) => (
+        <group key={i}>
+          {Array.from({ length: r.n + 1 }, (_, k) => {
+            const t = k / r.n;
+            return (
+              <mesh key={k} position={[r.a[0] + (r.b[0] - r.a[0]) * t, 0.55, r.a[1] + (r.b[1] - r.a[1]) * t]} material={M.metal} castShadow>
+                <boxGeometry args={[0.1, 1.1, 0.1]} />
+              </mesh>
+            );
+          })}
+          <group position={[r.mid[0], 0, r.mid[1]]} rotation-y={r.yaw}>
+            <Solid w={0.3} d={r.len} />
+            {[0.55, 1.0].map((y) => (
+              <mesh key={y} position={[0, y, 0]} material={rail} castShadow>
+                <boxGeometry args={[0.06, 0.07, r.len]} />
+              </mesh>
+            ))}
+            <mesh position={[0, 0.12, 0]} material={M.dark}>
+              <boxGeometry args={[0.04, 0.2, r.len]} />
+            </mesh>
+          </group>
+        </group>
+      ))}
+    </group>
   );
 }
 
 /* Ropeway Ridge: a multi-span gondola from the valley station over three coastal peaks. */
 const RW_GLB = "/models/ropeway.glb";
+const RS_GLB = "/models/ropeway-station.glb";
 useGLTF.preload(RW_GLB, false, true);
+useGLTF.preload(RS_GLB);
 function Ropeway() {
   const z = zoneById.ropeway;
   const [vx, vz] = zonePos(z);
@@ -859,7 +957,8 @@ function Ropeway() {
   // stations: valley, ridge, then the two outer peaks
   const stops = useMemo(() => {
     const pts: [number, number][] = [[vx, vz], [tx, tz], ...ROPE_PEAKS.map(([x, zz]) => [x, zz] as [number, number])];
-    return pts.map(([x, zz], i) => new THREE.Vector3(x, heightAt(x, zz) + (i === 0 ? 4 : 4.6), zz));
+    // the rope runs over each station's bull wheel, ~3 m above its deck
+    return pts.map(([x, zz]) => new THREE.Vector3(x, heightAt(x, zz) + 3.2, zz));
   }, [vx, vz, tx, tz]);
   // one continuous line with a catenary sag in every span, so cabins ride straight through the stations
   const curve = useMemo(() => {
@@ -920,6 +1019,7 @@ function Ropeway() {
     });
   });
   const { scene: rwScene } = useGLTF(RW_GLB, false, true);
+  const { scene: rsScene } = useGLTF(RS_GLB);
   const rw = useMemo(() => {
     const get = (n: string) => {
       const o = rwScene.getObjectByName(n)!.clone(true);
@@ -928,8 +1028,10 @@ function Ropeway() {
       return o;
     };
     const cabin = get("RwCabin");
-    return { tower: get("RwTower"), station: get("RwStation"), cabins: Array.from({ length: 10 }, () => cabin.clone(true)) };
-  }, [rwScene]);
+    const station = rsScene.clone(true);
+    station.traverse((m) => ((m as THREE.Mesh).isMesh ? (m.castShadow = m.receiveShadow = true) : null));
+    return { tower: get("RwTower"), station, cabins: Array.from({ length: 10 }, () => cabin.clone(true)) };
+  }, [rwScene, rsScene]);
   return (
     <group>
       {cables.map((g, i) => (
@@ -937,14 +1039,22 @@ function Ropeway() {
       ))}
       {/* towers, stations and cabins modelled in Blender (public/models/ropeway.glb) */}
       {towers.map(({ p, g, yaw }, i) => (
-        <primitive key={i} object={rw.tower.clone(true)} position={[p.x, g, p.z]} rotation-y={yaw} scale={[1, (p.y - g) / 10.55, 1]} />
+        <group key={i} position={[p.x, g, p.z]} rotation-y={yaw}>
+          <primitive object={rw.tower.clone(true)} scale={[1, (p.y - g) / 10.55, 1]} />
+          <Solid r={0.9} />
+        </group>
       ))}
       {stops.map((p, i) => {
         const nxt = stops[Math.min(i + 1, stops.length - 1)],
           prv = stops[Math.max(i - 1, 0)];
         const yaw = Math.atan2(nxt.x - prv.x, nxt.z - prv.z);
-        const big = i === 0 || i === stops.length - 1;
-        return <primitive key={`s${i}`} object={rw.station.clone(true)} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw} scale={big ? 1 : 0.8} />;
+        // stations stand on level pads cut into the slopes (terrain.ts); the plinth runs into the ground
+        return (
+          <group key={`s${i}`} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw}>
+            <primitive object={rw.station.clone(true)} scale={i === 0 ? 1 : 0.9} />
+            <Solid w={8.6} d={10.6} />
+          </group>
+        );
       })}
       <group ref={cabins}>
         {Array.from({ length: 10 }, (_, i) => (
@@ -952,7 +1062,7 @@ function Ropeway() {
         ))}
       </group>
       <ZoneGroup id="ropeway">
-        <Billboard id="ropeway" pos={[-5.2, 0, 4.5]} rotY={0.5} />
+        <Billboard id="ropeway" pos={[-8.5, 0, 7.5]} rotY={0.6} />
       </ZoneGroup>
     </group>
   );
@@ -1097,40 +1207,34 @@ function Trading() {
   });
   return (
     <ZoneGroup id="trading">
-      <mesh position={[0, 3, -1.5]} material={M.white} castShadow receiveShadow>
-        <boxGeometry args={[9, 6, 4]} />
+      {/* the exchange tower: glass floors between white slabs, the wall mounted on its podium */}
+      <mesh position={[0, 8.5, -7]} material={M.white} castShadow receiveShadow>
+        <boxGeometry args={[11, 17, 6]} />
       </mesh>
-      {[1, 2, 3, 4].map((i) => (
-        <mesh key={i} position={[0, i * 1.4 - 0.2, 0.52]} material={M.glass}>
-          <boxGeometry args={[8.6, 0.6, 0.02]} />
+      {Array.from({ length: 5 }, (_, i) => (
+        <mesh key={i} position={[0, 9.4 + i * 1.6, -3.98]} material={M.glass}>
+          <boxGeometry args={[10.4, 1.0, 0.04]} />
         </mesh>
       ))}
-      <mesh position={[0, 6.2, -1.5]} material={M.metal}>
-        <boxGeometry args={[9.4, 0.3, 4.4]} />
+      <mesh position={[0, 17.2, -7]} material={M.metal}>
+        <boxGeometry args={[11.4, 0.4, 6.4]} />
       </mesh>
-      {/* the big wall stands on two steel pylons from the ground either side of the tower */}
-      {[-7.6, 7.6].map((x) => (
-        <group key={x} position={[x, 0, -1.4]}>
-          <mesh position={[0, 6.6, 0]} material={M.dark} castShadow>
-            <boxGeometry args={[0.7, 14, 0.7]} />
-          </mesh>
-          <mesh position={[0, 0.25, 0]} material={M.white} receiveShadow>
-            <boxGeometry args={[1.6, 0.5, 1.6]} />
-          </mesh>
-          {[2.5, 5.5].map((y) => (
-            <mesh key={y} position={[x < 0 ? 1.55 : -1.55, y, 0]} rotation-z={x < 0 ? 0.9 : -0.9} material={M.metal}>
-              <boxGeometry args={[0.18, 3.9, 0.18]} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-      <mesh position={[0, 12.6, -1.4]} material={M.dark} castShadow>
-        <boxGeometry args={[16.8, 8.8, 0.4]} />
+      {/* the market wall at eye level: 16 x 8 m, bottom edge 0.9 m off the ground */}
+      <mesh position={[0, 4.9, -3.6]} material={M.dark} castShadow>
+        <boxGeometry args={[16.8, 8.8, 0.5]} />
       </mesh>
-      <mesh position={[0, 12.6, -1.18]} material={screen} {...hoverHandlers("trading")}>
+      <mesh position={[0, 4.9, -3.33]} material={screen} {...hoverHandlers("trading")}>
         <planeGeometry args={[16, 8]} />
       </mesh>
-      <Billboard id="trading" pos={[6.5, 0, 6]} rotY={-0.35} scale={0.85} />
+      {[-8.6, 8.6].map((x) => (
+        <mesh key={x} position={[x, 4.4, -3.6]} material={M.dark} castShadow>
+          <boxGeometry args={[0.6, 8.8, 0.9]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.2, -3.2]} material={M.white} receiveShadow>
+        <boxGeometry args={[17.6, 0.4, 1.4]} />
+      </mesh>
+      <Billboard id="trading" pos={[9.5, 0, 4.5]} rotY={-0.55} scale={0.85} />
     </ZoneGroup>
   );
 }
@@ -1210,6 +1314,76 @@ function IndustrialArm() {
 
 const WS_GLB = "/models/workshop.glb";
 useGLTF.preload(WS_GLB, false, true);
+/* The Workshop yard: the sawtooth makerspace, the arm's work cell, workbenches with a drone
+   on the bench, a parts rack and pallets of crates by the roller door. */
+const CRATE = new THREE.MeshStandardMaterial({ color: "#b98a54", roughness: 0.9 });
+const CRATE_DARK = new THREE.MeshStandardMaterial({ color: "#8c6338", roughness: 0.9 });
+function Crate({ s = 0.9 }: { s?: number }) {
+  return (
+    <group scale={s}>
+      <mesh position={[0, 0.5, 0]} material={CRATE} castShadow receiveShadow>
+        <boxGeometry args={[1, 1, 1]} />
+      </mesh>
+      {/* slats */}
+      {[-0.51, 0.51].map((z) =>
+        [0.15, 0.5, 0.85].map((y) => (
+          <mesh key={`${z}${y}`} position={[0, y, z]} material={CRATE_DARK}>
+            <boxGeometry args={[1.02, 0.1, 0.02]} />
+          </mesh>
+        ))
+      )}
+      {[-0.51, 0.51].map((x) => (
+        <mesh key={x} position={[x, 0.5, 0]} rotation-z={0.78} material={CRATE_DARK}>
+          <boxGeometry args={[0.02, 1.3, 0.12]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+function Pallet({ crates }: { crates: [number, number, number][] }) {
+  return (
+    <group>
+      <mesh position={[0, 0.07, 0]} material={CRATE_DARK} castShadow receiveShadow>
+        <boxGeometry args={[2.2, 0.14, 2.2]} />
+      </mesh>
+      {crates.map(([x, y, z], i) => (
+        <group key={i} position={[x, 0.14 + y, z]}>
+          <Crate />
+        </group>
+      ))}
+    </group>
+  );
+}
+function Workbench() {
+  const top = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c7a06b", roughness: 0.8 }), []);
+  return (
+    <group>
+      <mesh position={[0, 0.95, 0]} material={top} castShadow receiveShadow>
+        <boxGeometry args={[3, 0.08, 1.1]} />
+      </mesh>
+      {[-1.4, 1.4].map((x) =>
+        [-0.45, 0.45].map((z) => (
+          <mesh key={`${x}${z}`} position={[x, 0.47, z]} material={M.dark}>
+            <boxGeometry args={[0.07, 0.94, 0.07]} />
+          </mesh>
+        ))
+      )}
+      <mesh position={[0, 0.3, 0]} material={M.dark}>
+        <boxGeometry args={[2.8, 0.05, 1.0]} />
+      </mesh>
+      {/* a pegboard of tools behind */}
+      <mesh position={[0, 1.7, -0.52]} material={M.white} castShadow>
+        <boxGeometry args={[3, 1.4, 0.05]} />
+      </mesh>
+      {[-1.1, -0.6, -0.1, 0.5, 1.0].map((x, i) => (
+        <mesh key={x} position={[x, 1.75 - (i % 2) * 0.25, -0.48]} material={i % 2 ? M.red : M.dark}>
+          <boxGeometry args={[0.08, 0.5 - (i % 3) * 0.1, 0.03]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Workshop() {
   const { scene: wsScene } = useGLTF(WS_GLB, false, true);
   const shed = useMemo(() => {
@@ -1217,28 +1391,43 @@ function Workshop() {
     c.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = o.receiveShadow = true) : null));
     return c;
   }, [wsScene]);
-  const crates = useMemo(() => {
-    const r = rng(9);
-    return Array.from({ length: 9 }, (_, i) => ({
-      p: [-6 + (i % 3) * 1.15, 0.5 + Math.floor(i / 3) * 0.0, -4 + Math.floor(i / 3) * 1.15] as [number, number, number],
-      s: 0.9 + r() * 0.15,
-      c: ["#7a4dff", "#2d5bff", "#f7f8fa", "#12f0c0"][i % 4],
-    }));
-  }, []);
+  const yard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9c6bf", roughness: 0.95 }), []);
+  const hazard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffd23f", roughness: 0.6 }), []);
   return (
     <ZoneGroup id="workshop">
-      {/* the makerspace, modelled in Blender (public/models/workshop.glb) */}
-      <primitive object={shed} position={[3.8, 0, -4]} />
-      <group position={[-1.5, 0, 1]} scale={1.15}>
-        <IndustrialArm />
-      </group>
-      {crates.map((q, i) => (
-        <mesh key={i} position={q.p} scale={q.s} castShadow>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={q.c} roughness={0.6} />
+      {/* a concrete yard in front of the building, with a painted walkway */}
+      <mesh position={[0, 0.03, -1]} rotation-x={-Math.PI / 2} material={yard} receiveShadow>
+        <planeGeometry args={[26, 17]} />
+      </mesh>
+      {[-1.6, 1.6].map((x) => (
+        <mesh key={x} position={[x, 0.04, 2.5]} rotation-x={-Math.PI / 2} material={hazard}>
+          <planeGeometry args={[0.12, 11]} />
         </mesh>
       ))}
-      <Billboard id="workshop" pos={[9, 0, 6]} rotY={-0.5} scale={0.9} />
+      {/* the makerspace, modelled in Blender (public/models/workshop.glb), at one and a half size */}
+      <primitive object={shed} position={[4.5, 0, -6.5]} scale={1.5} />
+      <group position={[-7.5, 0, -1]} scale={1.25}>
+        <IndustrialArm />
+      </group>
+      {[-1, 1].map((k) => (
+        <group key={k} position={[-9.5, 0, -7.5 + k * 1.8]}>
+          <Solid w={3} d={1.1} />
+          <Workbench />
+        </group>
+      ))}
+      {/* the bench drone, waiting for its props */}
+      <group position={[-9.6, 1.0, -5.9]} rotation-y={0.4}>
+        <Quad scale={2.6} spin={0} />
+      </group>
+      <group position={[9.5, 0, 3]} rotation-y={-0.3}>
+        <Solid w={2.3} d={2.3} />
+        <Pallet crates={[[-0.5, 0, -0.5], [0.5, 0, -0.5], [-0.5, 0, 0.5], [0.5, 0, 0.5], [0, 0.9, 0]]} />
+      </group>
+      <group position={[11.5, 0, -0.5]} rotation-y={0.2}>
+        <Solid w={2.3} d={2.3} />
+        <Pallet crates={[[-0.5, 0, 0], [0.5, 0, 0]]} />
+      </group>
+      <Billboard id="workshop" pos={[-11, 0, 7]} rotY={0.55} scale={0.9} />
     </ZoneGroup>
   );
 }
@@ -1276,18 +1465,223 @@ function paperTexture(title: string, area: string) {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
+/* Surface detail for the library GLB, which ships with flat colours: box-projected UVs and canvas
+   textures for ashlar stone, slate, an oak plank door with iron straps and leaded stained glass. */
+function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void, repeat = true) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  draw(c.getContext("2d")!);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+function noise(g: CanvasRenderingContext2D, w: number, h: number, cols: string[], n: number, seed: number) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = cols[i % cols.length];
+    g.fillRect(r() * w, r() * h, 1 + r() * 3, 1 + r() * 3);
+  }
+}
+/** World-scale box projection: each triangle takes the plane its normal faces most. */
+function boxUV(geo: THREE.BufferGeometry, metres: number) {
+  const g = geo.index ? geo.toNonIndexed() : geo.clone();
+  const p = g.attributes.position as THREE.BufferAttribute;
+  const uv = new Float32Array(p.count * 2);
+  const a = new THREE.Vector3(),
+    b = new THREE.Vector3(),
+    c = new THREE.Vector3(),
+    n = new THREE.Vector3();
+  for (let i = 0; i < p.count; i += 3) {
+    a.fromBufferAttribute(p, i);
+    b.fromBufferAttribute(p, i + 1);
+    c.fromBufferAttribute(p, i + 2);
+    n.subVectors(b, a).cross(c.clone().sub(a));
+    const ax = Math.abs(n.x),
+      ay = Math.abs(n.y),
+      az = Math.abs(n.z);
+    for (let k = 0; k < 3; k++) {
+      const v = [a, b, c][k];
+      const [u, w] = ay >= ax && ay >= az ? [v.x, v.z] : ax >= az ? [v.z, v.y] : [v.x, v.y];
+      uv[(i + k) * 2] = u / metres;
+      uv[(i + k) * 2 + 1] = w / metres;
+    }
+  }
+  g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  g.computeVertexNormals();
+  return g;
+}
+/** Fit 0..1 UVs over a mesh's front face (its two largest bounding-box axes). */
+function fitUV(geo: THREE.BufferGeometry) {
+  const g = geo.clone();
+  g.computeBoundingBox();
+  const bb = g.boundingBox!;
+  const s = bb.getSize(new THREE.Vector3());
+  const p = g.attributes.position as THREE.BufferAttribute;
+  const uv = new Float32Array(p.count * 2);
+  const useZ = s.z > s.x; // window faces x or z
+  for (let i = 0; i < p.count; i++) {
+    const u = useZ ? (p.getZ(i) - bb.min.z) / (s.z || 1) : (p.getX(i) - bb.min.x) / (s.x || 1);
+    uv[i * 2] = u;
+    uv[i * 2 + 1] = (p.getY(i) - bb.min.y) / (s.y || 1);
+  }
+  g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+function libraryMaterials() {
+  const stone = canvasTex(512, 512, (g) => {
+    g.fillStyle = "#cfc7b6";
+    g.fillRect(0, 0, 512, 512);
+    noise(g, 512, 512, ["#c2b9a6", "#d9d2c3", "#b8ae9a"], 9000, 4);
+    g.fillStyle = "#a39985";
+    const rows = 8;
+    for (let r = 0; r < rows; r++) {
+      const y = (r * 512) / rows;
+      g.fillRect(0, y, 512, 3);
+      const off = r % 2 ? 0 : 64;
+      for (let x = off; x < 512 + 128; x += 128) g.fillRect(x, y, 3, 512 / rows);
+    }
+  });
+  const trim = canvasTex(256, 256, (g) => {
+    g.fillStyle = "#e3dccb";
+    g.fillRect(0, 0, 256, 256);
+    noise(g, 256, 256, ["#d6cfbd", "#ece6d8"], 3000, 5);
+  });
+  const slate = canvasTex(256, 256, (g) => {
+    g.fillStyle = "#3b4352";
+    g.fillRect(0, 0, 256, 256);
+    noise(g, 256, 256, ["#323946", "#465062", "#2c323d"], 3000, 6);
+    g.fillStyle = "#232831";
+    for (let r = 0; r < 8; r++) {
+      g.fillRect(0, r * 32, 256, 2);
+      for (let x = r % 2 ? 0 : 16; x < 256; x += 32) g.fillRect(x, r * 32, 2, 32);
+    }
+  });
+  const door = canvasTex(
+    256,
+    512,
+    (g) => {
+      g.fillStyle = "#6b4022";
+      g.fillRect(0, 0, 256, 512);
+      for (let i = 0; i < 6; i++) {
+        g.fillStyle = i % 2 ? "#74472a" : "#62391e";
+        g.fillRect(i * 43, 0, 41, 512);
+        g.fillStyle = "#3f2412";
+        g.fillRect(i * 43 + 41, 0, 2, 512);
+      }
+      noise(g, 256, 512, ["#5a341b", "#7d5030"], 2500, 7);
+      // iron straps with studs, and a ring handle
+      g.fillStyle = "#24262a";
+      for (const y of [90, 250, 410]) {
+        g.fillRect(0, y, 256, 16);
+        for (let x = 12; x < 256; x += 30) {
+          g.beginPath();
+          g.arc(x, y + 8, 4, 0, Math.PI * 2);
+          g.fillStyle = "#4a4d52";
+          g.fill();
+          g.fillStyle = "#24262a";
+        }
+      }
+      g.strokeStyle = "#2b2d31";
+      g.lineWidth = 7;
+      g.beginPath();
+      g.arc(200, 300, 18, 0, Math.PI * 2);
+      g.stroke();
+    },
+    false
+  );
+  const glass = canvasTex(
+    256,
+    512,
+    (g) => {
+      const pal = ["#2c5fd6", "#c8312f", "#e7b43a", "#2f9a5c", "#7b3fb8", "#4fb3e0"];
+      const r = rng(9);
+      const cw = 32,
+        ch = 40;
+      for (let y = 0; y < 512; y += ch)
+        for (let x = 0; x < 256; x += cw) {
+          g.fillStyle = pal[Math.floor(r() * pal.length)];
+          g.fillRect(x, y, cw, ch);
+        }
+      // a figure-ish medallion in the middle and lead came over everything
+      g.fillStyle = "#f3d27a";
+      g.beginPath();
+      g.arc(128, 220, 60, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = "#c8312f";
+      g.beginPath();
+      g.arc(128, 220, 34, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = "#1b1d22";
+      g.lineWidth = 5;
+      for (let y = 0; y <= 512; y += ch) (g.beginPath(), g.moveTo(0, y), g.lineTo(256, y), g.stroke());
+      for (let x = 0; x <= 256; x += cw) (g.beginPath(), g.moveTo(x, 0), g.lineTo(x, 512), g.stroke());
+      g.lineWidth = 7;
+      g.beginPath();
+      g.arc(128, 220, 60, 0, Math.PI * 2);
+      g.stroke();
+      g.strokeRect(4, 4, 248, 504);
+    },
+    false
+  );
+  const rose = canvasTex(
+    512,
+    512,
+    (g) => {
+      const pal = ["#2c5fd6", "#c8312f", "#e7b43a", "#7b3fb8", "#2f9a5c"];
+      g.fillStyle = "#1b1d22";
+      g.fillRect(0, 0, 512, 512);
+      for (let ring = 4; ring >= 1; ring--) {
+        const R = ring * 60;
+        for (let k = 0; k < 16; k++) {
+          g.fillStyle = pal[(k + ring) % pal.length];
+          g.beginPath();
+          g.moveTo(256, 256);
+          g.arc(256, 256, R, (k / 16) * Math.PI * 2 + 0.03, ((k + 1) / 16) * Math.PI * 2 - 0.03);
+          g.fill();
+        }
+      }
+      g.fillStyle = "#f3d27a";
+      g.beginPath();
+      g.arc(256, 256, 30, 0, Math.PI * 2);
+      g.fill();
+    },
+    false
+  );
+  const mk = (map: THREE.Texture, o: THREE.MeshStandardMaterialParameters = {}) => new THREE.MeshStandardMaterial({ map, roughness: 0.85, ...o });
+  return {
+    LibStone: { mat: mk(stone), uv: 3.2 },
+    LibTrim: { mat: mk(trim), uv: 1.5 },
+    LibSlate: { mat: mk(slate, { roughness: 0.6 }), uv: 1.6 },
+    LibWood: { mat: mk(door, { roughness: 0.7 }), uv: 0 },
+    LibGlass: { mat: mk(glass, { emissiveMap: glass, emissive: "#ffffff", emissiveIntensity: 0.4 }), uv: 0 },
+    LibRose: { mat: mk(rose, { emissiveMap: rose, emissive: "#ffffff", emissiveIntensity: 0.4 }), uv: 0 },
+  } as Record<string, { mat: THREE.MeshStandardMaterial; uv: number }>;
+}
+
 function Library() {
   const [hover, setHover] = useState<number | null>(null);
   const { scene } = useGLTF(LIB_GLB, false, true);
   const hall = useMemo(() => {
     const c = scene.clone(true);
-    const glow: THREE.MeshStandardMaterial[] = [];
+    const mats = libraryMaterials();
+    const glow = [mats.LibGlass.mat, mats.LibRose.mat];
+    c.updateMatrixWorld(true);
     c.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
       m.castShadow = m.receiveShadow = true;
-      const mat = m.material as THREE.MeshStandardMaterial;
-      if (/LibGlass|LibRose/.test(mat.name)) glow.push(mat);
+      const q = mats[(m.material as THREE.Material).name];
+      if (!q) return;
+      if (q.uv) {
+        // project in the hall's frame so the stone courses line up across separate meshes
+        const g = m.geometry.clone().applyMatrix4(m.matrixWorld);
+        const inv = m.matrixWorld.clone().invert();
+        m.geometry = boxUV(g, q.uv).applyMatrix4(inv);
+      } else m.geometry = fitUV(m.geometry);
+      m.material = q.mat;
     });
     return { c, glow };
   }, [scene]);
@@ -1484,15 +1878,26 @@ function MorpheusSigns() {
   });
   return (
     <group>
-      {/* the sign across the top of the arch */}
-      <mesh position={[0, 5.4, -1]} material={sign.mat}>
-        <planeGeometry args={[8, 2]} />
-      </mesh>
-      <mesh position={[0, 5.4, -1.06]} material={M.dark}>
-        <boxGeometry args={[8.3, 2.25, 0.08]} />
-      </mesh>
+      {/* the name across the top of the portal */}
+      <group position={[0, 12.4, -4]}>
+        <mesh material={sign.mat} position={[0, 0, 0.06]}>
+          <planeGeometry args={[10, 2.5]} />
+        </mesh>
+        <mesh material={sign.mat} position={[0, 0, -0.06]} rotation-y={Math.PI}>
+          <planeGeometry args={[10, 2.5]} />
+        </mesh>
+        <mesh material={M.dark}>
+          <boxGeometry args={[10.4, 2.8, 0.1]} />
+        </mesh>
+        {[-3, 3].map((x) => (
+          <mesh key={x} position={[x, -1.55, 0]} material={M.dark}>
+            <boxGeometry args={[0.18, 0.5, 0.18]} />
+          </mesh>
+        ))}
+      </group>
       {/* terminal kiosk */}
-      <group position={[4.6, 0, 3.4]} rotation-y={-0.5}>
+      <group position={[9, 0, 4]} rotation-y={-0.7}>
+        <Solid w={1.8} d={1} />
         <mesh position={[0, 0.6, 0]} material={M.dark} castShadow>
           <boxGeometry args={[1.6, 1.2, 0.8]} />
         </mesh>
@@ -1505,11 +1910,12 @@ function MorpheusSigns() {
       </group>
       {/* the five levels */}
       {LEVELS.map((_, i) => {
-        const a = ((-60 + i * 30) * Math.PI) / 180;
-        const x = Math.sin(a) * 7.6,
-          z = -Math.cos(a) * 7.6 - 1;
+        const a = ((-64 + i * 32) * Math.PI) / 180;
+        const x = Math.sin(a) * 11,
+          z = -Math.cos(a) * 11 - 2;
         return (
           <group key={i} position={[x, 0, z]} rotation-y={-a}>
+            <Solid w={1.5} d={0.5} />
             <mesh position={[0, 1.6, 0]} material={M.dark} castShadow>
               <boxGeometry args={[1.5, 3.2, 0.5]} />
             </mesh>
@@ -1523,18 +1929,116 @@ function MorpheusSigns() {
   );
 }
 
+/* The portal: a swirling tunnel of green code inside a standing ring. */
+function portalMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    uniforms: { uT: { value: 0 }, uNight: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `uniform float uT; uniform float uNight; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+      void main(){
+        vec2 p = vUv*2.0-1.0; float r = length(p); if (r > 1.0) discard;
+        float a = atan(p.y, p.x);
+        // log-polar tunnel: rings rush toward the centre while the whole thing turns
+        float depth = 0.35/(r+0.05) + uT*0.9;
+        float ang = a/6.2831 + uT*0.05 + 0.15/(r+0.1);
+        vec2 cell = floor(vec2(ang*42.0, depth*6.0));
+        float glyph = step(0.55, h(cell)) * (0.5 + 0.5*sin(uT*6.0 + h(cell+1.0)*40.0));
+        float streak = smoothstep(0.0, 0.25, fract(depth*6.0)) * (1.0 - fract(depth*6.0));
+        vec3 green = vec3(0.13, 1.0, 0.36);
+        vec3 col = green * glyph * streak * 1.6 + vec3(0.02,0.12,0.05);
+        col += vec3(0.7,1.0,0.8) * smoothstep(0.25, 0.0, r) * 0.9;      // the light at the end
+        col += green * smoothstep(0.82, 1.0, r) * 0.8;                   // rim glow
+        gl_FragColor = vec4(col, 0.94);
+      }`,
+  });
+}
+
+function PillPlinth({ color, label, x }: { color: string; label: string; x: number }) {
+  const pill = useRef<THREE.Group>(null);
+  const glow = useGlow(color, 0.6, 2.4);
+  const tag = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 128;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#020702";
+    g.fillRect(0, 0, 512, 128);
+    g.fillStyle = color;
+    g.font = "700 44px ui-monospace, monospace";
+    g.textAlign = "center";
+    g.fillText(label, 256, 80);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: "#ffffff", emissiveIntensity: 0.9 });
+  }, [color, label]);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (pill.current) {
+      pill.current.rotation.y = t * 0.6 + x;
+      pill.current.position.y = 2.75 + Math.sin(t * 1.4 + x) * 0.18;
+    }
+  });
+  return (
+    <group position={[x, 0, 1.5]}>
+      <Solid r={1.3} />
+      <mesh position={[0, 0.55, 0]} material={M.dark} castShadow receiveShadow>
+        <cylinderGeometry args={[1.1, 1.3, 1.1, 8]} />
+      </mesh>
+      <mesh position={[0, 1.12, 0]} rotation-x={-Math.PI / 2} material={glow}>
+        <ringGeometry args={[0.75, 0.95, 32]} />
+      </mesh>
+      {[0, Math.PI].map((r) => (
+        <mesh key={r} position={[Math.sin(r) * 1.22, 0.55, Math.cos(r) * 1.22]} rotation-y={r} material={tag}>
+          <planeGeometry args={[1.5, 0.38]} />
+        </mesh>
+      ))}
+      <group ref={pill}>
+        <mesh rotation-z={Math.PI / 2.6} castShadow>
+          <capsuleGeometry args={[0.42, 1.0, 10, 20]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.45} roughness={0.2} metalness={0.1} />
+        </mesh>
+      </group>
+      <pointLight position={[0, 2.6, 0]} color={color} intensity={6} distance={7} />
+    </group>
+  );
+}
+
 function Morpheus() {
   const { c, tex } = useMemo(rainTexture, []);
   const drops = useRef<number[]>(Array.from({ length: 16 }, () => Math.random() * 30));
   const acc = useRef(0);
   const mat = useMemo(() => new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: "#ffffff", emissiveIntensity: 1.1, color: "#000000" }), [tex]);
-  const arch = useGlow("#19e36b", 0.7, 3);
-  const pills = useRef<THREE.Group>(null);
-  useFrame(({ clock }, dt) => {
-    if (pills.current) {
-      pills.current.rotation.y += dt * 0.5;
-      pills.current.position.y = 3 + Math.sin(clock.elapsedTime * 1.5) * 0.25;
+  const ring = useGlow("#19e36b", 0.7, 3);
+  const portal = useMemo(portalMaterial, []);
+  const floor = useMemo(() => {
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 512;
+    const g = cv.getContext("2d")!;
+    g.fillStyle = "#050a06";
+    g.fillRect(0, 0, 512, 512);
+    g.strokeStyle = "#0f5a22";
+    g.lineWidth = 2;
+    for (let i = 0; i <= 512; i += 32) {
+      g.beginPath();
+      g.moveTo(i, 0);
+      g.lineTo(i, 512);
+      g.moveTo(0, i);
+      g.lineTo(512, i);
+      g.stroke();
     }
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(4, 4);
+    return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: "#ffffff", emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.4 });
+  }, []);
+  useFrame(({ clock }, dt) => {
+    portal.uniforms.uT.value = clock.elapsedTime;
+    floor.emissiveIntensity = 0.3 + world.night * 1.2;
     acc.current += dt;
     if (acc.current < 0.07) return;
     acc.current = 0;
@@ -1549,35 +2053,50 @@ function Morpheus() {
     });
     tex.needsUpdate = true;
   });
+  const R = 4.8;
   return (
     <ZoneGroup id="morpheus">
-      <mesh position={[0, 0, -1]} rotation-z={0} material={arch} castShadow>
-        <torusGeometry args={[4.2, 0.28, 12, 48, Math.PI]} />
+      {/* the gate's floor: a dark glass disc with a green grid */}
+      <mesh position={[0, 0.04, -2]} rotation-x={-Math.PI / 2} material={floor} receiveShadow>
+        <circleGeometry args={[11.5, 64]} />
       </mesh>
-      {[-4.2, 4.2].map((x) => (
-        <group key={x} position={[x, 0, -1]}>
-          <mesh position={[0, 2.3, 0]} material={M.dark} castShadow>
-            <boxGeometry args={[1.4, 4.6, 1.4]} />
+      {/* the portal on its stepped plinth */}
+      <Solid w={11} d={2.6} position={[0, 0, -4]} />
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[0, 0.2 + i * 0.4, -4]} material={M.dark} castShadow receiveShadow>
+          <boxGeometry args={[11 - i * 1.6, 0.4, 2.6 - i * 0.5]} />
+        </mesh>
+      ))}
+      <group position={[0, R + 1.3, -4]}>
+        <mesh material={ring} castShadow>
+          <torusGeometry args={[R, 0.42, 16, 72]} />
+        </mesh>
+        <mesh material={M.dark}>
+          <torusGeometry args={[R + 0.55, 0.2, 10, 72]} />
+        </mesh>
+        <mesh material={portal}>
+          <circleGeometry args={[R - 0.2, 64]} />
+        </mesh>
+      </group>
+      {/* code-rain pillars either side */}
+      {[-7.2, 7.2].map((x) => (
+        <group key={x} position={[x, 0, -4]}>
+          <Solid w={1.5} d={1.5} />
+          <mesh position={[0, 3.2, 0]} material={M.dark} castShadow>
+            <boxGeometry args={[1.4, 6.4, 1.4]} />
           </mesh>
           {[0.71, -0.71].map((z) => (
-            <mesh key={z} position={[0, 2.3, z]} rotation-y={z > 0 ? 0 : Math.PI} material={mat}>
-              <planeGeometry args={[1.25, 4.4]} />
+            <mesh key={z} position={[0, 3.2, z]} rotation-y={z > 0 ? 0 : Math.PI} material={mat}>
+              <planeGeometry args={[1.25, 6.1]} />
             </mesh>
           ))}
         </group>
       ))}
-      <group ref={pills} position={[0, 3, -1]}>
-        <mesh position={[-0.7, 0, 0]} rotation-z={1.2}>
-          <capsuleGeometry args={[0.22, 0.5, 8, 16]} />
-          <meshStandardMaterial color="#ff2b2b" emissive="#ff2b2b" emissiveIntensity={0.6} />
-        </mesh>
-        <mesh position={[0.7, 0, 0]} rotation-z={-1.2}>
-          <capsuleGeometry args={[0.22, 0.5, 8, 16]} />
-          <meshStandardMaterial color="#2b6bff" emissive="#2b6bff" emissiveIntensity={0.6} />
-        </mesh>
-      </group>
+      {/* the choice */}
+      <PillPlinth color="#ff2b2b" label="RED PILL · WAKE UP" x={-4.2} />
+      <PillPlinth color="#2b6bff" label="BLUE PILL · SLEEP" x={4.2} />
       <MorpheusSigns />
-      <Billboard id="morpheus" pos={[0, 0, 5.5]} rotY={0} scale={0.85} />
+      <Billboard id="morpheus" pos={[-9.5, 0, 8.5]} rotY={0.6} scale={0.85} />
     </ZoneGroup>
   );
 }
@@ -1745,18 +2264,27 @@ function Lamps() {
   const poles = useRef<THREE.InstancedMesh>(null);
   const bulbs = useRef<THREE.InstancedMesh>(null);
   const glow = useGlow("#ffe3a1", 0.05, 3.2);
-  const N = 28;
+  const N = 40;
   useEffect(() => {
     const m = new THREE.Matrix4();
+    const spokes = ZONES.filter((z) => z.radius).map((z) => Math.atan2(zonePos(z)[1], zonePos(z)[0]));
+    let k = 0;
     for (let i = 0; i < N; i++) {
-      const a = (i / N) * Math.PI * 2;
-      const x = Math.cos(a) * (ROAD_R + 2.1),
-        z = Math.sin(a) * (ROAD_R + 2.1);
+      // nudge lamps that would stand in a boulevard mouth along the kerb, clear of the crossing
+      let a = (i / N) * Math.PI * 2;
+      for (const sp of spokes) {
+        const d = Math.atan2(Math.sin(a - sp), Math.cos(a - sp));
+        if (Math.abs(d) * ROAD_R < 4.5) a = sp + Math.sign(d || 1) * (4.5 / ROAD_R);
+      }
+      // alternate sides, on the back edge of each sidewalk
+      const rr = ROAD_R + (i % 2 ? -1 : 1) * (ROAD_HALF - 0.35);
+      const x = Math.cos(a) * rr,
+        z = Math.sin(a) * rr;
       const y = heightAt(x, z);
       m.makeTranslation(x, y + 1.3, z);
-      poles.current!.setMatrixAt(i, m);
+      poles.current!.setMatrixAt(k, m);
       m.makeTranslation(x, y + 2.7, z);
-      bulbs.current!.setMatrixAt(i, m);
+      bulbs.current!.setMatrixAt(k++, m);
     }
     poles.current!.instanceMatrix.needsUpdate = true;
     bulbs.current!.instanceMatrix.needsUpdate = true;
@@ -1776,7 +2304,7 @@ function Lamps() {
 /* ---------------- delivery drones between zones ---------------- */
 function Couriers() {
   const g = useRef<THREE.Group>(null);
-  const routes = useMemo(() => [0.9, 1.25, 1.6].map((s, i) => ({ r: 18 + i * 9, h: 13 + i * 2.5, s: 0.08 * s * (i % 2 ? -1 : 1), o: i * 2 })), []);
+  const routes = useMemo(() => [0.9, 1.25, 1.6].map((s, i) => ({ r: 26 + i * 13, h: 15 + i * 2.5, s: 0.06 * s * (i % 2 ? -1 : 1), o: i * 2 })), []);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     g.current?.children.forEach((d, i) => {
@@ -1815,7 +2343,7 @@ export default function Landmarks() {
       <Lamps />
       <Couriers />
       {ZONES.map((z) => (
-        <ZoneLabel key={z.id} id={z.id} y={z.id === "hq" ? 18 : z.id === "trading" ? 13 : 9} />
+        <ZoneLabel key={z.id} id={z.id} y={z.id === "hq" ? 18 : z.id === "trading" ? 19 : 9} />
       ))}
     </>
   );

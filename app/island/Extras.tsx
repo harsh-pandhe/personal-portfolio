@@ -140,7 +140,7 @@ function WorkshopLife() {
   return (
     <At id="workshop">
       {/* conveyor */}
-      <group position={[-3.5, 0, -4.4]} rotation-y={0.2}>
+      <group position={[5.5, 0, 0.8]}>
         <mesh position={[0, 0.7, 0]} castShadow>
           <boxGeometry args={[7.4, 0.2, 1.1]} />
           <meshStandardMaterial color="#2a2f36" roughness={0.6} />
@@ -161,7 +161,7 @@ function WorkshopLife() {
         </group>
       </group>
       {/* 3D printer */}
-      <group position={[5.8, 0, 2.2]}>
+      <group position={[-4, 0, -6.5]}>
         <mesh position={[0, 0.25, 0]}>
           <boxGeometry args={[1.6, 0.5, 1.6]} />
           <meshStandardMaterial color="#f2f3f5" roughness={0.5} />
@@ -234,19 +234,6 @@ function Pages() {
           </mesh>
         ))}
       </group>
-      {/* reading benches */}
-      {[-3, 3].map((x) => (
-        <group key={x} position={[x, 0, 3.4]}>
-          <mesh position={[0, 0.45, 0]} castShadow>
-            <boxGeometry args={[2.2, 0.12, 0.6]} />
-            <meshStandardMaterial color="#b07a4c" roughness={0.85} />
-          </mesh>
-          <mesh position={[0, 0.2, 0]}>
-            <boxGeometry args={[1.8, 0.4, 0.4]} />
-            <meshStandardMaterial color="#eef1f4" />
-          </mesh>
-        </group>
-      ))}
     </At>
   );
 }
