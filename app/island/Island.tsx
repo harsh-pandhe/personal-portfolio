@@ -229,7 +229,7 @@ function Loader() {
       </div>
       <div>
         <div className="mb-4 font-mono text-xs uppercase tracking-wider text-white/50">Spinning up rotors, waking the swarm…</div>
-        <div className="text-[22vw] font-semibold leading-[0.8] tracking-[-0.06em] tabular-nums">{String(Math.floor(shown)).padStart(2, "0")}</div>
+        <div className="font-display text-[22vw] font-semibold leading-[0.8] tracking-[-0.04em] tabular-nums">{String(Math.floor(shown)).padStart(2, "0")}</div>
       </div>
       <div className="absolute bottom-0 left-0 h-1.5 bg-gradient-to-r from-[#2d5bff] via-[#00d2ff] to-[#12f0c0]" style={{ width: `${shown}%` }} />
     </div>
@@ -505,7 +505,7 @@ function Hero() {
       />
       <div className={`pointer-events-none fixed bottom-[104px] left-4 right-4 z-20 sm:bottom-[46px] sm:left-[calc(var(--pl,376px)+20px)] sm:right-12 transition-all [transition-duration:1200ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] ${show ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
         <div className={`mb-3 text-[13px] font-medium sm:text-[15px] ${ui.night ? "text-white/80" : "text-neutral-800"}`}>Autonomous navigation & multi-agent robotics · SIT Lonavala</div>
-        <h1 className={`text-[clamp(46px,8.6vw,168px)] font-semibold leading-[0.86] tracking-[-0.065em] transition-colors duration-1000 ${ui.night ? "text-white" : "text-[#121417]"}`}>
+        <h1 className={`font-display text-[clamp(46px,8.6vw,168px)] font-semibold leading-[0.86] tracking-[-0.03em] transition-colors duration-1000 ${ui.night ? "text-white" : "text-[#121417]"}`}>
           A portfolio
           <br />
           you can <span className={`font-serif font-normal italic tracking-[-0.03em] ${ui.night ? "text-[#2ee0ff]" : "text-[#2d5bff]"}`}>fly</span> through.
@@ -569,7 +569,7 @@ function TourCard() {
           {String(ui.tour + 1).padStart(2, "0")} / {String(TOUR.length).padStart(2, "0")}
         </span>
       </div>
-      <h2 className="mt-3 text-[30px] font-semibold sm:text-[40px] leading-[0.95] tracking-[-0.05em]">{z.name}</h2>
+      <h2 className="mt-3 font-display text-[30px] font-semibold leading-[0.95] tracking-[-0.035em] sm:text-[40px]">{z.name}</h2>
       <p className="mt-2 text-[16px] font-medium leading-snug tracking-[-0.02em] text-neutral-800 sm:text-[18px]">{z.headline}</p>
       <p className="mt-3 line-clamp-3 text-[14px] leading-relaxed text-neutral-600 sm:line-clamp-none">{z.blurb}</p>
       <div className="mt-5 flex items-center gap-2">

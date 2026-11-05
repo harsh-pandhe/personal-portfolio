@@ -185,7 +185,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "board":
       return <ProjectBoard />;
     case "statement":
-      return <p className="max-w-[19ch] text-[clamp(30px,5vw,84px)] font-semibold leading-[1.02] tracking-[-0.045em]">{s.text}</p>;
+      return <p className="max-w-[19ch] font-display text-[clamp(30px,5vw,84px)] font-semibold leading-[1.02] tracking-[-0.03em]">{s.text}</p>;
     case "quote":
       return (
         <figure>
@@ -198,7 +198,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "text":
       return (
         <Row label={s.label}>
-          {s.title && <h3 className="mb-5 max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}
+          {s.title && <h3 className="mb-5 max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}
           <p className="max-w-[60ch] text-[17px] leading-relaxed text-white/80">{s.body}</p>
         </Row>
       );
@@ -217,7 +217,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "steps":
       return (
         <div>
-          <Row label={s.label}>{s.title && <h3 className="max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}</Row>
+          <Row label={s.label}>{s.title && <h3 className="max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}</Row>
           <div className="mt-8 grid grid-cols-1">
             {s.items.map((it, i) => (
               <Reveal key={it.title} delay={i * 50}>
@@ -280,7 +280,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
       return (
         <div>
           <Row label={s.label}>
-            <h3 className="max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">What each paper found.</h3>
+            <h3 className="max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">What each paper found.</h3>
           </Row>
           <div className="mt-8">
             <PaperCards area={s.area} accent={accent} />
@@ -304,7 +304,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
           {/* hero */}
           <section className="px-4 pt-8 sm:px-10 sm:pt-14">
             <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-[1fr_minmax(220px,30%)] md:gap-10">
-              <Title className="text-[clamp(44px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
+              <Title className="font-display text-[clamp(44px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.03em]">
                 {c.titleLines.map((l, i) => (
                   <span
                     key={l}
@@ -320,7 +320,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
                 <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: z.accent }}>
                   {z.team}
                 </span>
-                <p className="mt-2 text-[clamp(18px,1.6vw,26px)] font-semibold leading-snug tracking-[-0.02em] text-white">{z.headline}</p>
+                <p className="mt-2 font-display text-[clamp(18px,1.6vw,26px)] font-semibold leading-snug tracking-[-0.02em] text-white">{z.headline}</p>
               </aside>
             </div>
             <div className="mb-8 mt-8 grid grid-cols-2 gap-2 sm:mb-10 sm:mt-12 lg:grid-cols-4 lg:gap-2.5 font-mono text-[12.5px] uppercase leading-snug">
@@ -344,7 +344,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
 
           <Reveal>
             <div className="grid grid-cols-1 items-end gap-6 px-4 pb-10 pt-16 sm:px-10 sm:pb-16 sm:pt-28 md:grid-cols-[minmax(0,1fr)_minmax(220px,32%)] md:gap-10">
-              <p className="max-w-[22ch] text-[clamp(28px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.045em]">{c.hook}</p>
+              <p className="max-w-[22ch] font-display text-[clamp(28px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.03em]">{c.hook}</p>
               <p className="mb-2 border-t border-white/15 pt-4 text-[16px] leading-relaxed text-white/65">{z.blurb}</p>
             </div>
           </Reveal>
@@ -379,7 +379,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
                 <Reveal key={m.label} delay={i * 70}>
                   <div className="h-full rounded-[20px] border border-white/14 bg-[linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02))] px-5 pb-6 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_30px_50px_-30px_rgba(0,0,0,.8)] transition-transform duration-500 hover:[transform:perspective(800px)_translateY(-6px)_rotateX(8deg)]">
                     <b
-                      className="block bg-clip-text text-[clamp(32px,4.4vw,72px)] font-semibold leading-[0.92] tracking-[-0.06em] text-transparent"
+                      className="block bg-clip-text font-display text-[clamp(32px,4.4vw,72px)] font-semibold leading-[0.92] tracking-[-0.04em] text-transparent"
                       style={{ backgroundImage: `linear-gradient(180deg,#fff, color-mix(in srgb, ${z.accent} 70%, #fff))` }}
                     >
                       <CountUp value={m.value} />
@@ -430,7 +430,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
           >
             <span>
               <span className="block font-mono text-[12px] uppercase text-white/45">Next place</span>
-              <b className="mt-2 block text-[clamp(36px,6vw,104px)] font-semibold leading-[0.9] tracking-[-0.06em] transition-colors duration-500 group-hover:text-[var(--accent)]" style={{ ["--accent" as string]: next.accent }}>
+              <b className="mt-2 block font-display text-[clamp(36px,6vw,104px)] font-semibold leading-[0.9] tracking-[-0.04em] transition-colors duration-500 group-hover:text-[var(--accent)]" style={{ ["--accent" as string]: next.accent }}>
                 {next.name}
               </b>
             </span>

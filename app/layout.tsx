@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { DM_Mono, Instrument_Serif, Inter_Tight, Press_Start_2P } from "next/font/google";
+import { Bricolage_Grotesque, DM_Mono, Instrument_Serif, Inter_Tight, Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
+// Bricolage Grotesque for display headlines (variable: optical size and width), Inter Tight for text
+const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display", axes: ["opsz", "wdth"] });
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", weight: ["400", "500", "600", "700"] });
 const serif = Instrument_Serif({ subsets: ["latin"], variable: "--font-serif", weight: "400", style: ["normal", "italic"] });
 const pixel = Press_Start_2P({ subsets: ["latin"], variable: "--font-pixel", weight: "400" });
@@ -48,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${sans.variable} ${serif.variable} ${mono.variable} ${pixel.variable} font-sans antialiased`}>
+      <body className={`${display.variable} ${sans.variable} ${serif.variable} ${mono.variable} ${pixel.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

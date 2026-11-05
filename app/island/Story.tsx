@@ -253,7 +253,7 @@ export function StoryOverlay() {
             <div className="font-mono text-[12px] uppercase tracking-[0.3em] text-white/75">
               {c.kicker} · <span className="text-white/50">{SHOT_NAMES[shot]} shot</span>
             </div>
-            <div className="mt-2 text-[clamp(34px,6vw,96px)] font-semibold leading-[0.9] tracking-[-0.055em]">{c.title}</div>
+            <div className="mt-2 font-display text-[clamp(34px,6vw,96px)] font-semibold leading-[0.9] tracking-[-0.038em]">{c.title}</div>
           </div>
           {/* the chapter's film: a Google Flow clip, picture-in-picture */}
           {film && c.clip && (
@@ -355,7 +355,7 @@ export function GalaOverlay() {
         <>
           <div key={idx} className="absolute inset-x-0 bottom-[7vh] animate-[rise_1.2s_cubic-bezier(.16,1,.3,1)_both] text-center text-white">
             <div className="font-mono text-[12px] uppercase tracking-[0.35em] text-white/60">Gala night · formation {String((idx ?? 0) + 1).padStart(2, "0")}</div>
-            <div className="mt-3 px-4 text-[clamp(32px,5vw,84px)] font-semibold leading-none tracking-[-0.05em]" style={{ textShadow: `0 0 40px ${s.color}88` }}>
+            <div className="mt-3 px-4 font-display text-[clamp(32px,5vw,84px)] font-semibold leading-none tracking-[-0.035em]" style={{ textShadow: `0 0 40px ${s.color}88` }}>
               {s.caption}
             </div>
             <div className="mt-3 px-4 text-[14px] text-white/75 sm:text-[17px]">{s.sub}</div>
