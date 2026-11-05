@@ -400,7 +400,7 @@ const VILLAGERS: Villager[] = [
   },
   {
     key: "rope", zone: "ropeway", role: "Ropeway engineer", tint: "#e5322d", anim: "Wave", side: 1,
-    thoughts: ["Two points in, an alignment out.", "Checked against 12 real lines.", "Eurocode says the sag is fine.", "Cabin 3 is running a bit warm."],
+    thoughts: ["Two points in, an alignment out.", "Checked against 19 real lines.", "Eurocode says the sag is fine.", "Cabin 3 is running a bit warm."],
     ask: "Ask me what Harsh built at Doppelmayr?",
   },
   {

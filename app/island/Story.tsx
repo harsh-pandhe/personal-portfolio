@@ -66,7 +66,7 @@ export const CHAPTERS: Chapter[] = [
     zone: "ropeway",
     kicker: "Chapter 6",
     title: "On the ropes",
-    lines: ["Six months at Doppelmayr, the Austrian ropeway company.", "RopeIQ: two coordinates in, a permit-grade alignment out — checked against 12 real installations."],
+    lines: ["Six months at Doppelmayr, the Austrian ropeway company.", "RopeIQ: two coordinates in, a permit-grade alignment out — checked against 19 real installations."],
     clip: "ropeway-aerial",
     dist: 42,
     height: 12,

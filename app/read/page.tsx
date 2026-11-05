@@ -51,6 +51,9 @@ export default function ReadPage() {
           ·{" "}
           <a className="hover:text-white" href={profile.links.ssrn}>
             SSRN
+          </a> ·{" "}
+          <a className="hover:text-white" href={profile.links.devto}>
+            dev.to
           </a>
         </span>
       </footer>
