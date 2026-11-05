@@ -74,10 +74,10 @@ function Deferred({ step, children }: { step: number; children: React.ReactNode 
 
 /** dev only: expose the three.js scene to the console for measuring and debugging */
 function DevHandle() {
-  const scene = useThree((s) => s.scene);
+  const { scene, camera, gl } = useThree();
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") Object.assign(window, { __scene: scene, __THREE: THREE });
-  }, [scene]);
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __scene: scene, __camera: camera, __gl: gl, __THREE: THREE });
+  }, [scene, camera, gl]);
   return null;
 }
 
