@@ -253,10 +253,14 @@ export function Singapore() {
     d = 150;
   return (
     <group position={[Math.cos(a) * d, 0, Math.sin(a) * d]} rotation-y={-a - Math.PI / 2}>
-      {/* the bay front */}
-      <mesh position={[0, -0.9, -8]}>
+      {/* the bay front: grassy land raised above the water, with a sand edge facing the island */}
+      <mesh position={[0, -0.4, -8]} receiveShadow>
         <boxGeometry args={[150, 2, 40]} />
-        <meshStandardMaterial color="#b9c4b4" roughness={1} />
+        <meshStandardMaterial color="#8fa98a" roughness={1} />
+      </mesh>
+      <mesh position={[0, -0.65, 13.5]}>
+        <boxGeometry args={[150, 2, 3]} />
+        <meshStandardMaterial color="#e8d9ae" roughness={1} />
       </mesh>
       {/* Marina Bay Sands: three slightly leaning towers and the SkyPark ship across the top */}
       <group position={[0, 0, -10]} scale={1.4}>

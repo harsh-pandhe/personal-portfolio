@@ -527,16 +527,16 @@ export function Shore() {
 const NAV_GEO = new THREE.SphereGeometry(0.2, 8, 6);
 type Lane = { kind: "cargo" | "ferry" | "sail"; ang: number; off: number; len: number; speed: number; phase: number; tint: string };
 const LANES: Lane[] = [
-  { kind: "cargo", ang: 0.35, off: 134, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" },
-  { kind: "cargo", ang: 0.35, off: 148, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
-  { kind: "cargo", ang: 2.1, off: 166, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" },
-  { kind: "ferry", ang: 1.2, off: 108, len: 360, speed: 4.6, phase: 0.1, tint: "#ffffff" },
-  { kind: "ferry", ang: 2.9, off: 120, len: 380, speed: -4.0, phase: 0.6, tint: "#ffffff" },
-  { kind: "sail", ang: 0.9, off: 90, len: 220, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
-  { kind: "sail", ang: 1.7, off: 96, len: 220, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
-  { kind: "sail", ang: 2.5, off: 86, len: 200, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
-  { kind: "sail", ang: 3.8, off: 92, len: 220, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
-  { kind: "sail", ang: 4.6, off: 100, len: 240, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
+  { kind: "cargo", ang: 3.5, off: 120, len: 420, speed: 3.2, phase: 0, tint: "#c2382f" }, // west, clear of both far shores
+  { kind: "cargo", ang: 3.5, off: 134, len: 420, speed: -2.6, phase: 0.55, tint: "#1f4fa8" },
+  { kind: "cargo", ang: 2.1, off: 108, len: 460, speed: 2.4, phase: 0.2, tint: "#2c7a4b" }, // inside Singapore's bay, never through it
+  { kind: "ferry", ang: 1.75, off: 100, len: 260, speed: 4.6, phase: 0.1, tint: "#ffffff" },
+  { kind: "ferry", ang: 3.9, off: 110, len: 260, speed: -4.0, phase: 0.6, tint: "#ffffff" },
+  { kind: "sail", ang: 0.9, off: 90, len: 160, speed: 1.6, phase: 0.3, tint: "#ff5a6e" },
+  { kind: "sail", ang: 1.7, off: 96, len: 160, speed: -1.4, phase: 0.7, tint: "#ffd23f" },
+  { kind: "sail", ang: 2.5, off: 86, len: 160, speed: 1.2, phase: 0.45, tint: "#12f0c0" },
+  { kind: "sail", ang: 3.8, off: 92, len: 160, speed: -1.7, phase: 0.15, tint: "#2d5bff" },
+  { kind: "sail", ang: 4.6, off: 100, len: 160, speed: 1.5, phase: 0.85, tint: "#ff8a3d" },
 ];
 
 function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: { red: THREE.Material; green: THREE.Material; white: THREE.Material; win: THREE.Material } }) {
