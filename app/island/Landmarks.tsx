@@ -1208,7 +1208,15 @@ function IndustrialArm() {
   );
 }
 
+const WS_GLB = "/models/workshop.glb";
+useGLTF.preload(WS_GLB, false, true);
 function Workshop() {
+  const { scene: wsScene } = useGLTF(WS_GLB, false, true);
+  const shed = useMemo(() => {
+    const c = wsScene.clone(true);
+    c.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = o.receiveShadow = true) : null));
+    return c;
+  }, [wsScene]);
   const crates = useMemo(() => {
     const r = rng(9);
     return Array.from({ length: 9 }, (_, i) => ({
@@ -1219,20 +1227,8 @@ function Workshop() {
   }, []);
   return (
     <ZoneGroup id="workshop">
-      {/* sawtooth shed */}
-      <group position={[3.5, 0, -3]}>
-        <mesh position={[0, 1.8, 0]} material={M.white} castShadow receiveShadow>
-          <boxGeometry args={[7, 3.6, 4.5]} />
-        </mesh>
-        {[-2.3, 0, 2.3].map((x) => (
-          <mesh key={x} position={[x, 4.05, 0]} rotation-z={0.5} material={M.metal} castShadow>
-            <boxGeometry args={[2.6, 0.12, 4.6]} />
-          </mesh>
-        ))}
-        <mesh position={[0, 1.3, 2.26]} material={M.dark}>
-          <boxGeometry args={[3, 2.6, 0.02]} />
-        </mesh>
-      </group>
+      {/* the makerspace, modelled in Blender (public/models/workshop.glb) */}
+      <primitive object={shed} position={[3.8, 0, -4]} />
       <group position={[-1.5, 0, 1]} scale={1.15}>
         <IndustrialArm />
       </group>
@@ -1242,7 +1238,7 @@ function Workshop() {
           <meshStandardMaterial color={q.c} roughness={0.6} />
         </mesh>
       ))}
-      <Billboard id="workshop" pos={[2.5, 0, 5.5]} rotY={-0.3} scale={0.9} />
+      <Billboard id="workshop" pos={[9, 0, 6]} rotY={-0.5} scale={0.9} />
     </ZoneGroup>
   );
 }
