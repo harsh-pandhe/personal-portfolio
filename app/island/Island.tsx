@@ -3,7 +3,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
 import Decor from "./Decor";
@@ -24,6 +24,35 @@ import { zoneById, ZONES } from "./zones";
 import { profile } from "@/lib/achievements";
 
 /* ---------------- 3D scene ---------------- */
+/** Build every shader under this group off the main thread (KHR_parallel_shader_compile) before it
+ *  is drawn, so mounting it never freezes a frame. */
+function Warm({ children, onReady }: { children: React.ReactNode; onReady?: () => void }) {
+  const ref = useRef<THREE.Group>(null);
+  const { gl, camera, scene } = useThree();
+  const [ready, setReady] = useState(false);
+  useLayoutEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    let live = true;
+    // compile while visible (compile skips hidden objects), then hide until the programs are linked
+    g.visible = true;
+    const p = gl.compileAsync(g, camera, scene);
+    g.visible = false;
+    p.catch(() => undefined).then(() => {
+      if (!live) return;
+      setReady(true);
+      onReady?.();
+    });
+    return () => void (live = false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <group ref={ref} visible={ready}>
+      {children}
+    </group>
+  );
+}
+
 /** Mount children once the loader is gone, `step` idle slots later (~350 ms apart). */
 function Deferred({ step, children }: { step: number; children: React.ReactNode }) {
   const loaded = useUI().loaded;
@@ -34,7 +63,11 @@ function Deferred({ step, children }: { step: number; children: React.ReactNode 
     const t = setTimeout(() => (ric ? ric(() => setOn(true), { timeout: 1200 }) : setOn(true)), 250 + step * 350);
     return () => clearTimeout(t);
   }, [loaded, on, step]);
-  return on ? <Suspense fallback={null}>{children}</Suspense> : null;
+  return on ? (
+    <Suspense fallback={null}>
+      <Warm>{children}</Warm>
+    </Suspense>
+  ) : null;
 }
 
 /** dev only: expose the three.js scene to the console for measuring and debugging */
@@ -46,11 +79,27 @@ function DevHandle() {
   return null;
 }
 
+/** Mounts once every asset of the first screen has loaded (it sits last inside the Suspense);
+ *  compiles the whole scene's shaders, then tells the loader it may lift. */
+function FirstScreenReady() {
+  const { gl, camera, scene } = useThree();
+  useEffect(() => {
+    let live = true;
+    gl.compileAsync(scene, camera)
+      .catch(() => undefined)
+      .then(() => live && setUI({ compiled: true }));
+    return () => void (live = false);
+  }, [gl, camera, scene]);
+  return null;
+}
+
 const LITE = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("lite");
 
 function Scene() {
   // start crisp, step down if the frame rate drops
   const [dpr, setDpr] = useState(LITE ? 0.75 : 1.5);
+  // shadows start at 2048 for a quick first screen and go to 4096 once the frame rate allows
+  const [sharp, setSharp] = useState(false);
   return (
     <Canvas
       shadows={!LITE}
@@ -60,11 +109,21 @@ function Scene() {
       style={{ position: "fixed", inset: 0 }}
       onPointerMissed={() => (document.body.style.cursor = "")}
     >
-      <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(0.8, d - 0.25))} onIncline={() => setDpr((d) => Math.min(LITE ? 0.75 : 1.75, d + 0.25))} flipflops={4} />
+      <PerformanceMonitor
+        onDecline={() => {
+          setDpr((d) => Math.max(0.8, d - 0.25));
+          setSharp(false);
+        }}
+        onIncline={() => {
+          setDpr((d) => Math.min(LITE ? 0.75 : 1.75, d + 0.25));
+          setSharp(true);
+        }}
+        flipflops={4}
+      />
       <AdaptiveDpr pixelated={false} />
       <fog attach="fog" args={["#cdeeff", 150, 430]} />
       <SkyDome />
-      <Lights />
+      <Lights shadowSize={sharp ? 4096 : 2048} />
       <Environment resolution={LITE ? 64 : 256} frames={1}>
         <Lightformer intensity={2.2} position={[0, 6, -9]} scale={[14, 4, 1]} color="#ffffff" />
         <Lightformer intensity={1.2} position={[-9, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 3, 1]} color="#bfe8ff" />
@@ -87,6 +146,7 @@ function Scene() {
         <LightShow />
         <LaunchDeck />
         <JourneyPlaza />
+        <FirstScreenReady />
       </Suspense>
       {/* everything decorative mounts after the hero has painted, a piece at a time, so the
           first screen doesn't stutter while ~40k grass blades, crowds and GLB clones compile */}
@@ -126,6 +186,7 @@ function Scene() {
 /* ---------------- loader ---------------- */
 function Loader() {
   const { progress, active } = useProgress();
+  const compiled = useUI().compiled;
   const [gone, setGone] = useState(false);
   const [shown, setShown] = useState(0);
   useEffect(() => {
@@ -135,21 +196,22 @@ function Loader() {
       const dt = Math.min((now - last) / 1000, 0.25);
       last = now;
       // time-based so slow machines don't sit on the loader
-      setShown((s) => Math.min(s + dt * 90, progress >= 100 ? 100 : Math.max(progress, 5) * 0.99));
+      // assets fill the first 90%, compiling the first screen's shaders the last 10%
+      setShown((s) => Math.min(s + dt * 90, getUI().compiled ? 100 : Math.max(progress, 5) * 0.9));
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [progress]);
   useEffect(() => {
-    if (!active && progress >= 100 && shown >= 99.5) {
+    if (!active && compiled && shown >= 99.5) {
       const t = setTimeout(() => {
         setGone(true);
         setUI({ loaded: true });
       }, 300);
       return () => clearTimeout(t);
     }
-  }, [active, progress, shown]);
+  }, [active, compiled, shown]);
   return (
     <div
       className={`fixed inset-0 z-[100] flex flex-col justify-between bg-[#0a0a0a] p-10 text-[#f3f3f1] transition-[clip-path] [transition-duration:1100ms] [transition-timing-function:cubic-bezier(.76,0,.24,1)] ${

@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { heightAt, ISLAND_EDGE, MARS_C, MARS_R, rng, ROAD_HALF, ROAD_R, zoneFlatR } from "./terrain";
 import { zoneById, zonePos, ZONES, type ZoneId } from "./zones";
 import { addCollider, zoneToWorld } from "./colliders";
-import { Bench, Planter } from "./Props";
+import { Bench, Planter, Static } from "./Props";
 
 const m4 = new THREE.Matrix4();
 const q = new THREE.Quaternion();
@@ -88,7 +88,7 @@ function PlazaFurniture() {
     []
   );
   return (
-    <>
+    <Static>
       {list.map((b) => (
         <group key={b.key}>
           <group position={[b.x, b.y, b.z]} rotation-y={b.yaw}>
@@ -99,7 +99,7 @@ function PlazaFurniture() {
           </group>
         </group>
       ))}
-    </>
+    </Static>
   );
 }
 

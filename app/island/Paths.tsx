@@ -68,6 +68,10 @@ function slab(pts: THREE.Vector2[], a: number, b: number, h: number, closed = fa
   const idx: number[] = [];
   const n = pts.length;
   const rows: { x: number; z: number; y: number }[][] = [];
+  // sample the ground every ~0.8 m across the slab too, so a crowned or sloping road never lets
+  // the terrain poke through the middle of it
+  const cols = Math.max(1, Math.ceil(Math.abs(b - a) / 0.8));
+  const offs = Array.from({ length: cols + 1 }, (_, k) => a + ((b - a) * k) / cols);
   let run = 0;
   const runs: number[] = [];
   for (let i = 0; i < n; i++) {
@@ -78,7 +82,7 @@ function slab(pts: THREE.Vector2[], a: number, b: number, h: number, closed = fa
     if (i > 0) run += p.distanceTo(pts[i - 1]);
     runs.push(run);
     rows.push(
-      [a, b].map((o) => {
+      offs.map((o) => {
         const x = p.x - t.y * o,
           z = p.y + t.x * o;
         return { x, z, y: heightAt(x, z) };
@@ -100,16 +104,16 @@ function slab(pts: THREE.Vector2[], a: number, b: number, h: number, closed = fa
       prev = cur;
     }
   };
-  const w = Math.abs(b - a);
-  strip((i) => [
-    [rows[i][0].x, rows[i][0].y + h, rows[i][0].z, 0, runs[i]],
-    [rows[i][1].x, rows[i][1].y + h, rows[i][1].z, w, runs[i]],
-  ]);
+  for (let k = 0; k < cols; k++)
+    strip((i) => [
+      [rows[i][k].x, rows[i][k].y + h, rows[i][k].z, Math.abs(offs[k] - a), runs[i]],
+      [rows[i][k + 1].x, rows[i][k + 1].y + h, rows[i][k + 1].z, Math.abs(offs[k + 1] - a), runs[i]],
+    ]);
   if (h > 0.02)
     for (const e of [0, 1]) {
       const sgn = e ? 1 : -1;
       strip((i) => {
-        const q = rows[i][e];
+        const q = rows[i][e ? cols : 0];
         const top: [number, number, number, number, number] = [q.x, q.y + h, q.z, 0, runs[i]];
         const bot: [number, number, number, number, number] = [q.x, q.y - 0.25, q.z, h + 0.25, runs[i]];
         return sgn > 0 === b > a ? [top, bot] : [bot, top];
@@ -210,7 +214,7 @@ function Roads() {
     const out: { g: THREE.BufferGeometry; m: THREE.Material }[] = [];
     const ring = circle(ROAD_R, 300);
     // carriageway: two 3.5 m lanes, solid white edge lines
-    out.push({ g: slab(ring, -LANE_W, LANE_W, 0.04, true), m: M.asphalt });
+    out.push({ g: slab(ring, -LANE_W, LANE_W, 0.05, true), m: M.asphalt });
     for (const s of [-1, 1]) out.push({ g: slab(ring, s * (LANE_W - 0.35), s * (LANE_W - 0.2), 0.05, true), m: M.line });
     // raised kerbs and concrete sidewalks, broken where each boulevard crosses at a zebra
     for (const s of [-1, 1]) {

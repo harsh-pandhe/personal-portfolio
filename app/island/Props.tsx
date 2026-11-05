@@ -2,7 +2,8 @@
 
 // Small street furniture shared by every zone: benches, flags, lamp posts, planters.
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { addCollider } from "./colliders";
 import * as THREE from "three";
 import { world } from "./store";
@@ -119,7 +120,11 @@ export function Flag({ kind = "india", height = 6, width = 1.8, phase = 0 }: { k
     }
     return new THREE.MeshStandardMaterial({ color: kind, side: THREE.DoubleSide, roughness: 0.85 });
   }, [kind]);
-  useFrame(({ clock }) => {
+  const at = useRef<THREE.Group>(null);
+  const wp = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ clock, camera }) => {
+    // cloth is only worth simulating where you can see it ripple
+    if (at.current && camera.position.distanceTo(at.current.getWorldPosition(wp)) > 70) return;
     const t = clock.elapsedTime * (1 + world.rain * 0.8) + phase;
     const pos = geo.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {
@@ -144,7 +149,9 @@ export function Flag({ kind = "india", height = 6, width = 1.8, phase = 0 }: { k
       <mesh position={[0, height + 0.08, 0]} material={MAT.pole}>
         <sphereGeometry args={[0.09, 12, 8]} />
       </mesh>
-      <mesh geometry={geo} material={mat} position={[0.05, height - H / 2 - 0.12, 0]} castShadow />
+      <group ref={at} userData={{ dynamic: true }}>
+        <mesh geometry={geo} material={mat} position={[0.05, height - H / 2 - 0.12, 0]} castShadow />
+      </group>
     </group>
   );
 }
@@ -221,4 +228,58 @@ export function Solid({ w, d, r, position }: { w?: number; d?: number; r?: numbe
     return addCollider({ kind: "box", x: _p.x, z: _p.z, hw: ((w ?? 1) * _s.x) / 2, hd: ((d ?? 1) * _s.z) / 2, rot: yaw });
   }, [w, d, r]);
   return <group ref={ref} position={position} />;
+}
+
+/** Merge every static mesh under `root` into one mesh per material (and shadow flags), in root's
+ *  own frame, and drop the originals. Turns a few hundred small boxes into a handful of draw calls.
+ *  Skips instanced and skinned meshes, multi-material meshes, anything with pointer handlers and
+ *  anything flagged `userData.dynamic`. */
+export function bakeStatic(root: THREE.Object3D) {
+  root.updateWorldMatrix(true, true);
+  const inv = root.matrixWorld.clone().invert();
+  const buckets = new Map<string, { mat: THREE.Material; cast: boolean; recv: boolean; geos: THREE.BufferGeometry[] }>();
+  const drop: THREE.Mesh[] = [];
+  const m4 = new THREE.Matrix4();
+  root.traverse((o) => {
+    const m = o as THREE.Mesh & { __r3f?: { handlers?: Record<string, unknown> } };
+    if (!m.isMesh || (m as unknown as THREE.InstancedMesh).isInstancedMesh || (m as unknown as THREE.SkinnedMesh).isSkinnedMesh) return;
+    if (Array.isArray(m.material) || m.userData.dynamic || !m.visible) return;
+    if (m.__r3f?.handlers && Object.keys(m.__r3f.handlers).length) return;
+    for (let p = m.parent; p && p !== root; p = p.parent) if (p.userData.dynamic) return;
+    let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
+    g.applyMatrix4(m4.multiplyMatrices(inv, m.matrixWorld));
+    if (!g.attributes.normal) g.computeVertexNormals();
+    if (!g.attributes.uv) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    const keep = new THREE.BufferGeometry();
+    for (const k of ["position", "normal", "uv"]) keep.setAttribute(k, g.attributes[k]);
+    g = keep;
+    const key = `${m.material.uuid}|${m.castShadow}|${m.receiveShadow}`;
+    const b = buckets.get(key) ?? { mat: m.material, cast: m.castShadow, recv: m.receiveShadow, geos: [] };
+    b.geos.push(g);
+    buckets.set(key, b);
+    drop.push(m);
+  });
+  if (drop.length < 4) return; // nothing worth merging
+  for (const m of drop) m.parent?.remove(m);
+  for (const b of buckets.values()) {
+    const merged = mergeGeometries(b.geos, false);
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, b.mat);
+    mesh.castShadow = b.cast;
+    mesh.receiveShadow = b.recv;
+    root.add(mesh);
+  }
+}
+
+/** Children of this group are static: after they mount they are merged per material (bakeStatic). */
+export function Static({ children, ...rest }: { children: React.ReactNode } & Omit<React.ComponentProps<"group">, "children">) {
+  const ref = useRef<THREE.Group>(null);
+  useLayoutEffect(() => {
+    if (ref.current) bakeStatic(ref.current);
+  }, []);
+  return (
+    <group ref={ref} {...rest}>
+      {children}
+    </group>
+  );
 }

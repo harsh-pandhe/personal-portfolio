@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { Flag, Solid } from "./Props";
+import { Flag, Solid, Static } from "./Props";
 import { Billboard, fontFamily, M, Quad, useGlow, ZoneGroup } from "./Landmarks";
 import { rng } from "./terrain";
 import { world } from "./store";
@@ -345,6 +345,10 @@ function FinalsArch() {
   );
 }
 
+const CRATER = new THREE.MeshStandardMaterial({ color: "#7a2f19", roughness: 1 });
+const RIM = new THREE.MeshStandardMaterial({ color: "#b14a28", roughness: 1, flatShading: true });
+const ROCK = new THREE.MeshStandardMaterial({ color: "#8a3a1f", roughness: 1, flatShading: true });
+
 export function MarsYard() {
   const scan = useRef<THREE.Mesh>(null);
   const scanMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#ff5a36", transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }), []);
@@ -382,6 +386,7 @@ export function MarsYard() {
   };
   return (
     <ZoneGroup id="marsyard">
+      <Static>
       {/* boundary: a low barrier and a safety net on poles */}
       {posts.map(([x, z], i) => (
         <mesh key={i} position={[x, 2, z]} material={M.metal}>
@@ -424,22 +429,20 @@ export function MarsYard() {
       <IcePatch />
       {CRATERS.map(([x, z, r], i) => (
         <group key={i} position={[x, 0, z]}>
-          <mesh position={[0, 0.03, 0]} rotation-x={-Math.PI / 2}>
+          <mesh position={[0, 0.03, 0]} rotation-x={-Math.PI / 2} material={CRATER}>
             <circleGeometry args={[r, 28]} />
-            <meshStandardMaterial color="#7a2f19" roughness={1} />
           </mesh>
-          <mesh position={[0, 0.08, 0]} rotation-x={-Math.PI / 2} castShadow>
+          <mesh position={[0, 0.08, 0]} rotation-x={-Math.PI / 2} castShadow material={RIM}>
             <torusGeometry args={[r, 0.32, 8, 28]} />
-            <meshStandardMaterial color="#b14a28" roughness={1} flatShading />
           </mesh>
         </group>
       ))}
       {rocks.map((q, i) => (
-        <mesh key={i} position={q.p} rotation={[q.rot, q.rot * 2, 0]} scale={q.s} castShadow>
+        <mesh key={i} position={q.p} rotation={[q.rot, q.rot * 2, 0]} scale={q.s} castShadow material={ROCK}>
           <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#8a3a1f" roughness={1} flatShading />
         </mesh>
       ))}
+      </Static>
       <FlyingQuad path={lead} scale={3.4} scanRef={scan} />
       <mesh ref={scan} material={scanMat}>
         <coneGeometry args={[1.6, 1, 24, 1, true]} />

@@ -71,7 +71,7 @@ export function roadMask(x: number, z: number) {
   }
   // the ring road (carriageway, kerbs and sidewalks: ROAD_HALF either side) is wider than the boulevards
   const ring = Math.abs(r - ROAD_R) === d;
-  return 1 - ss(ring ? ROAD_HALF + 0.4 : 3.6, ring ? ROAD_HALF + 2 : 5, d);
+  return 1 - ss(ring ? ROAD_HALF + 0.4 : 2.9, ring ? ROAD_HALF + 2 : 3.9, d);
 }
 
 /** Level pads cut into slopes for things that need flat ground (ropeway stations, lighthouse). */
@@ -144,16 +144,64 @@ const C = {
   plaza: new THREE.Color("#eef1f4"),
 };
 
-export function buildTerrain(size = 260, seg = 330) {
+/* A cached grid of the ground: heights at every terrain vertex (the mesh is drawn from the same
+   samples, so bilinear lookups match what you see) and a free-land mask for scattering grass and
+   flowers. Built once, on first use; tens of thousands of lookups then cost almost nothing. */
+const GRID = { size: 260, seg: 330, h: null as Float32Array | null, free: null as Uint8Array | null };
+const gridN = () => GRID.seg + 1;
+const toGrid = (v: number) => ((v + GRID.size / 2) / GRID.size) * GRID.seg;
+function heightGrid() {
+  if (GRID.h) return GRID.h;
+  const n = gridN();
+  const h = new Float32Array(n * n);
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++) h[i * n + j] = heightAt(-GRID.size / 2 + (GRID.size * j) / GRID.seg, -GRID.size / 2 + (GRID.size * i) / GRID.seg);
+  return (GRID.h = h);
+}
+/** Ground height from the cached grid (bilinear); use for placing many decorative instances. */
+export function heightFast(x: number, z: number) {
+  const h = heightGrid();
+  const n = gridN();
+  const gx = Math.min(Math.max(toGrid(x), 0), GRID.seg - 1e-4),
+    gz = Math.min(Math.max(toGrid(z), 0), GRID.seg - 1e-4);
+  const j = Math.floor(gx),
+    i = Math.floor(gz),
+    fx = gx - j,
+    fz = gz - i;
+  const a = h[i * n + j],
+    b = h[i * n + j + 1],
+    c = h[(i + 1) * n + j],
+    d = h[(i + 1) * n + j + 1];
+  return (a * (1 - fx) + b * fx) * (1 - fz) + (c * (1 - fx) + d * fx) * fz;
+}
+/** isFreeLand from the cached grid (nearest cell); for grass and flowers. */
+export function freeFast(x: number, z: number) {
+  if (!GRID.free) {
+    const n = gridN();
+    const f = new Uint8Array(n * n);
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) f[i * n + j] = isFreeLand(-GRID.size / 2 + (GRID.size * j) / GRID.seg, -GRID.size / 2 + (GRID.size * i) / GRID.seg) ? 1 : 0;
+    GRID.free = f;
+  }
+  const j = Math.round(toGrid(x)),
+    i = Math.round(toGrid(z));
+  if (i < 0 || j < 0 || i > GRID.seg || j > GRID.seg) return false;
+  return GRID.free[i * gridN() + j] === 1;
+}
+
+export function buildTerrain() {
+  const { size, seg } = GRID;
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position as THREE.BufferAttribute;
   const cols = new Float32Array(pos.count * 3);
   const c = new THREE.Color();
+  const H = heightGrid();
+  const N = gridN();
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i),
       z = pos.getZ(i);
-    const h = heightAt(x, z);
+    const h = H[Math.round(toGrid(z)) * N + Math.round(toGrid(x))];
     pos.setY(i, h);
     const r = Math.hypot(x, z);
     const n = 0.5 + 0.5 * Math.sin(x * 0.7 + Math.sin(z * 0.5) * 2) * Math.cos(z * 0.6);

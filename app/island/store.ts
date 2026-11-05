@@ -29,6 +29,7 @@ type UI = {
   tour: number; // index into TOUR
   night: boolean;
   loaded: boolean;
+  compiled: boolean; // shaders for the first screen are built
   medals: number[]; // indices of found medals
   weatherMode: "live" | "clear" | "monsoon";
   timeMode: "manual" | "live";
@@ -50,6 +51,7 @@ let ui: UI = {
   tour: 0,
   night: false,
   loaded: false,
+  compiled: false,
   medals: [],
   toast: null,
   help: false,

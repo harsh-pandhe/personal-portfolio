@@ -4,10 +4,10 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildTerrain, heightAt, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
+import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
 import { getUI, world } from "./store";
 import { addCollider } from "./colliders";
-import { Solid } from "./Props";
+import { bakeStatic, Solid } from "./Props";
 
 /* ---------------- Sky dome (day ↔ night) ---------------- */
 export function SkyDome() {
@@ -228,9 +228,9 @@ export function Flowers() {
         d = 22 + pr() * 68;
       const x = Math.cos(a) * d + (r() - 0.5) * 7,
         z = Math.sin(a) * d + (r() - 0.5) * 7;
-      if (!isFreeLand(x, z)) continue;
+      if (!freeFast(x, z)) continue;
       const s = 0.12 + r() * 0.1;
-      m.makeScale(s, s * 1.8, s).setPosition(x, heightAt(x, z) + s, z);
+      m.makeScale(s, s * 1.8, s).setPosition(x, heightFast(x, z) + s, z);
       ref.current!.setMatrixAt(i, m);
       ref.current!.setColorAt(i, c.set(pal[pa % 3 === 0 ? 2 + (pa % 3) : pa % 2]));
       i++;
@@ -285,8 +285,15 @@ export function Clouds() {
 }
 
 /* ---------------- Lights, synced to day/night ---------------- */
-export function Lights() {
+export function Lights({ shadowSize = 2048 }: { shadowSize?: number }) {
   const sun = useRef<THREE.DirectionalLight>(null);
+  useEffect(() => {
+    const s = sun.current?.shadow;
+    if (!s || s.mapSize.x === shadowSize) return;
+    s.mapSize.set(shadowSize, shadowSize);
+    s.map?.dispose();
+    s.map = null; // rebuilt at the new size on the next frame
+  }, [shadowSize]);
   const hemi = useRef<THREE.HemisphereLight>(null);
   const moonCol = useMemo(() => new THREE.Color("#7f96ff"), []);
   const sunCol = useMemo(() => new THREE.Color("#fff3e0"), []);
@@ -315,7 +322,7 @@ export function Lights() {
         position={[55, 85, 35]}
         intensity={2.6}
         castShadow
-        shadow-mapSize={[4096, 4096]}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-112}
         shadow-camera-right={112}
         shadow-camera-top={112}
@@ -449,11 +456,11 @@ export function Grass({ count = 56000 }: { count?: number }) {
         d = 20 + Math.sqrt(r()) * 76;
       const x = Math.cos(a) * d,
         z = Math.sin(a) * d;
-      if (!isFreeLand(x, z)) continue;
+      if (!freeFast(x, z)) continue;
       q.setFromEuler(e.set(0, r() * Math.PI, 0));
       const k = 0.7 + r() * 0.9;
       s.set(k, k * (0.8 + r() * 0.6), k);
-      m.compose(new THREE.Vector3(x, heightAt(x, z) - 0.02, z), q, s);
+      m.compose(new THREE.Vector3(x, heightFast(x, z) - 0.02, z), q, s);
       ref.current!.setMatrixAt(i++, m);
     }
     ref.current!.count = i;
@@ -620,6 +627,7 @@ function Ship({ kind, tint, nav }: { kind: Lane["kind"]; tint: string; nav: Nav 
         (m.material as THREE.MeshStandardMaterial).color.set(tint);
       }
     });
+    bakeStatic(c); // ~50 container and deck meshes down to one per material
     return c;
   }, [scene, kind, tint, nav]);
   return <primitive object={model} />;
