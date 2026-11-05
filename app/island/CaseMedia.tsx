@@ -105,7 +105,7 @@ export function MediaHero({ id, accent }: { id: ZoneId; accent: string }) {
   if (m?.live === "mars") return <MarsHero />;
   if (!m?.hero) return <Cover id={id} accent={accent} />;
   return (
-    <div className="relative aspect-[16/7] w-full overflow-hidden bg-black">
+    <div className="relative aspect-[4/3] sm:aspect-[16/7] w-full overflow-hidden bg-black">
       <Clip src={V(m.hero.video)} className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgba(7,11,23,.85))]" />
       <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between font-mono text-[11px] uppercase tracking-wide text-white/75">
@@ -121,11 +121,11 @@ export function Gallery({ id, accent }: { id: ZoneId; accent: string }) {
   const [big, setBig] = useState<Shot | null>(null);
   if (!g?.length) return null;
   return (
-    <section className="mx-10 mt-16">
+    <section className="mx-4 mt-12 sm:mx-10 sm:mt-16">
       <span className="font-mono text-[12px] uppercase tracking-wide" style={{ color: accent }}>
         From the field
       </span>
-      <div className="mt-4 grid grid-cols-3 gap-3 [grid-auto-flow:dense]">
+      <div className="mt-4 grid grid-cols-2 gap-2 [grid-auto-flow:dense] sm:gap-3 md:grid-cols-3">
         {g.map((s) => (
           <figure
             key={s.src}
@@ -331,7 +331,7 @@ function MorpheusHero() {
   }, []);
   const bits = useMemo(() => Array.from({ length: 34 }, (_, i) => ({ x: (i * 37) % 100, d: 3 + ((i * 7) % 5), del: (i % 9) * 0.4 })), []);
   return (
-    <div className="relative aspect-[16/7] w-full overflow-hidden bg-[#020702] font-[family-name:var(--font-pixel)] text-[#22ff4c]">
+    <div className="relative aspect-[4/3] sm:aspect-[16/7] w-full overflow-hidden bg-[#020702] font-[family-name:var(--font-pixel)] text-[#22ff4c]">
       <style>{`@keyframes mf{from{transform:translateY(-10%)}to{transform:translateY(110%)}}@keyframes mb{50%{opacity:0}}`}</style>
       {bits.map((b, i) => (
         <span key={i} className="absolute top-0 text-[11px] opacity-25" style={{ left: `${b.x}%`, animation: `mf ${b.d}s linear ${b.del}s infinite` }}>
@@ -343,7 +343,7 @@ function MorpheusHero() {
       <div className="relative flex h-full items-center gap-10 px-[6%]">
         <div className="flex-1">
           <p className="text-[11px] text-[#22ff4c]/70">&gt; SYSTEM INITIALIZING…</p>
-          <h3 className="mt-4 text-[clamp(28px,4.2vw,64px)] leading-[1.05] [text-shadow:0_0_18px_#22ff4c,4px_4px_0_#0a5a14]">
+          <h3 className="mt-4 text-[clamp(24px,4.2vw,64px)] leading-[1.05] [text-shadow:0_0_18px_#22ff4c,4px_4px_0_#0a5a14]">
             PROJECT
             <br />
             MORPHEUS
@@ -444,7 +444,7 @@ function MarsHero() {
   const still = <Cover id="marsyard" accent="#ff5a36" />;
   if (gl === false) return still;
   return (
-    <div className="relative aspect-[16/7] w-full bg-[radial-gradient(ellipse_at_50%_80%,#5a1d10,#0b0604_70%)]">
+    <div className="relative aspect-[4/3] sm:aspect-[16/7] w-full bg-[radial-gradient(ellipse_at_50%_80%,#5a1d10,#0b0604_70%)]">
       {gl && (
         <GLBoundary fallback={<div className="absolute inset-0">{still}</div>}>
           <Canvas camera={{ position: [0, 2.2, 6.5], fov: 40 }} dpr={[1, 1.75]}>
