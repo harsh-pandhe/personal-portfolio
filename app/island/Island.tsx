@@ -4,7 +4,8 @@ import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
+import HillSign from "./HillSign";
+import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Nature, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
 import Decor from "./Decor";
 import Paths from "./Paths";
@@ -142,6 +143,7 @@ function Scene() {
         <Trees />
         <Shore />
         <Landmarks />
+        <HillSign />
         <Decor />
         <Paths />
         <Teammates />
@@ -158,6 +160,7 @@ function Scene() {
       <Deferred step={1}>{!LITE && <Grass count={LOW ? 20000 : 56000} />}</Deferred>
       <Deferred step={2}>
         <Flowers />
+        <Nature />
         <Clouds />
         <Birds />
       </Deferred>
