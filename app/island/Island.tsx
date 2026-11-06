@@ -118,6 +118,8 @@ function Scene() {
       onPointerMissed={() => (document.body.style.cursor = "")}
     >
       <PerformanceMonitor
+        // judge by fixed frame rates, not the display's: on 120 Hz phones the default bounds call a steady 57 fps "declining"
+        bounds={() => [38, 54]}
         onDecline={() => {
           setDpr((d) => Math.max(0.8, d - 0.25));
           setSharp(false);
