@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { world } from "../store";
 import { papers } from "@/lib/achievements";
-import { M, fontFamily, Billboard, ZoneGroup, hoverHandlers } from "./common";
+import { M, fontFamily, Billboard, ZoneGroup, hoverHandlers, boxMetres, facadeMaterial } from "./common";
 
 /* A walk-street trading wall: four instruments, AlgoTrade's real P&L, an equity curve and a ticker.
    The instrument prices are a simulated feed (clearly labelled); the AlgoTrade figures are from the
@@ -36,10 +36,41 @@ export function Trading() {
   const series = useRef(INSTR.map((q) => Array.from({ length: 60 }, (_, i) => q.base * (1 + Math.sin(i * 0.3 + q.base) * q.vol * 6))));
   const acc = useRef(0);
   const ff = useMemo(() => fontFamily(), []);
+  const glass = useMemo(() => facadeMaterial("glass", 3), []);
+  const towerGeo = useMemo(() => boxMetres(11, 17, 6), []);
+  const wallBack = useMemo(() => {
+    const cv = document.createElement("canvas");
+    cv.width = 1024;
+    cv.height = 512;
+    const g = cv.getContext("2d")!;
+    g.fillStyle = "#2a2f36";
+    g.fillRect(0, 0, 1024, 512);
+    g.strokeStyle = "#454c56";
+    g.lineWidth = 10;
+    for (let x = 0; x <= 1024; x += 128) {
+      g.beginPath();
+      g.moveTo(x, 0);
+      g.lineTo(x, 512);
+      g.moveTo(x, 0);
+      g.lineTo(x + 128, 512);
+      g.moveTo(x + 128, 0);
+      g.lineTo(x, 512);
+      g.stroke();
+    }
+    g.fillStyle = "#00e08a";
+    g.fillRect(0, 230, 1024, 60);
+    g.fillStyle = "#03110c";
+    g.font = `800 44px ${fontFamily()}`;
+    g.fillText("ALGOTRADE · TRADING FLOOR", 40, 276);
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0.3 });
+  }, []);
   const screen = useMemo(() => new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: "#ffffff", emissiveIntensity: 0.9 }), [tex]);
   useFrame(({ clock }, dt) => {
     acc.current += dt;
     screen.emissiveIntensity = 0.75 + world.night * 1.1;
+    glass.emissiveIntensity = world.night * 1.2;
     if (acc.current < 0.5) return;
     acc.current = 0;
     const t = clock.elapsedTime;
@@ -146,15 +177,8 @@ export function Trading() {
   });
   return (
     <ZoneGroup id="trading">
-      {/* the exchange tower: glass floors between white slabs, the wall mounted on its podium */}
-      <mesh position={[0, 8.5, -7]} material={M.white} castShadow receiveShadow>
-        <boxGeometry args={[11, 17, 6]} />
-      </mesh>
-      {Array.from({ length: 5 }, (_, i) => (
-        <mesh key={i} position={[0, 9.4 + i * 1.6, -3.98]} material={M.glass}>
-          <boxGeometry args={[10.4, 1.0, 0.04]} />
-        </mesh>
-      ))}
+      {/* the exchange tower: a glass curtain wall on every side, lit floor by floor at night */}
+      <mesh position={[0, 8.5, -7]} geometry={towerGeo} material={glass} castShadow receiveShadow />
       <mesh position={[0, 17.2, -7]} material={M.metal}>
         <boxGeometry args={[11.4, 0.4, 6.4]} />
       </mesh>
@@ -164,6 +188,10 @@ export function Trading() {
       </mesh>
       <mesh position={[0, 4.9, -3.33]} material={screen} {...hoverHandlers("trading")}>
         <planeGeometry args={[16, 8]} />
+      </mesh>
+      {/* its back: a steel truss with the floor's name, seen from the tower side */}
+      <mesh position={[0, 4.9, -3.87]} rotation-y={Math.PI} material={wallBack}>
+        <planeGeometry args={[16.6, 8.6]} />
       </mesh>
       {[-8.6, 8.6].map((x) => (
         <mesh key={x} position={[x, 4.4, -3.6]} material={M.dark} castShadow>

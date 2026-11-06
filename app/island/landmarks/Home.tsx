@@ -2,7 +2,9 @@
 
 import * as THREE from "three";
 import { useMemo } from "react";
-import { M, useGlow, Billboard, ZoneGroup } from "./common";
+import { useFrame } from "@react-three/fiber";
+import { world } from "../store";
+import { M, useGlow, Billboard, ZoneGroup, boxMetres, facadeMaterial } from "./common";
 
 /* Home: a modern two-storey Navi Mumbai house with a lit glazed ground floor, a cantilevered
    upper floor and balcony, solar panels and the black water tank on the roof, and coconut palms. */
@@ -36,6 +38,11 @@ function Palm({ x, z, h = 5.5, lean = 0.25 }: { x: number; z: number; h?: number
 
 export function Home() {
   const win = useGlow("#ffd27a", 0.05, 2.4);
+  // windowed plaster on every side, so the house reads from behind and across the plot too
+  const walls = useMemo(() => ({ ground: boxMetres(7.4, 3.2, 5), upper: boxMetres(8.2, 2.9, 5), mat: facadeMaterial("plaster", 5), mat2: facadeMaterial("plaster", 9) }), []);
+  useFrame(() => {
+    walls.mat.emissiveIntensity = walls.mat2.emissiveIntensity = world.night * 1.4;
+  });
   const plaster = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f6f1e8", roughness: 0.85 }), []);
   const upper = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8d2c8", roughness: 0.8 }), []);
   const cladding = useMemo(() => new THREE.MeshStandardMaterial({ color: "#a86b3c", roughness: 0.75 }), []);
@@ -58,9 +65,7 @@ export function Home() {
       ))}
       <group position={[0, 0, -4.2]}>
         {/* ground floor */}
-        <mesh position={[0, 1.6, 0]} material={plaster} castShadow receiveShadow>
-          <boxGeometry args={[7.4, 3.2, 5]} />
-        </mesh>
+        <mesh position={[0, 1.6, 0]} geometry={walls.ground} material={walls.mat} castShadow receiveShadow />
         {/* glazed front, lit from inside at night */}
         <mesh position={[0.9, 1.45, 2.49]} material={win}>
           <planeGeometry args={[4.6, 2.5]} />
@@ -89,9 +94,7 @@ export function Home() {
           </mesh>
         ))}
         {/* cantilevered upper floor */}
-        <mesh position={[0.4, 4.65, 0.5]} material={upper} castShadow receiveShadow>
-          <boxGeometry args={[8.2, 2.9, 5]} />
-        </mesh>
+        <mesh position={[0.4, 4.65, 0.5]} geometry={walls.upper} material={walls.mat2} castShadow receiveShadow />
         <mesh position={[0.4, 4.75, 3.01]} material={win}>
           <planeGeometry args={[6.8, 1.5]} />
         </mesh>

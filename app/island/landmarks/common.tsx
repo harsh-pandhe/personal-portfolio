@@ -117,6 +117,31 @@ export function Billboard({ id, pos, rotY, scale = 1 }: { id: ZoneId; pos: [numb
     return () => t?.dispose();
   }, [id]);
   const screen = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#ffffff", emissiveIntensity: 0.55, roughness: 0.35 }), []);
+  const back = useMemo(() => {
+    if (typeof document === "undefined") return null;
+    const z = zoneById[id];
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 300;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#171b22";
+    g.fillRect(0, 0, 512, 300);
+    g.fillStyle = z.accent;
+    g.fillRect(0, 0, 512, 8);
+    g.fillRect(0, 292, 512, 8);
+    g.fillStyle = "rgba(255,255,255,.45)";
+    g.font = `600 22px ${fontFamily()}`;
+    g.fillText("MISSION ISLAND", 32, 64);
+    g.fillStyle = "#ffffff";
+    g.font = `700 54px ${fontFamily()}`;
+    g.fillText(z.name, 32, 150);
+    g.fillStyle = z.accent;
+    g.font = `600 22px ${fontFamily()}`;
+    g.fillText("This way to the front  ↻", 32, 252);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 });
+  }, [id]);
   useEffect(() => {
     screen.map = tex;
     screen.emissiveMap = tex;
@@ -160,6 +185,12 @@ export function Billboard({ id, pos, rotY, scale = 1 }: { id: ZoneId; pos: [numb
       >
         <planeGeometry args={[5.1, 3.0]} />
       </mesh>
+      {/* the back of the sign carries the zone's name, so it isn't a blank panel from behind */}
+      {back && (
+        <mesh position={[0, 3.6, -0.205]} rotation-y={Math.PI} material={back}>
+          <planeGeometry args={[5.1, 3.0]} />
+        </mesh>
+      )}
       <Solid w={5.4} d={0.7} position={[0, 0, -0.25]} />
       {/* little concrete footings */}
       {[-2.2, 2.2].map((x) => (
@@ -209,4 +240,79 @@ export function ZoneGroup({ id, children }: { id: ZoneId; children: React.ReactN
       {children}
     </group>
   );
+}
+
+/** UVs in metres on a BoxGeometry (u along the face's width, v up its height), so tiled façade
+ *  textures keep the same window size on faces of any size. Face order: +x, -x, +y, -y, +z, -z. */
+export function boxMetres(w: number, h: number, d: number, metres = 1) {
+  const g = new THREE.BoxGeometry(w, h, d);
+  const uv = g.attributes.uv as THREE.BufferAttribute;
+  const dims: [number, number][] = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let f = 0; f < 6; f++)
+    for (let k = 0; k < 4; k++) {
+      const i = f * 4 + k;
+      uv.setXY(i, (uv.getX(i) * dims[f][0]) / metres, (uv.getY(i) * dims[f][1]) / metres);
+    }
+  return g;
+}
+
+/** A tileable façade: one texture tile is one storey (3.2 m) by one bay (3.2 m). `kind` picks the
+ *  look; windows on the emissive map light up at night (drive emissiveIntensity from world.night). */
+export function facadeMaterial(kind: "glass" | "plaster" | "concrete", seed = 1) {
+  const S = 128;
+  const draw = (lit: boolean) => {
+    const c = document.createElement("canvas");
+    c.width = c.height = S;
+    const g = c.getContext("2d")!;
+    let s = seed * 9301 + (lit ? 7 : 3);
+    const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    if (kind === "glass") {
+      g.fillStyle = lit ? "#000" : "#7d9cb8";
+      g.fillRect(0, 0, S, S);
+      // glazing with a floor slab band and two mullions per bay
+      if (!lit) {
+        const grd = g.createLinearGradient(0, 0, 0, S);
+        grd.addColorStop(0, "#9cc0db");
+        grd.addColorStop(1, "#5d7f9c");
+        g.fillStyle = grd;
+        g.fillRect(0, 0, S, S - 18);
+      } else if (r() < 0.6) {
+        g.fillStyle = "#ffe0a0";
+        g.fillRect(4, 8, S - 8, S - 32);
+      }
+      g.fillStyle = lit ? "#000" : "#e8edf2";
+      g.fillRect(0, S - 18, S, 18);
+      [0, S / 2].forEach((x) => g.fillRect(x, 0, 5, S));
+    } else if (kind === "plaster") {
+      g.fillStyle = lit ? "#000" : "#f1ece2";
+      g.fillRect(0, 0, S, S);
+      {
+        // a window with a sill in every bay (one tile repeats across the wall)
+        g.fillStyle = lit ? (r() < 0.7 ? "#ffd27a" : "#000") : "#4e6478";
+        g.fillRect(36, 30, 56, 62);
+        if (!lit) {
+          g.fillStyle = "#d8d1c3";
+          g.fillRect(30, 92, 68, 7);
+          g.fillStyle = "#6f8aa0";
+          g.fillRect(63, 30, 3, 62);
+        }
+      }
+    } else {
+      g.fillStyle = lit ? "#000" : "#c9ccd0";
+      g.fillRect(0, 0, S, S);
+      if (!lit) {
+        g.fillStyle = "#b3b7bc";
+        for (let x = 0; x < S; x += 32) g.fillRect(x, 0, 6, S); // fins
+        g.fillStyle = "#a9adb2";
+        g.fillRect(0, S - 6, S, 6);
+      }
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(1 / 3.2, 1 / 3.2);
+    t.anisotropy = 4;
+    return t;
+  };
+  return new THREE.MeshStandardMaterial({ map: draw(false), emissiveMap: draw(true), emissive: "#ffffff", emissiveIntensity: 0, roughness: kind === "glass" ? 0.25 : 0.85, metalness: kind === "glass" ? 0.4 : 0 });
 }
