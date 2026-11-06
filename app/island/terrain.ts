@@ -189,8 +189,9 @@ export function freeFast(x: number, z: number) {
   return GRID.free[i * gridN() + j] === 1;
 }
 
-export function buildTerrain() {
-  const { size, seg } = GRID;
+/** The island ground mesh. Phones pass a coarser `seg` (fewer triangles; heights are then interpolated). */
+export function buildTerrain(seg = GRID.seg) {
+  const { size } = GRID;
   const g = new THREE.PlaneGeometry(size, size, seg, seg);
   g.rotateX(-Math.PI / 2);
   const pos = g.attributes.position as THREE.BufferAttribute;
@@ -201,7 +202,7 @@ export function buildTerrain() {
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i),
       z = pos.getZ(i);
-    const h = H[Math.round(toGrid(z)) * N + Math.round(toGrid(x))];
+    const h = seg === GRID.seg ? H[Math.round(toGrid(z)) * N + Math.round(toGrid(x))] : heightFast(x, z);
     pos.setY(i, h);
     const r = Math.hypot(x, z);
     const n = 0.5 + 0.5 * Math.sin(x * 0.7 + Math.sin(z * 0.5) * 2) * Math.cos(z * 0.6);

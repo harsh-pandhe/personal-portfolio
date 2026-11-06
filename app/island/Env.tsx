@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, ISLAND_EDGE, LIGHTHOUSE, rng, roadMask } from "./terrain";
 import { getUI, world } from "./store";
 import { addCollider } from "./colliders";
+import { DEVICE } from "./device";
 import { GALA_CAM } from "./Show";
 import { bakeStatic, Solid } from "./Props";
 
@@ -105,7 +106,7 @@ export function Sea() {
 }
 
 export function Terrain() {
-  const geo = useMemo(() => buildTerrain(), []);
+  const geo = useMemo(() => buildTerrain(DEVICE.low ? 230 : undefined), []);
   return (
     <mesh
       geometry={geo}

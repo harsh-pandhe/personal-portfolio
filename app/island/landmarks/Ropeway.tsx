@@ -121,8 +121,14 @@ export function Ropeway() {
     const cabin = get("RwCabin");
     const station = rsScene.clone(true);
     station.traverse((m) => ((m as THREE.Mesh).isMesh ? (m.castShadow = m.receiveShadow = true) : null));
-    return { tower: get("RwTower"), station, cabins: Array.from({ length: 10 }, () => cabin.clone(true)) };
-  }, [rwScene, rsScene]);
+    // clone once: a fresh clone per render would add a new, unmerged copy every time the island re-renders
+    const tower = get("RwTower");
+    return {
+      towers: towers.map(() => tower.clone(true)),
+      stations: stops.map(() => station.clone(true)),
+      cabins: Array.from({ length: 10 }, () => cabin.clone(true)),
+    };
+  }, [rwScene, rsScene, towers, stops]);
   return (
     <group>
       {cables.map((g, i) => (
@@ -132,7 +138,7 @@ export function Ropeway() {
       <Static>
       {towers.map(({ p, g, yaw }, i) => (
         <group key={i} position={[p.x, g, p.z]} rotation-y={yaw}>
-          <primitive object={rw.tower.clone(true)} scale={[1, (p.y - g) / 10.55, 1]} />
+          <primitive object={rw.towers[i]} scale={[1, (p.y - g) / 10.55, 1]} />
           <Solid r={0.9} />
         </group>
       ))}
@@ -143,7 +149,7 @@ export function Ropeway() {
         // stations stand on level pads cut into the slopes (terrain.ts); the plinth runs into the ground
         return (
           <group key={`s${i}`} position={[p.x, heightAt(p.x, p.z), p.z]} rotation-y={yaw}>
-            <primitive object={rw.station.clone(true)} scale={i === 0 ? 1 : 0.9} />
+            <primitive object={rw.stations[i]} scale={i === 0 ? 1 : 0.9} />
             <Solid w={8.6} d={10.6} />
           </group>
         );
