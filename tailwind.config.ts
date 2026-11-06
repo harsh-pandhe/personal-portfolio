@@ -19,6 +19,7 @@ export default {
       keyframes: {
         grow: { from: { width: "0%" }, to: { width: "100%" } },
         rise: { from: { transform: "translateY(40%)", opacity: "0" }, to: { transform: "translateY(0)", opacity: "1" } },
+        dip: { from: { opacity: "0.92" }, to: { opacity: "0" } },
         pop: { from: { transform: "scale(.6) translateY(8px)", opacity: "0" }, to: { transform: "scale(1)", opacity: "1" } },
       },
     },
