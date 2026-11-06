@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
+import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, ISLAND_EDGE, LIGHTHOUSE, rng, roadMask } from "./terrain";
 import { getUI, world } from "./store";
 import { addCollider } from "./colliders";
 import { GALA_CAM } from "./Show";
@@ -210,6 +210,93 @@ export function Trees() {
   );
 }
 
+/* ---------------- Bushes, shrubs and rocks (public/models/nature.glb, from a CC-BY Sketchfab pack), instanced ---------------- */
+const NATURE_GLB = "/models/nature.glb";
+type Spot = { x: number; y: number; z: number; s: number; yaw: number; hue: number };
+/** Hedges along the road verges, shrubs in the open, boulders on the hills and along the waterline. */
+function natureSpots() {
+  const r = rng(77);
+  const bush: Spot[] = [],
+    shrub: Spot[] = [],
+    rock: Spot[] = [];
+  const at = (x: number, z: number, s: number, lift = 0): Spot => ({ x, y: heightFast(x, z) - lift, z, s, yaw: r() * Math.PI * 2, hue: r() });
+  let guard = 0;
+  while ((bush.length < 300 || shrub.length < 140 || rock.length < 150) && guard++ < 60000) {
+    const a = r() * Math.PI * 2,
+      d = 20 + Math.sqrt(r()) * 74;
+    const x = Math.cos(a) * d,
+      z = Math.sin(a) * d;
+    if (!freeFast(x, z)) continue;
+    // a verge is free land with a road a few metres off
+    const verge = [0, 1, 2, 3].some((k) => roadMask(x + Math.cos((k * Math.PI) / 2) * 3.5, z + Math.sin((k * Math.PI) / 2) * 3.5) > 0.3);
+    const h = heightFast(x, z);
+    if (verge && bush.length < 300) bush.push(at(x, z, 0.55 + r() * 0.45));
+    else if (h > 4.5 && r() < 0.5 && rock.length < 150) rock.push(at(x, z, 0.35 + r() * 0.9, 0.15));
+    else if (r() < 0.12 && shrub.length < 140) shrub.push(at(x, z, 0.8 + r() * 0.5));
+  }
+  // boulders where the land meets the beach, leaving the pier and the lighthouse point clear
+  for (let i = 0; i < 110; i++) {
+    const a = r() * Math.PI * 2;
+    if (Math.abs(((a * 180) / Math.PI - 95 + 540) % 360 - 180) < 9) continue;
+    const d = ISLAND_EDGE - 3 + r() * 6,
+      x = Math.cos(a) * d,
+      z = Math.sin(a) * d;
+    if (Math.hypot(x - LIGHTHOUSE[0], z - LIGHTHOUSE[1]) < 9) continue;
+    rock.push(at(x, z, 0.5 + r() * 1.1, 0.25));
+  }
+  return { bush, shrub, rock };
+}
+
+function Instanced({ geo, list, color, hsl, rough = 0.9 }: { geo: THREE.BufferGeometry; list: Spot[]; color?: string; hsl?: [number, number, number]; rough?: number }) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useEffect(() => {
+    const m = new THREE.Matrix4(),
+      q = new THREE.Quaternion(),
+      c = new THREE.Color(),
+      up = new THREE.Vector3(0, 1, 0);
+    list.forEach((t, i) => {
+      m.compose(new THREE.Vector3(t.x, t.y, t.z), q.setFromAxisAngle(up, t.yaw), new THREE.Vector3(t.s, t.s * (0.85 + t.hue * 0.3), t.s));
+      ref.current!.setMatrixAt(i, m);
+      if (hsl) ref.current!.setColorAt(i, c.setHSL(hsl[0] + (t.hue - 0.5) * 0.05, hsl[1], hsl[2] + (t.hue - 0.5) * 0.1));
+    });
+    ref.current!.instanceMatrix.needsUpdate = true;
+    if (ref.current!.instanceColor) ref.current!.instanceColor.needsUpdate = true;
+  }, [list, hsl]);
+  return (
+    <instancedMesh ref={ref} args={[geo, undefined, list.length]} castShadow receiveShadow frustumCulled={false}>
+      <meshStandardMaterial color={color} roughness={rough} flatShading />
+    </instancedMesh>
+  );
+}
+
+export function Nature() {
+  const { scene } = useGLTF(NATURE_GLB);
+  const spots = useMemo(natureSpots, []);
+  const geo = useMemo(() => {
+    scene.updateMatrixWorld(true);
+    const get = (n: string) => {
+      const m = scene.getObjectByName(n) as THREE.Mesh;
+      return m.geometry.clone().applyMatrix4(m.matrixWorld);
+    };
+    return { bush: get("Bush_Clump"), trunk: get("Shrub_Trunk"), crown: get("Shrub_Crown"), rockA: get("Rock_A"), rockB: get("Rock_B") };
+  }, [scene]);
+  // big boulders are solid
+  useEffect(() => {
+    const off = spots.rock.filter((t) => t.s > 0.8).map((t) => addCollider({ kind: "circle", x: t.x, z: t.z, r: t.s * 1.1 }));
+    return () => off.forEach((f) => f());
+  }, [spots]);
+  const half = (l: Spot[], k: number) => l.filter((_, i) => i % 2 === k);
+  return (
+    <group>
+      <Instanced geo={geo.bush} list={spots.bush} hsl={[0.3, 0.5, 0.36]} />
+      <Instanced geo={geo.trunk} list={spots.shrub} color="#7a5638" rough={1} />
+      <Instanced geo={geo.crown} list={spots.shrub} hsl={[0.25, 0.5, 0.42]} />
+      <Instanced geo={geo.rockA} list={half(spots.rock, 0)} hsl={[0.1, 0.06, 0.55]} />
+      <Instanced geo={geo.rockB} list={half(spots.rock, 1)} hsl={[0.08, 0.05, 0.62]} />
+    </group>
+  );
+}
+
 /* ---------------- Flower meadows (lavender + marigold) ---------------- */
 export function Flowers() {
   const ref = useRef<THREE.InstancedMesh>(null);
@@ -337,7 +424,9 @@ export function Lights({ shadowSize = 2048 }: { shadowSize?: number }) {
 }
 
 /* ---------------- distant mountain ranges: noise ridgelines with depth, haze and snow ---------------- */
-function rangeGeometry(d: number, depth: number, H: number, seed: number) {
+type Range = { d: number; depth: number; H: number; seed: number };
+/** Height of a mountain range at angle t around the ring and u (0 front .. 1 back) across it. */
+function rangeProfile({ H, seed }: Range) {
   const r = rng(seed);
   // periodic ridged noise along the ring: integer harmonics so it closes seamlessly
   const waves = Array.from({ length: 9 }, (_, i) => ({ k: [3, 5, 7, 11, 17, 23, 31, 43, 61][i], a: 1 / (1 + i * 0.9), p: r() * Math.PI * 2 }));
@@ -350,6 +439,31 @@ function rangeGeometry(d: number, depth: number, H: number, seed: number) {
     }
     return Math.pow(v / n, 2.2);
   };
+  return (t: number, u: number) => H * ridge(t, u * 6) * Math.pow(Math.sin(Math.PI * Math.min(Math.max(u * 1.1 - 0.05, 0), 1)), 1.3) - 4;
+}
+export const RANGES: Range[] = [
+  { d: 255, depth: 44, H: 28, seed: 77 },
+  { d: 310, depth: 54, H: 44, seed: 78 },
+  { d: 370, depth: 64, H: 62, seed: 79 },
+];
+const RANGE_YAW = (i: number) => i * 0.7;
+/** Ground height of the background mountains at (x, z) (sea level where there are none). */
+export function mountainHeight(x: number, z: number) {
+  const rad = Math.hypot(x, z);
+  let h = 0;
+  RANGES.forEach((l, i) => {
+    const u = (rad - (l.d - l.depth / 2)) / l.depth;
+    if (u <= 0 || u >= 1) return;
+    // the mesh is turned by RANGE_YAW about y, which moves a ring angle t to t - yaw
+    h = Math.max(h, PROFILES[i](Math.atan2(z, x) + RANGE_YAW(i), u));
+  });
+  return h;
+}
+const PROFILES = RANGES.map(rangeProfile);
+
+function rangeGeometry(l: Range, i: number) {
+  const { d, depth } = l;
+  const height = PROFILES[i];
   const C = 720,
     R = 7;
   const pos: number[] = [],
@@ -360,10 +474,9 @@ function rangeGeometry(d: number, depth: number, H: number, seed: number) {
     for (let j = 0; j < R; j++) {
       const u = j / (R - 1);
       const rad = d - depth / 2 + u * depth;
-      const prof = Math.pow(Math.sin(Math.PI * Math.min(Math.max(u * 1.1 - 0.05, 0), 1)), 1.3);
-      const h = j === 0 || j === R - 1 ? -6 : H * ridge(t, j) * prof - 4;
+      const h = j === 0 || j === R - 1 ? -6 : height(t, u);
       pos.push(Math.cos(t) * rad, h, Math.sin(t) * rad);
-      const snow = h > H * 0.5 ? 1 : 0.5 + (h / H) * 0.35;
+      const snow = h > l.H * 0.5 ? 1 : 0.5 + (h / l.H) * 0.35;
       col.push(snow, snow, snow);
     }
   }
@@ -382,29 +495,28 @@ function rangeGeometry(d: number, depth: number, H: number, seed: number) {
 }
 
 export function Mountains() {
-  const layers = useMemo(
-    () => [
-      { d: 255, depth: 44, H: 28, day: "#8fbad0", night: "#1a2244", seed: 77 },
-      { d: 310, depth: 54, H: 44, day: "#a9cbe0", night: "#141b38", seed: 78 },
-      { d: 370, depth: 64, H: 62, day: "#c4dcea", night: "#10162e", seed: 79 },
-    ],
-    []
-  );
   const items = useMemo(
     () =>
-      layers.map((l) => ({
-        g: rangeGeometry(l.d, l.depth, l.H, l.seed),
-        m: new THREE.MeshStandardMaterial({ color: l.day, vertexColors: true, roughness: 1, flatShading: true }),
-        day: new THREE.Color(l.day),
-        night: new THREE.Color(l.night),
-      })),
-    [layers]
+      RANGES.map((l, i) => {
+        const [day, night] = [
+          ["#8fbad0", "#1a2244"],
+          ["#a9cbe0", "#141b38"],
+          ["#c4dcea", "#10162e"],
+        ][i];
+        return {
+          g: rangeGeometry(l, i),
+          m: new THREE.MeshStandardMaterial({ color: day, vertexColors: true, roughness: 1, flatShading: true }),
+          day: new THREE.Color(day),
+          night: new THREE.Color(night),
+        };
+      }),
+    []
   );
   useFrame(() => items.forEach((q) => q.m.color.copy(q.day).lerp(q.night, world.night)));
   return (
     <group>
       {items.map((q, i) => (
-        <mesh key={i} geometry={q.g} material={q.m} rotation-y={i * 0.7} />
+        <mesh key={i} geometry={q.g} material={q.m} rotation-y={RANGE_YAW(i)} />
       ))}
     </group>
   );

@@ -15,3 +15,7 @@ Modelled for this site in Blender 5.2 by `assets-src/scripts/island_props.py` (r
 ## merlion.glb, artscience.glb
 
 Modelled for this site by `assets-src/scripts/island_props.py` (`blender -b --python assets-src/scripts/island_props.py -- . merlion artscience`). Original work, same licence as the site.
+
+## trees.glb (Oak, Pine, Cypress), nature.glb
+
+From "Low Poly Trees & Nature Pack (70 Props)" by anastasita.3d on Sketchfab (https://sketchfab.com/3d-models/low-poly-trees-nature-pack-70-props-9e80530909f84da9bc226273974f75f1), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: split into trunk and leaf meshes by texture colour, decimated, rescaled and re-exported without textures so `app/island/Env.tsx` can instance and tint them. The Blender working file is `assets-src/nature-pack.blend`. The palms in `trees.glb` are still the ones from `island_props.py`.
