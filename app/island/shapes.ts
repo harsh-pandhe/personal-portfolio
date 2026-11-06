@@ -545,3 +545,56 @@ export function matchFormations(A: Float32Array, B: Float32Array): Int32Array {
   for (let r = 0; r < n; r++) perm[ia[r]] = ib[r];
   return perm;
 }
+
+/** "SINGAPORE" above a skyline outline: CBD towers, the three Marina Bay towers under their
+ *  SkyPark, the Flyer's wheel and the Merlion. The first `singaporeTextCount(n)` points are the
+ *  word; the LightShow paints the word red and the skyline white. */
+export const singaporeTextCount = (n: number) => Math.floor(n * 0.42);
+export function singaporeShape(n: number): Float32Array {
+  const out = new Float32Array(n * 3);
+  const nt = singaporeTextCount(n);
+  const word = gridTextShape(nt, ["SINGAPORE"], 10);
+  for (let i = 0; i < nt; i++) {
+    out[i * 3] = word[i * 3];
+    out[i * 3 + 1] = word[i * 3 + 1] + 1.5;
+    out[i * 3 + 2] = word[i * 3 + 2];
+  }
+  // skyline: a polyline of segments, points spread evenly along its length
+  const segs: [number, number, number, number][] = [];
+  const box = (x0: number, x1: number, y0: number, y1: number) => segs.push([x0, y0, x0, y1], [x0, y1, x1, y1], [x1, y1, x1, y0]);
+  const ground = -3.4;
+  // CBD towers on the left
+  [[-5, -4.3, 0.2], [-4.2, -3.6, 0.9], [-3.5, -2.9, 0.4], [-2.8, -2.3, 1.2]].forEach(([a, b, h]) => box(a, b, ground, h - 1));
+  // Marina Bay: three towers and the SkyPark across them
+  [-1.6, -0.7, 0.2].forEach((x) => box(x, x + 0.45, ground, -0.4));
+  segs.push([-1.9, -0.25, 1.1, -0.15]);
+  // the Flyer
+  const fx = 2.7,
+    fy = -1.3,
+    fr = 1.35;
+  for (let k = 0; k < 24; k++) {
+    const a0 = (k / 24) * Math.PI * 2,
+      a1 = ((k + 1) / 24) * Math.PI * 2;
+    segs.push([fx + Math.cos(a0) * fr, fy + Math.sin(a0) * fr, fx + Math.cos(a1) * fr, fy + Math.sin(a1) * fr]);
+  }
+  segs.push([fx, fy, fx - 0.6, ground], [fx, fy, fx + 0.6, ground]);
+  // the Merlion: a seated profile with its jet of water
+  segs.push([4.3, ground, 4.3, -1.6], [4.3, -1.6, 4.6, -1.2], [4.6, -1.2, 5.1, -1.35], [5.1, -1.35, 4.9, -1.9], [4.9, -1.9, 4.75, ground]);
+  for (let k = 0; k < 8; k++) segs.push([5.1 + k * 0.12, -1.45 - k * k * 0.03, 5.22 + k * 0.12, -1.45 - (k + 1) * (k + 1) * 0.03]);
+  // the waterline
+  segs.push([-5.2, ground, 5.6, ground]);
+  const len = segs.map(([a, b, c, d]) => Math.hypot(c - a, d - b));
+  const total = len.reduce((p, q) => p + q, 0);
+  const r = rand(17);
+  for (let i = nt; i < n; i++) {
+    let u = r() * total,
+      k = 0;
+    while (k < segs.length - 1 && u > len[k]) u -= len[k++];
+    const [a, b, c, d] = segs[k];
+    const f = u / (len[k] || 1);
+    out[i * 3] = a + (c - a) * f;
+    out[i * 3 + 1] = b + (d - b) * f;
+    out[i * 3 + 2] = (r() - 0.5) * 0.15;
+  }
+  return out;
+}

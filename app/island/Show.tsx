@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getUI, world } from "./store";
-import { cubesatFrom, cubesatShape, droneShape, flagShape, flagWheelFrom, globeShape, gridTextShape, matchFormations, rocketShape, ropewayShape, starShape, trophyShape } from "./shapes";
+import { cubesatFrom, cubesatShape, droneShape, flagShape, flagWheelFrom, globeShape, gridTextShape, matchFormations, rocketShape, ropewayShape, singaporeShape, singaporeTextCount, starShape, trophyShape } from "./shapes";
 import { sfx } from "./audio";
 
 const N = 1400;
@@ -20,7 +20,7 @@ export const GALA_STEPS: { key: string; caption: string; sub: string; color: str
   { key: "ropeway", caption: "Ropeways at Doppelmayr", sub: "Two coordinates in, an alignment out", color: "#ff5a6e" },
   { key: "chart", caption: "AlgoTrade", sub: "The strategy that survived ten attempts to kill it", color: "#7dff8a" },
   { key: "flag", caption: "Built in India", sub: "From Solapur and Lonavala to the world", color: "#ff9933" },
-  { key: "globe", caption: "Next stop: Singapore", sub: "Singapore–India Hackathon Grand Finale · 15–17 Nov 2026", color: "#00d2ff" },
+  { key: "singapore", caption: "Next stop: Singapore", sub: "Singapore–India Hackathon Grand Finale · 15–17 Nov 2026", color: "#00d2ff" },
   { key: "hp", caption: "Thank you for visiting", sub: "Say hello: harshpandhehome@gmail.com", color: "#ffffff" },
 ];
 
@@ -57,7 +57,8 @@ const SAFFRON = new THREE.Color("#ff8a2b"),
   NAVY = new THREE.Color("#4a63ff"),
   OCEAN = new THREE.Color("#2d8bff"),
   LAND = new THREE.Color("#3ddc84"),
-  GOLD = new THREE.Color("#ffd23f");
+  GOLD = new THREE.Color("#ffd23f"),
+  SG_RED = new THREE.Color("#ff3346");
 const FLAG_H = 6; // flagShape(width 9) is 6 tall
 
 /** Drones parked in rows on the launch deck (local units: the holder is scaled 6x, 44 m up). */
@@ -230,6 +231,7 @@ export function LightShow() {
         star: starShape(N),
         cubesat: cubesatShape(N),
         flag: flagShape(N),
+        singapore: singaporeShape(N),
       };
       from.current.set(shapes.current.grid);
       to.current.set(shapes.current.grid);
@@ -246,6 +248,7 @@ export function LightShow() {
     if (k === "flag") return ti >= flagWheelFrom(N) ? NAVY : y > FLAG_H / 6 ? SAFFRON : y < -FLAG_H / 6 ? GREEN : WHITE;
     if (k === "cubesat") return ti >= cubesatFrom(N) ? (Math.abs(x) > 0.3 ? OCEAN : GOLD) : (ti * 2654435761) % 7 < 3 ? LAND : OCEAN;
     if (k === "star") return ti < N * 0.45 ? GOLD : WHITE;
+    if (k === "singapore") return ti < singaporeTextCount(N) ? SG_RED : WHITE;
     if (k === "swarm") return P[ti % P.length];
     // everything else: a slow sweep across the palette from left to right
     const sweep = (x * 0.12 + t * 0.25) % 1;
@@ -377,7 +380,7 @@ export function LightShow() {
       const cw = Math.min(Math.max(f * 1.8 - r * 0.11, 0), 1);
       cb.copy(target(k, ti, B, j, t, toPal.current));
       // flag bands are spaced wider than other formations' points, so each LED burns brighter
-      const tw = (k === "flag" ? 1.25 : 1) * (0.62 + 0.1 * Math.sin(t * 5 + j * 0.37)) + (k === "star" && ti >= N * 0.75 ? 0.25 * Math.sin(t * 3 + ti) : 0);
+      const tw = (k === "flag" || k === "singapore" ? 1.25 : 1) * (0.62 + 0.1 * Math.sin(t * 5 + j * 0.37)) + (k === "star" && ti >= N * 0.75 ? 0.25 * Math.sin(t * 3 + ti) : 0);
       cols[ix] = (FC[ix] + (cb.r * tw - FC[ix]) * cw);
       cols[ix + 1] = (FC[ix + 1] + (cb.g * tw - FC[ix + 1]) * cw);
       cols[ix + 2] = (FC[ix + 2] + (cb.b * tw - FC[ix + 2]) * cw);

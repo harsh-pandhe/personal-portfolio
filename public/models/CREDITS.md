@@ -11,3 +11,7 @@ Six-axis industrial arm modelled for this site in Blender 5.2 (source: `assets-s
 ## ship-cargo.glb, ship-ferry.glb, ship-sail.glb, trees.glb, ropeway-station.glb
 
 Modelled for this site in Blender 5.2 by `assets-src/scripts/island_props.py` (run `blender -b --python assets-src/scripts/island_props.py -- .` from the repo root to rebuild). Ships carry named materials (`NavRed`, `NavGreen`, `NavWhite`, `ShipWindows`) that `app/island/Env.tsx` lights at night; `trees.glb` holds `<Species>_Trunk` / `<Species>_Crown` meshes for Oak, Pine, Cypress and Palm, instanced and tinted per tree. Original work, same licence as the site.
+
+## merlion.glb, artscience.glb
+
+Modelled for this site by `assets-src/scripts/island_props.py` (`blender -b --python assets-src/scripts/island_props.py -- . merlion artscience`). Original work, same licence as the site.
