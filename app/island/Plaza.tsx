@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { heightAt, PLAZA_R, rng } from "./terrain";
 import { zonePos, ZONES } from "./zones";
-import { Bench, Flag, LampPost, Solid, Static, useNightGlow } from "./Props";
+import { bakeStatic, Bench, Flag, LampPost, Solid, Static, useNightGlow } from "./Props";
+import { useGLTF } from "@react-three/drei";
 import { world } from "./store";
 
 // The city centre: a fountain around Mission Control and a ring of milestones, Nerul to Singapore.
@@ -448,86 +449,212 @@ export function JourneyPlaza() {
   );
 }
 
-/* ---------- Singapore across the water: the ArtScience lotus, the Merlion and Supertrees ---------- */
-export function Singapore() {
-  const stone = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f4f1ea", emissive: "#fff4d6", emissiveIntensity: 0.05, roughness: 0.7 }), []);
-  // Gardens by the Bay Supertrees: a steel trunk flaring into a canopy ring, lit at night
-  const trunk = useMemo(() => new THREE.MeshStandardMaterial({ color: "#5d7a52", roughness: 0.8, flatShading: true }), []);
-  const canopy = useMemo(() => new THREE.MeshStandardMaterial({ color: "#7a5aa8", emissive: "#c06bff", emissiveIntensity: 0.05, roughness: 0.6, side: THREE.DoubleSide, flatShading: true }), []);
-  const supertrees = useMemo(() => {
-    const prof = [[1.1, 0], [0.9, 4], [0.7, 12], [0.9, 18], [2.6, 21.5], [4.6, 23], [4.8, 23.6]].map(([x, y]) => new THREE.Vector2(x, y));
-    return { g: new THREE.LatheGeometry(prof, 10), list: [[-10, 0, 1], [-2, -6, 1.25], [7, 1, 0.9], [15, -7, 1.1], [-17, -9, 0.8], [3, -14, 0.85]] };
-  }, []);
+/* ---------- Singapore: the Merlion (public/models/merlion.glb), modelled in Blender, with its jet ---------- */
+const MERLION_GLB = "/models/merlion.glb";
+const ART_GLB = "/models/artscience.glb";
+useGLTF.preload(MERLION_GLB);
+useGLTF.preload(ART_GLB);
+
+/** The Merlion, facing local +z, spouting an arc of water from its mouth. */
+function MerlionStatue() {
+  const { scene } = useGLTF(MERLION_GLB);
+  const model = useMemo(() => {
+    const c = scene.clone(true);
+    c.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = o.receiveShadow = true) : null));
+    bakeStatic(c);
+    return c;
+  }, [scene]);
   const spout = useRef<THREE.InstancedMesh>(null);
+  const water = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8f4ff", emissive: "#7fd8ff", emissiveIntensity: 0.5, transparent: true, opacity: 0.75 }), []);
   const m = useMemo(() => new THREE.Matrix4(), []);
   useFrame(({ clock }) => {
-    const n = world.night,
-      t = clock.elapsedTime;
-    stone.emissiveIntensity = 0.05 + n * 0.7;
-    canopy.emissiveIntensity = 0.05 + n * 1.6;
-    // the Merlion's water jet
-    for (let k = 0; k < 40; k++) {
-      const u = (t * 0.7 + k / 40) % 1;
-      m.makeScale(0.35, 0.35, 0.35).setPosition(u * 9, 9 - u * u * 11, 0);
-      spout.current!.setMatrixAt(k, m);
+    const t = clock.elapsedTime;
+    water.emissiveIntensity = 0.4 + world.night * 1.6;
+    for (let k = 0; k < 64; k++) {
+      const u = (t * 0.7 + k / 64) % 1;
+      const s = 0.1 + u * 0.16;
+      // from the mouth (y 6, z 1.4) out and down into the sea in a ballistic arc
+      m.makeScale(s, s, s).setPosition(Math.sin(k * 2.3) * 0.05 * u, 6.0 + u * 1.2 - u * u * 7.4, 1.5 + u * 6.5);
+      spout.current?.setMatrixAt(k, m);
     }
-    spout.current!.instanceMatrix.needsUpdate = true;
+    if (spout.current) spout.current.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <group>
+      <primitive object={model} />
+      <instancedMesh ref={spout} args={[undefined, undefined, 64]} material={water} frustumCulled={false}>
+        <sphereGeometry args={[1, 6, 4]} />
+      </instancedMesh>
+    </group>
+  );
+}
+
+/** A lit office tower: glass curtain wall with window rows (canvas texture), lit at night. */
+function useTowerMaterials() {
+  return useMemo(() => {
+    const make = (base: string, glass: string, lit: string, seed: number) => {
+      // two canvases drawn together: the façade, and a black glow map holding only the lit windows
+      const c = document.createElement("canvas"),
+        e = document.createElement("canvas");
+      c.width = e.width = 64;
+      c.height = e.height = 256;
+      const g = c.getContext("2d")!,
+        ge = e.getContext("2d")!;
+      const r = rng(seed);
+      g.fillStyle = base;
+      g.fillRect(0, 0, 64, 256);
+      ge.fillStyle = "#000";
+      ge.fillRect(0, 0, 64, 256);
+      for (let y = 4; y < 256; y += 8)
+        for (let x = 3; x < 64; x += 8) {
+          const on = r() < 0.45;
+          g.fillStyle = on ? lit : glass;
+          g.fillRect(x, y, 6, 5);
+          if (on) {
+            ge.fillStyle = lit;
+            ge.fillRect(x, y, 6, 5);
+          }
+        }
+      const tex = (cv: HTMLCanvasElement) => {
+        const t = new THREE.CanvasTexture(cv);
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        return t;
+      };
+      return new THREE.MeshStandardMaterial({ map: tex(c), emissiveMap: tex(e), emissive: "#ffffff", emissiveIntensity: 0, roughness: 0.25, metalness: 0.5 });
+    };
+    return [make("#6f8aa3", "#3e5a73", "#ffd98a", 1), make("#8d9cab", "#556676", "#ffe9b8", 2), make("#5d7189", "#2f465e", "#ffcf7a", 3), make("#7f91a3", "#4b5e72", "#cfe6ff", 4)];
+  }, []);
+}
+
+/* ---------- Singapore across the water: Marina Bay with the CBD skyline, the ArtScience Museum,
+   the Merlion, the Supertrees, the Singapore Flyer and the Helix bridge ---------- */
+export function Singapore() {
+  const stone = useMemo(() => new THREE.MeshStandardMaterial({ color: "#e9e5db", roughness: 0.8 }), []);
+  const paving = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8d2c4", roughness: 0.9 }), []);
+  const grass = useMemo(() => new THREE.MeshStandardMaterial({ color: "#7fa66b", roughness: 1 }), []);
+  const steel = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d4dbe3", roughness: 0.35, metalness: 0.7 }), []);
+  const towers = useTowerMaterials();
+  const trunk = useMemo(() => new THREE.MeshStandardMaterial({ color: "#4f7a4a", roughness: 0.8, flatShading: true }), []);
+  const canopy = useMemo(() => new THREE.MeshStandardMaterial({ color: "#6a4f99", emissive: "#d070ff", emissiveIntensity: 0.05, roughness: 0.6, side: THREE.DoubleSide, flatShading: true }), []);
+  const cabin = useMemo(() => new THREE.MeshStandardMaterial({ color: "#eaf6ff", emissive: "#9fe0ff", emissiveIntensity: 0.05, roughness: 0.3 }), []);
+  const helixLit = useMemo(() => new THREE.MeshStandardMaterial({ color: "#cfe9ff", emissive: "#7fd3ff", emissiveIntensity: 0.05, roughness: 0.3, metalness: 0.6 }), []);
+  const { scene: art } = useGLTF(ART_GLB);
+  const artModel = useMemo(() => {
+    const c = art.clone(true);
+    bakeStatic(c);
+    return c;
+  }, [art]);
+  const flyer = useRef<THREE.Group>(null);
+  const supertrees = useMemo(() => {
+    const prof = [[1.1, 0], [0.9, 4], [0.7, 12], [0.9, 18], [2.6, 21.5], [4.6, 23], [4.8, 23.6]].map(([x, y]) => new THREE.Vector2(x, y));
+    return { g: new THREE.LatheGeometry(prof, 12), list: [[-62, -2, 1], [-54, -10, 1.25], [-46, -1, 0.9], [-38, -9, 1.1], [-68, -12, 0.8], [-50, -18, 0.85]] };
+  }, []);
+  // the CBD: a cluster of towers of varied height behind the bay
+  const cbd = useMemo(() => {
+    const r = rng(88);
+    return Array.from({ length: 22 }, (_, i) => {
+      const x = -30 + i * 4.6 + (r() - 0.5) * 2,
+        z = -20 - r() * 16;
+      const h = 26 + r() * 46 * (1 - Math.abs(i - 11) / 16);
+      return { x, z, h, w: 4.5 + r() * 3, d: 4.5 + r() * 3, m: Math.floor(r() * 4), crown: r() < 0.3 };
+    });
+  }, []);
+  const helix = useMemo(() => {
+    const make = (ph: number) => {
+      const pts = Array.from({ length: 120 }, (_, i) => {
+        const t = i / 119,
+          a = t * Math.PI * 10 + ph;
+        return new THREE.Vector3(-14 + t * 28, 3.2 + Math.sin(a) * 2.2, 14 + Math.cos(a) * 2.2);
+      });
+      return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 300, 0.12, 6, false);
+    };
+    return [make(0), make(Math.PI)];
+  }, []);
+  useFrame(({ clock }, dt) => {
+    const n = world.night;
+    towers.forEach((m) => (m.emissiveIntensity = n * 1.3));
+    canopy.emissiveIntensity = 0.05 + n * 1.6;
+    cabin.emissiveIntensity = 0.05 + n * 1.2;
+    helixLit.emissiveIntensity = 0.05 + n * (1.2 + 0.6 * Math.sin(clock.elapsedTime * 2));
+    if (flyer.current) flyer.current.rotation.z += dt * 0.03;
   });
   // south-east across the water, facing the island
   const a = (128 * Math.PI) / 180,
     d = 200;
   return (
     <group position={[Math.cos(a) * d, 0, Math.sin(a) * d]} rotation-y={-a - Math.PI / 2}>
-      {/* the bay front: grassy land raised above the water, with a sand edge facing the island */}
-      <mesh position={[0, -0.4, -8]} receiveShadow>
-        <boxGeometry args={[150, 2, 40]} />
-        <meshStandardMaterial color="#8fa98a" roughness={1} />
+      {/* the bay front: land, a paved promenade with a stone sea wall, then a lawn strip */}
+      <mesh position={[0, -0.4, -14]} receiveShadow material={grass}>
+        <boxGeometry args={[170, 2, 52]} />
       </mesh>
-      <mesh position={[0, -0.65, 13.5]}>
-        <boxGeometry args={[150, 2, 3]} />
-        <meshStandardMaterial color="#e8d9ae" roughness={1} />
+      <mesh position={[0, 0.62, 8]} receiveShadow material={paving}>
+        <boxGeometry args={[170, 0.1, 8]} />
       </mesh>
-      {/* Supertree grove */}
-      <group position={[-4, 0, -8]}>
+      <mesh position={[0, -0.3, 12.2]} material={stone}>
+        <boxGeometry args={[170, 2.2, 0.6]} />
+      </mesh>
+      <Static>
+        {cbd.map((b, i) => (
+          <group key={i} position={[b.x, 0.6, b.z]}>
+            <mesh position={[0, b.h / 2, 0]} material={towers[b.m]} castShadow>
+              <boxGeometry args={[b.w, b.h, b.d]} />
+            </mesh>
+            {b.crown && (
+              <mesh position={[0, b.h + 2, 0]} material={steel}>
+                <coneGeometry args={[b.w * 0.55, 4, 4]} />
+              </mesh>
+            )}
+          </group>
+        ))}
+        {/* Gardens by the Bay: Supertrees */}
         {supertrees.list.map(([x, z, k], i) => (
-          <group key={i} position={[x, 0.5, z]} scale={k}>
+          <group key={`s${i}`} position={[x, 0.5, z]} scale={k}>
             <mesh geometry={supertrees.g} material={trunk} castShadow />
             <mesh position={[0, 23.3, 0]} rotation-x={-Math.PI / 2} material={canopy}>
-              <ringGeometry args={[2.2, 4.8, 10]} />
+              <ringGeometry args={[2.2, 4.8, 12]} />
             </mesh>
           </group>
         ))}
+        {helix.map((g, i) => (
+          <mesh key={`h${i}`} geometry={g} material={helixLit} />
+        ))}
+        <mesh position={[0, 3.2, 14]} material={paving}>
+          <boxGeometry args={[28, 0.3, 2.6]} />
+        </mesh>
+      </Static>
+      {/* ArtScience Museum and the Merlion on the promenade */}
+      <group position={[-22, 0.6, 2]} scale={0.95}>
+        <primitive object={artModel} />
       </group>
-      {/* ArtScience Museum lotus */}
-      <group position={[-42, 0, 4]}>
-        {Array.from({ length: 10 }, (_, i) => (
-          <mesh key={i} position={[0, 4, 0]} rotation={[0.55, (i / 10) * Math.PI * 2, 0]} material={stone} castShadow>
-            <coneGeometry args={[1.6, 9, 6, 1, true]} />
+      <group position={[30, 0.6, 9]} scale={1.6} rotation-y={0}>
+        <MerlionStatue />
+      </group>
+      {/* the Singapore Flyer: a wheel of capsules on an A-frame */}
+      <group position={[56, 0.6, -6]}>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 4, 10, 0]} rotation-z={s * 0.32} material={steel}>
+            <boxGeometry args={[0.8, 21, 0.8]} />
           </mesh>
         ))}
-      </group>
-      {/* the Merlion on its quay, spouting into the bay */}
-      <group position={[34, 0, 9]} rotation-y={Math.PI / 2}>
-        <mesh position={[0, 1, 0]} material={stone}>
-          <cylinderGeometry args={[3, 3.4, 2, 16]} />
-        </mesh>
-        <mesh position={[0, 4.5, 0]} material={stone} castShadow>
-          <cylinderGeometry args={[1.3, 1.9, 5, 12]} />
-        </mesh>
-        <mesh position={[0, 7.8, 0]} material={stone}>
-          <sphereGeometry args={[1.8, 16, 12]} />
-        </mesh>
-        {/* mane and tail */}
-        <mesh position={[-0.5, 7.4, 0]} scale={[1.2, 1.1, 1.5]} material={stone}>
-          <icosahedronGeometry args={[1.6, 0]} />
-        </mesh>
-        <mesh position={[-1.5, 2.6, 0]} rotation-z={0.8} material={stone}>
-          <torusGeometry args={[1.2, 0.35, 8, 16, Math.PI]} />
-        </mesh>
-        <instancedMesh ref={spout} args={[undefined, undefined, 40]} frustumCulled={false} position={[1.6, -0.6, 0]}>
-          <sphereGeometry args={[1, 6, 4]} />
-          <meshStandardMaterial color="#d8f4ff" emissive="#7fd8ff" emissiveIntensity={0.6} transparent opacity={0.8} />
-        </instancedMesh>
+        <group ref={flyer} position={[0, 21, 0]}>
+          <mesh material={steel}>
+            <torusGeometry args={[17, 0.35, 8, 72]} />
+          </mesh>
+          {Array.from({ length: 14 }, (_, i) => (
+            <mesh key={i} rotation-z={(i / 14) * Math.PI} material={steel}>
+              <boxGeometry args={[34, 0.12, 0.12]} />
+            </mesh>
+          ))}
+          {Array.from({ length: 28 }, (_, i) => {
+            const t = (i / 28) * Math.PI * 2;
+            return (
+              <mesh key={`c${i}`} position={[Math.cos(t) * 17, Math.sin(t) * 17, 0.9]} material={cabin}>
+                <capsuleGeometry args={[0.55, 1.4, 4, 8]} />
+              </mesh>
+            );
+          })}
+        </group>
       </group>
     </group>
   );
@@ -536,65 +663,7 @@ export function Singapore() {
 /* ---------- Singapore on the island: the Merlion on a quay at the end of the pier ---------- */
 const polarXZ = (deg: number, r: number): [number, number] => [Math.cos((deg * Math.PI) / 180) * r, Math.sin((deg * Math.PI) / 180) * r];
 
-function Merlion({ stone }: { stone: THREE.Material }) {
-  const spout = useRef<THREE.InstancedMesh>(null);
-  const water = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d8f4ff", emissive: "#7fd8ff", emissiveIntensity: 0.5, transparent: true, opacity: 0.8 }), []);
-  const m = useMemo(() => new THREE.Matrix4(), []);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    water.emissiveIntensity = 0.4 + world.night * 1.6;
-    for (let k = 0; k < 48; k++) {
-      const u = (t * 0.8 + k / 48) % 1;
-      const s = 0.12 + u * 0.12;
-      m.makeScale(s, s, s).setPosition(1.1 + u * 5.5, 3.7 - u * u * 5.2, 0);
-      spout.current!.setMatrixAt(k, m);
-    }
-    spout.current!.instanceMatrix.needsUpdate = true;
-  });
-  return (
-    <group>
-      {/* the fish body coils up from the plinth */}
-      <mesh position={[0, 1.1, 0]} material={stone} castShadow>
-        <cylinderGeometry args={[0.7, 1.05, 2.2, 16]} />
-      </mesh>
-      <mesh position={[-0.55, 0.8, 0]} rotation-z={0.9} material={stone} castShadow>
-        <torusGeometry args={[0.7, 0.24, 8, 18, Math.PI * 1.2]} />
-      </mesh>
-      {/* scales: a few ridges */}
-      {[0.5, 1.0, 1.5].map((y) => (
-        <mesh key={y} position={[0, y, 0]} material={stone}>
-          <torusGeometry args={[0.92 - y * 0.12, 0.05, 6, 20]} />
-        </mesh>
-      ))}
-      {/* the lion's head with its mane and an open mouth facing the sea */}
-      <group position={[0.15, 2.85, 0]}>
-        <mesh scale={[1.1, 1, 1]} material={stone} castShadow>
-          <sphereGeometry args={[0.72, 18, 14]} />
-        </mesh>
-        <mesh position={[-0.25, 0.05, 0]} scale={[0.9, 1.15, 1.25]} material={stone} castShadow>
-          <icosahedronGeometry args={[0.8, 1]} />
-        </mesh>
-        <mesh position={[0.72, -0.12, 0]} rotation-z={-Math.PI / 2} material={stone}>
-          <cylinderGeometry args={[0.32, 0.42, 0.4, 12]} />
-        </mesh>
-        {[-1, 1].map((s) => (
-          <mesh key={s} position={[0.55, 0.28, s * 0.28]} material={stone}>
-            <sphereGeometry args={[0.1, 8, 6]} />
-          </mesh>
-        ))}
-      </group>
-      <instancedMesh ref={spout} args={[undefined, undefined, 48]} material={water} frustumCulled={false}>
-        <sphereGeometry args={[1, 6, 4]} />
-      </instancedMesh>
-    </group>
-  );
-}
-
 export function SingaporeCorner() {
-  const stone = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f4f1ea", emissive: "#fff4d6", emissiveIntensity: 0.05, roughness: 0.7 }), []);
-  useFrame(() => {
-    stone.emissiveIntensity = 0.05 + world.night * 0.7;
-  });
   const PIER = 95;
   const [qx, qz] = polarXZ(PIER, 105);
   const out = -(PIER * Math.PI) / 180; // local +x points out to sea
@@ -603,15 +672,16 @@ export function SingaporeCorner() {
       {/* round quay at the end of the pier, linked by a short walkway */}
       <group position={[qx, 0, qz]} rotation-y={out}>
         <mesh position={[0, 0.25, 0]} receiveShadow>
-          <cylinderGeometry args={[2.8, 3, 0.7, 28]} />
+          <cylinderGeometry args={[3.2, 3.4, 0.7, 32]} />
           <meshStandardMaterial color="#d9d3c4" roughness={0.9} />
         </mesh>
-        <mesh position={[-2.6, 0.35, 0]}>
+        <mesh position={[-3, 0.35, 0]}>
           <boxGeometry args={[2.4, 0.2, 2]} />
           <meshStandardMaterial color="#9c6b43" roughness={0.9} />
         </mesh>
-        <group position={[0, 0.6, 0]} scale={1.15}>
-          <Merlion stone={stone} />
+        {/* the statue faces out to sea (its local +z turned toward +x) */}
+        <group position={[0, 0.6, 0]} rotation-y={Math.PI / 2} scale={0.62}>
+          <MerlionStatue />
         </group>
       </group>
     </group>

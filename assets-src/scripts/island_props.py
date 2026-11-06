@@ -313,9 +313,113 @@ def trees():
     merge(fr, "Palm_Crown")
     export("trees.glb")
 
-ropeway_station()
-cargo_ship()
-ferry()
-sailboat()
-trees()
+# ------------------------------------------------------------------ Singapore
+def sweep(name, path, radius_fn, material, parent=None, seg=12, squash=(1.0, 1.0)):
+    """A tube swept along a list of 3D points, radius varying along it (fish bodies, tails)."""
+    bm = bmesh.new()
+    rings = []
+    n = len(path)
+    for i, p in enumerate(path):
+        p = Vector(p)
+        t = (Vector(path[min(i + 1, n - 1)]) - Vector(path[max(i - 1, 0)])).normalized()
+        up = Vector((0, 0, 1)) if abs(t.z) < 0.9 else Vector((1, 0, 0))
+        a = t.cross(up).normalized()
+        b = t.cross(a).normalized()
+        r = radius_fn(i / (n - 1))
+        rings.append([bm.verts.new(p + (a * math.cos(k / seg * math.tau) * squash[0] + b * math.sin(k / seg * math.tau) * squash[1]) * r) for k in range(seg)])
+    for r0, r1 in zip(rings, rings[1:]):
+        for k in range(seg):
+            bm.faces.new((r0[k], r0[(k + 1) % seg], r1[(k + 1) % seg], r1[k]))
+    bm.faces.new(list(reversed(rings[0])))
+    bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return obj_from_bm(bm, name, material, parent)
+
+def merlion():
+    """The Merlion: a big lion's head with an open mouth and a mane flowing down its neck, on a
+    slim fish body that rises from the plinth with scale rings and a tail curled up behind.
+    About 8.6 m tall, facing -Y (the sea)."""
+    reset()
+    stone = mat("MerlionStone", hexc("#f2efe6"), 0.55)
+    shade = mat("MerlionShade", hexc("#ddd7c8"), 0.7)
+    dark = mat("MerlionDark", hexc("#2e2d2b"), 0.6)
+    plinth = mat("MerlionPlinth", hexc("#c9c2b3"), 0.85)
+    root = empty("Merlion")
+    cyl("Base", 2.6, 2.7, 0.7, (0, 0, 0.35), plinth, root, 32)
+    cyl("Base2", 1.9, 2.1, 0.6, (0, 0, 1.0), plinth, root, 32)
+    # slim body: rises with a gentle S, chest pushed forward under the head
+    body = [(0, 0.55, 1.3), (0, 0.45, 2.1), (0, 0.15, 3.1), (0, -0.1, 4.0), (0, -0.15, 4.8), (0, -0.05, 5.4)]
+    sweep("Body", body, lambda t: 0.82 - 0.22 * t, stone, root, 18, squash=(1.0, 0.85))
+    for k, z in enumerate((1.8, 2.4, 3.0, 3.6, 4.2)):
+        cyl("Scale", 0.78 - k * 0.04, 0.82 - k * 0.04, 0.09, (0, 0.4 - k * 0.12, z), shade, root, 24)
+    # tail: sweeps back off the plinth and curls up
+    tail = [(0, 0.9, 1.35), (0, 1.7, 1.5), (0, 2.35, 1.95), (0, 2.6, 2.6), (0, 2.45, 3.2), (0, 2.1, 3.5)]
+    sweep("Tail", tail, lambda t: 0.5 - 0.38 * t, stone, root, 14)
+    bm = bmesh.new()
+    fin = [bm.verts.new(v) for v in ((0, 2.1, 3.45), (-0.05, 1.5, 4.25), (0, 2.25, 4.0), (0.05, 2.85, 4.2))]
+    bm.faces.new(fin[:3]); bm.faces.new((fin[0], fin[2], fin[3]))
+    obj_from_bm(bm, "Fin", shade, root)
+    # the head, large: skull, broad muzzle, open jaw with a dark mouth, nose, eyes, ears
+    hz = 6.55
+    ico("Head", 1.25, (0, 0.05, hz), stone, root, sub=2, scale=(1.0, 1.05, 0.95))
+    ico("Muzzle", 0.72, (0, -1.0, hz - 0.25), stone, root, sub=2, scale=(1.0, 0.95, 0.72))
+    ico("Nose", 0.24, (0, -1.6, hz + 0.02), shade, root, sub=1, scale=(1.2, 0.8, 0.7))
+    ico("Jaw", 0.55, (0, -0.95, hz - 0.85), shade, root, sub=2, scale=(0.95, 1.0, 0.5))
+    ico("Mouth", 0.42, (0, -1.35, hz - 0.55), dark, root, sub=1, scale=(1.05, 0.5, 0.6))
+    for sx in (-1, 1):
+        ico("Eye", 0.12, (sx * 0.5, -1.05, hz + 0.42), dark, root, sub=1)
+        ico("Brow", 0.26, (sx * 0.5, -0.95, hz + 0.62), stone, root, sub=1, scale=(1.3, 0.8, 0.55))
+        ico("Cheek", 0.42, (sx * 0.62, -0.95, hz - 0.15), stone, root, sub=1, scale=(0.9, 0.9, 0.8))
+        ico("Ear", 0.26, (sx * 0.85, 0.15, hz + 1.0), stone, root, sub=1, scale=(0.7, 0.55, 1.1))
+    # mane: locks framing the face, then flowing down the back of the neck in rows
+    rnd = random.Random(5)
+    for row in range(5):
+        z = hz + 1.0 - row * 0.62
+        n = 12
+        for k in range(n):
+            a = k / n * math.tau
+            if math.sin(a) < -0.45:
+                continue  # keep the face clear
+            rad = 1.25 + 0.12 * row - (0.25 if row > 2 else 0)
+            x, y = math.cos(a) * rad * 0.95, math.sin(a) * rad + 0.25 + row * 0.08
+            ico("Lock", 0.4 - row * 0.03, (x, y, z), shade if (k + row) % 2 else stone, root, sub=1, scale=(0.75, 0.75, 1.5), jitter=0.12, seed=row * 31 + k)
+    export("merlion.glb")
+
+def artscience():
+    """ArtScience Museum: ten petals, each a tapered, curved shell rising from a round base, the
+    tips spread like the fingers of an open hand. About 14 m tall."""
+    reset()
+    shell = mat("ArtShell", hexc("#f5f3ee"), 0.35, 0.1)
+    rib = mat("ArtRib", hexc("#c8ccd2"), 0.4, 0.4)
+    water = mat("ArtPond", hexc("#2c7fb8"), 0.1)
+    root = empty("ArtScience")
+    cyl("Pond", 12.0, 12.0, 0.2, (0, 0, 0.1), water, root, 48)
+    cyl("Core", 3.6, 4.2, 4.0, (0, 0, 2.0), rib, root, 20)
+    P = 10
+    for k in range(P):
+        a = k / P * math.tau
+        h = 9.5 + 4.5 * (0.5 + 0.5 * math.cos(a - 0.6))  # petals rise higher on one side
+        secs = []
+        for i in range(9):
+            t = i / 8
+            r = 3.0 + 6.5 * t ** 1.4  # spreading outward
+            z = 1.0 + h * t
+            w = 2.6 * math.sin(math.pi * (0.15 + 0.85 * t)) ** 0.6 * (1 - 0.55 * t) + 0.25  # broad, rounded at the tip
+            cx, cy = math.cos(a) * r, math.sin(a) * r
+            tx, ty = -math.sin(a), math.cos(a)
+            bow = 0.5 * math.sin(t * math.pi)  # the petal is cupped
+            secs.append([(cx - tx * w + math.cos(a) * bow, cy - ty * w + math.sin(a) * bow, z), (cx, cy, z + 0.15), (cx + tx * w + math.cos(a) * bow, cy + ty * w + math.sin(a) * bow, z)])
+        bm = bmesh.new()
+        rows = [[bm.verts.new(v) for v in row] for row in secs]
+        for r0, r1 in zip(rows, rows[1:]):
+            for j in range(2):
+                bm.faces.new((r0[j], r0[j + 1], r1[j + 1], r1[j]))
+        obj_from_bm(bm, "Petal", shell, root)
+    export("artscience.glb")
+
+import sys as _sys
+_only = [a for a in _sys.argv[_sys.argv.index("--") + 2:]] if "--" in _sys.argv and len(_sys.argv) > _sys.argv.index("--") + 2 else []
+for fn in (ropeway_station, cargo_ship, ferry, sailboat, trees, merlion, artscience):
+    if not _only or fn.__name__ in _only:
+        fn()
 print("DONE")

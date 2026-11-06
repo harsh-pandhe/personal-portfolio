@@ -5,7 +5,8 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import { bakeStatic, Solid, Static } from "../Props";
-import { M, useGlow, Billboard, ZoneGroup } from "./common";
+import { M, useGlow, Billboard, ZoneGroup, facadeMaterial } from "./common";
+import { world } from "../store";
 import { Quad } from "./Quad";
 
 /* A six-axis industrial arm (KUKA-style orange) running a pick-and-place loop with a crate. */
@@ -161,6 +162,32 @@ export function Workshop() {
     bakeStatic(c);
     return c;
   }, [wsScene]);
+  const walls = useMemo(() => {
+    const bb = new THREE.Box3().setFromObject(shed);
+    const sz = bb.getSize(new THREE.Vector3()).multiplyScalar(1.5);
+    const c = bb.getCenter(new THREE.Vector3()).multiplyScalar(1.5);
+    const h = sz.y * 0.55;
+    const mat = facadeMaterial("plaster", 13);
+    // UVs in metres, so the façade tile keeps its storey-and-bay size
+    const plane = (w: number) => {
+      const g = new THREE.PlaneGeometry(w, h);
+      const uv = g.attributes.uv as THREE.BufferAttribute;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w, uv.getY(i) * h);
+      return g;
+    };
+    return {
+      h,
+      mat,
+      faces: [
+        { p: [c.x, h / 2, c.z - sz.z / 2 - 0.03] as [number, number, number], ry: Math.PI, g: plane(sz.x * 0.96) },
+        { p: [c.x + sz.x / 2 + 0.03, h / 2, c.z - sz.z * 0.1] as [number, number, number], ry: Math.PI / 2, g: plane(sz.z * 0.75) },
+        { p: [c.x - sz.x / 2 - 0.03, h / 2, c.z - sz.z * 0.1] as [number, number, number], ry: -Math.PI / 2, g: plane(sz.z * 0.75) },
+      ],
+    };
+  }, [shed]);
+  useFrame(() => {
+    walls.mat.emissiveIntensity = world.night * 1.3;
+  });
   const yard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9c6bf", roughness: 0.95 }), []);
   const hazard = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffd23f", roughness: 0.6 }), []);
   return (
@@ -176,6 +203,12 @@ export function Workshop() {
       ))}
       {/* the makerspace, modelled in Blender (public/models/workshop.glb), at one and a half size */}
       <primitive object={shed} position={[4.5, 0, -6.5]} scale={1.5} />
+      {/* windows on the back and side walls (the model's own walls are plain), up to the eaves */}
+      <group position={[4.5, 0, -6.5]}>
+        {walls.faces.map((f, i) => (
+          <mesh key={i} position={f.p} rotation-y={f.ry} geometry={f.g} material={walls.mat} />
+        ))}
+      </group>
       <group position={[-7.5, 0, -1]} scale={1.25}>
         <IndustrialArm />
       </group>

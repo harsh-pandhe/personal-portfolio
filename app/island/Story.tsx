@@ -7,7 +7,7 @@ import { heightAt, MARS_C } from "./terrain";
 import { GALA_CAM, GALA_STEPS } from "./Show";
 import { sfx } from "./audio";
 
-type Chapter = { zone: ZoneId | null; kicker: string; title: string; lines: string[]; dist?: number; height?: number; swing?: number; clip?: string };
+type Chapter = { zone: ZoneId | null; kicker: string; title: string; lines: string[]; dist?: number; height?: number; swing?: number; clip?: string; singapore?: boolean };
 
 // The story, in order. Every line is drawn from research/ and lib/achievements.ts.
 export const CHAPTERS: Chapter[] = [
@@ -86,6 +86,7 @@ export const CHAPTERS: Chapter[] = [
     title: "Next stop: Singapore",
     lines: ["Selected for the Singapore–India Hackathon Grand Finale, 15–17 November 2026.", "But first, the island throws a party."],
     clip: "story-6-singapore",
+    singapore: true,
     dist: 26,
   },
 ];
@@ -97,7 +98,23 @@ const SHOT_NAMES = ["Wide", "Tracking", "Close", "Drone"] as const;
 type Shot = { pos: [number, number, number]; look: [number, number, number] };
 
 /** Four cuts per chapter: an establishing wide, a low tracking dolly, a close-up and a drone's-eye descent. */
+/** The epilogue looks across the water from the Merlion's quay to Singapore. */
+const SG = (() => {
+  const q = (95 * Math.PI) / 180,
+    s = (128 * Math.PI) / 180;
+  return { qx: Math.cos(q) * 105, qz: Math.sin(q) * 105, sx: Math.cos(s) * 200, sz: Math.sin(s) * 200 };
+})();
+function singaporeShot(k: number, u: number): Shot {
+  const { qx, qz, sx, sz } = SG;
+  const toward = (f: number, y: number): Shot["pos"] => [qx + (sx - qx) * f, y, qz + (sz - qz) * f];
+  if (k === 0) return { pos: [qx - 14 + u * 4, 34 - u * 6, qz - 18], look: [sx, 18, sz] }; // high over the pier
+  if (k === 1) return { pos: toward(0.08 + u * 0.22, 3.2), look: [sx, 16, sz] }; // skimming the water
+  if (k === 2) return { pos: [qx + 13 - u * 4, 7.5, qz - 11], look: [qx + (sx - qx) * 0.5, 9, qz + (sz - qz) * 0.5] }; // past the Merlion
+  return { pos: toward(0.45 + u * 0.12, 22 + u * 10), look: [sx, 10, sz] }; // a drone rising over the bay
+}
+
 function shotFor(c: Chapter, t: number): Shot {
+  if (c.singapore) return singaporeShot(Math.floor(t / SHOT_SECONDS) % 4, (t % SHOT_SECONDS) / SHOT_SECONDS);
   if (!c.zone) {
     const a = 0.9 + t * 0.05;
     return { pos: [Math.sin(a) * 190, 132, Math.cos(a) * 190], look: [0, -10, 0] };
@@ -194,6 +211,8 @@ export function StoryOverlay() {
   const [captions, setCaptions] = useState(true);
   const [film, setFilm] = useState(true);
   const [list, setList] = useState(false);
+  const [dip, setDip] = useState(0);
+  const lastShot = useRef(-1);
   const live = useRef({ paused, speed });
   live.current = { paused, speed };
   const next = () => ((idx ?? 0) < CHAPTERS.length - 1 ? setUI({ story: (idx ?? 0) + 1 }) : startGala());
@@ -212,7 +231,14 @@ export function StoryOverlay() {
       const t = clock.current;
       world.shot = shotFor(CHAPTERS[idx], t);
       setProgress(Math.min(t / CH_SECONDS, 1));
-      setShot(Math.floor(t / SHOT_SECONDS) % 4);
+      const sh = Math.floor(t / SHOT_SECONDS) % 4;
+      if (sh !== lastShot.current) {
+        // a hard cut, hidden by a quick dip to black, instead of the camera swooping between angles
+        lastShot.current = sh;
+        world.cut = true;
+        setDip((d) => d + 1);
+      }
+      setShot(sh);
       if (t >= CH_SECONDS) {
         if (idx < CHAPTERS.length - 1) setUI({ story: idx + 1 });
         else startGala();
@@ -244,12 +270,15 @@ export function StoryOverlay() {
   const btn = "rounded-full border border-white/30 px-3 py-1 text-[12px] text-white/80 hover:bg-white/10";
   return (
     <div className={`pointer-events-none fixed inset-0 z-[45] transition-opacity duration-700 ${on ? "opacity-100" : "opacity-0"}`}>
+      {/* the dip between shots, and a soft vignette over the frame */}
+      {on && <div key={`dip${dip}`} className="absolute inset-0 animate-[dip_.45s_ease-out_both] bg-black" />}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,.35))]" />
       {/* letterbox */}
       <div className={`absolute inset-x-0 top-0 bg-black transition-[height] duration-1000 ${on ? "h-[11vh]" : "h-0"}`} />
       <div className={`absolute inset-x-0 bottom-0 bg-black transition-[height] duration-1000 ${on ? "h-[17vh]" : "h-0"}`} />
       {on && (
         <>
-          <div key={`t${idx}`} className="absolute left-4 right-4 top-[14vh] animate sm:left-16 sm:right-auto sm:top-[16vh]-[rise_1s_cubic-bezier(.16,1,.3,1)_both] text-white [text-shadow:0_4px_30px_rgba(0,0,0,.45)]">
+          <div key={`t${idx}`} className="absolute left-4 right-4 top-[14vh] animate-[rise_1s_cubic-bezier(.16,1,.3,1)_both] text-white sm:left-16 sm:right-auto sm:top-[16vh] [text-shadow:0_4px_30px_rgba(0,0,0,.45)]">
             <div className="font-mono text-[12px] uppercase tracking-[0.3em] text-white/75">
               {c.kicker} · <span className="text-white/50">{SHOT_NAMES[shot]} shot</span>
             </div>
@@ -257,7 +286,7 @@ export function StoryOverlay() {
           </div>
           {/* the chapter's film: a Google Flow clip, picture-in-picture */}
           {film && c.clip && (
-            <figure key={`f${idx}`} className="absolute bottom-[21vh] right-3 w-[46vw] animate sm:right-8 sm:w-[min(30vw,420px)]-[rise_1s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden rounded-2xl border border-white/20 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8)]">
+            <figure key={`f${idx}`} className="absolute bottom-[21vh] right-3 w-[46vw] animate-[rise_1s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden sm:right-8 sm:w-[min(30vw,420px)] rounded-2xl border border-white/20 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8)]">
               <video src={`/media/video/${c.clip}.mp4`} poster={`/media/video/${c.clip}.jpg`} autoPlay muted loop playsInline className="block aspect-video w-full object-cover" />
               <figcaption className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wide text-white/75">Animated with Google Flow</figcaption>
             </figure>

@@ -24,20 +24,54 @@ export function Ropeway() {
     // the rope runs over each station's bull wheel, ~3 m above its deck
     return pts.map(([x, zz]) => new THREE.Vector3(x, heightAt(x, zz) + 3.2, zz));
   }, [vx, vz, tx, tz]);
-  // one continuous line with a catenary sag in every span, so cabins ride straight through the stations
+  // Supports: the four stations, plus a lattice tower wherever a sagging span would bring the
+  // cabins (which hang ~4 m under the rope) too close to the hillside. Towers are added one at a
+  // time at the lowest point of the worst span until every span clears the ground.
+  const supports = useMemo(() => {
+    const CLEAR = 8; // rope height above ground the cabins need
+    const TOP = 11; // rope height on a tower
+    const sagOf = (A: THREE.Vector3, B: THREE.Vector3) => A.distanceTo(B) * 0.045;
+    const list: { p: THREE.Vector3; tower: boolean }[] = stops.map((p) => ({ p, tower: false }));
+    for (let iter = 0; iter < 40; iter++) {
+      let worst = 0,
+        at: { span: number; t: number } | null = null;
+      for (let s = 0; s < list.length - 1; s++) {
+        const A = list[s].p,
+          B = list[s + 1].p,
+          sag = sagOf(A, B);
+        for (let i = 1; i < 40; i++) {
+          const t = i / 40;
+          const x = A.x + (B.x - A.x) * t,
+            z = A.z + (B.z - A.z) * t;
+          const y = A.y + (B.y - A.y) * t - Math.sin(t * Math.PI) * sag;
+          const lack = heightAt(x, z) + CLEAR - y;
+          if (lack > worst) (worst = lack), (at = { span: s, t });
+        }
+      }
+      if (!at) break;
+      const A = list[at.span].p,
+        B = list[at.span + 1].p;
+      const x = A.x + (B.x - A.x) * at.t,
+        z = A.z + (B.z - A.z) * at.t;
+      list.splice(at.span + 1, 0, { p: new THREE.Vector3(x, heightAt(x, z) + TOP, z), tower: true });
+    }
+    return { list, sagOf };
+  }, [stops]);
+  // one continuous line with a catenary sag in every span, so cabins ride straight through supports
   const curve = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    for (let s = 0; s < stops.length - 1; s++) {
-      const A = stops[s],
-        B = stops[s + 1];
-      const sag = A.distanceTo(B) * 0.055;
+    const L = supports.list;
+    for (let s = 0; s < L.length - 1; s++) {
+      const A = L[s].p,
+        B = L[s + 1].p;
+      const sag = supports.sagOf(A, B);
       for (let i = s ? 1 : 0; i <= 24; i++) {
         const t = i / 24;
         pts.push(A.clone().lerp(B, t).setY(A.y + (B.y - A.y) * t - Math.sin(t * Math.PI) * sag));
       }
     }
     return new THREE.CatmullRomCurve3(pts, false, "centripetal");
-  }, [stops]);
+  }, [supports]);
   const side = useMemo(() => {
     const d = stops[stops.length - 1].clone().sub(stops[0]);
     return new THREE.Vector3(d.z, 0, -d.x).normalize().multiplyScalar(1.1);
@@ -46,27 +80,20 @@ export function Ropeway() {
     () =>
       [-1, 1].map((sgn) => {
         const off = side.clone().multiplyScalar(sgn);
-        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(curve.getPoints(220).map((p) => p.clone().add(off))), 440, 0.05, 5);
+        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(curve.getPoints(320).map((p) => p.clone().add(off))), 640, 0.05, 5);
       }),
     [curve, side]
   );
-  // a lattice tower at the middle of every long span
+  // towers stand at the supports that aren't stations, turned along the line
   const towers = useMemo(() => {
-    const out: { p: THREE.Vector3; g: number; yaw: number }[] = [];
-    for (let s = 0; s < stops.length - 1; s++) {
-      const A = stops[s],
-        B = stops[s + 1];
-      const L = A.distanceTo(B);
-      const n = L > 24 ? 1 : 0;
-      for (let k = 1; k <= n; k++) {
-        const t = k / (n + 1);
-        const p = A.clone().lerp(B, t);
-        p.y = A.y + (B.y - A.y) * t - Math.sin(t * Math.PI) * L * 0.055 + 0.4;
-        out.push({ p, g: heightAt(p.x, p.z), yaw: Math.atan2(B.x - A.x, B.z - A.z) });
-      }
-    }
-    return out;
-  }, [stops]);
+    const L = supports.list;
+    return L.flatMap((q, i) => {
+      if (!q.tower) return [];
+      const prv = L[i - 1].p,
+        nxt = L[i + 1].p;
+      return [{ p: q.p.clone().setY(q.p.y + 0.4), g: heightAt(q.p.x, q.p.z), yaw: Math.atan2(nxt.x - prv.x, nxt.z - prv.z) }];
+    });
+  }, [supports]);
   const cabins = useRef<THREE.Group>(null);
   const tan = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ clock }) => {

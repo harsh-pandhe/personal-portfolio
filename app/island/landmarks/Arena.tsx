@@ -8,7 +8,7 @@ import { ARENA } from "../colliders";
 import { heightAt, rng } from "../terrain";
 import { zoneById, zonePos } from "../zones";
 import { world } from "../store";
-import { M, Billboard, ZoneGroup } from "./common";
+import { M, Billboard, ZoneGroup, fontFamily } from "./common";
 
 /* The SIH trophy: a two-handled cup with a lip, a knotted stem and a stepped ebony base with a
    gold plaque, standing on a stone plinth in the centre circle. */
@@ -204,6 +204,43 @@ export function Arena() {
     () => new THREE.LatheGeometry([new THREE.Vector2(ARENA.r1 + 0.4, 6.2), new THREE.Vector2(ARENA.r1 - 3.2, 6.9)], 96, ARENA.gapHalf, Math.PI * 2 - ARENA.gapHalf * 2),
     []
   );
+  // the outside of the bowl: concrete fins, hanging banners in the zone colours and the name
+  const facade = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 2048;
+    c.height = 256;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#d9dbdf";
+    g.fillRect(0, 0, 2048, 256);
+    for (let x = 0; x < 2048; x += 64) {
+      g.fillStyle = "#c3c6cb";
+      g.fillRect(x, 0, 14, 256);
+    }
+    g.fillStyle = "#b8bcc2";
+    g.fillRect(0, 226, 2048, 30);
+    const cols = ["#2d5bff", "#ffd23f", "#ff5a36", "#12f0c0"];
+    for (let k = 0; k < 8; k++) {
+      const x = 90 + k * 250;
+      g.fillStyle = cols[k % cols.length];
+      g.fillRect(x, 20, 54, 150);
+      g.beginPath();
+      g.moveTo(x, 170);
+      g.lineTo(x + 27, 196);
+      g.lineTo(x + 54, 170);
+      g.fill();
+    }
+    g.fillStyle = "#1d2128";
+    g.font = `800 92px ${fontFamily()}`;
+    g.fillText("THE ARENA", 760, 140);
+    g.font = `600 30px ${fontFamily()}`;
+    g.fillText("SMART INDIA HACKATHON 2025 · NATIONAL WINNERS", 640, 196);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = THREE.RepeatWrapping;
+    t.repeat.set(3, 1);
+    t.anisotropy = 8;
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 });
+  }, []);
   const seatMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9ced6", roughness: 0.8, side: THREE.DoubleSide, flatShading: true }), []);
   const roofMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f4f6f8", roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide }), []);
   const cols = useMemo(() => Array.from({ length: 14 }, (_, i) => ARENA.gapHalf + 0.1 + (i / 13) * (Math.PI * 2 - ARENA.gapHalf * 2 - 0.2)), []);
@@ -229,6 +266,9 @@ export function Arena() {
         <meshBasicMaterial color="#ffffff" />
       </mesh>
       <mesh geometry={bowl} material={seatMat} castShadow receiveShadow />
+      <mesh position={[0, 2.2, 0]} material={facade}>
+        <cylinderGeometry args={[ARENA.r1 + 0.34, ARENA.r1 + 0.34, 4.4, 96, 1, true, ARENA.gapHalf, Math.PI * 2 - ARENA.gapHalf * 2]} />
+      </mesh>
       <mesh geometry={canopy} material={roofMat} castShadow />
       {cols.map((a) => (
         <mesh key={a} position={[Math.sin(a) * (ARENA.r1 + 0.15), 5.3, Math.cos(a) * (ARENA.r1 + 0.15)]} material={M.metal}>

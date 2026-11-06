@@ -190,6 +190,8 @@ export default function ProjectBoard() {
   const fit = () => {
     const el = wrap.current;
     if (!el) return;
+    // narrow screens fit the height and pan sideways; fitting the width there leaves a thin strip of tiny cards
+    if (el.clientWidth < 640) return setView({ x: 8, y: 8, k: (el.clientHeight - 16) / 2060 });
     const k = Math.min(el.clientWidth / 2900, el.clientHeight / 2020);
     setView({ x: (el.clientWidth - 2960 * k) / 2, y: 8, k });
   };
@@ -214,10 +216,11 @@ export default function ProjectBoard() {
 
   return (
     <div>
-      <div className="mb-3 flex items-end justify-between">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <span className="font-mono text-[12px] uppercase tracking-wide text-[var(--accent)]">The board · {ITEMS.length} builds</span>
         <span className="flex gap-2 font-mono text-[11px] uppercase text-white/50">
-          <span>Drag to pan · scroll to zoom</span>
+          <span className="hidden sm:inline">Drag to pan · scroll to zoom</span>
+          <span className="sm:hidden">Swipe sideways to pan</span>
           {[
             ["−", 0.8],
             ["+", 1.25],
@@ -233,8 +236,8 @@ export default function ProjectBoard() {
       </div>
       <div
         ref={wrap}
-        className="relative h-[780px] cursor-grab overflow-hidden rounded-[22px] border border-white/10 bg-[#0b0f19] active:cursor-grabbing"
-        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,.09) 1px, transparent 1px)", backgroundSize: `${24 * view.k}px ${24 * view.k}px`, backgroundPosition: `${view.x}px ${view.y}px` }}
+        className="relative h-[520px] cursor-grab sm:h-[780px] overflow-hidden rounded-[22px] border border-white/10 bg-[#0b0f19] active:cursor-grabbing"
+        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,.09) 1px, transparent 1px)", backgroundSize: `${24 * view.k}px ${24 * view.k}px`, backgroundPosition: `${view.x}px ${view.y}px`, touchAction: "pan-y" }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false };
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);

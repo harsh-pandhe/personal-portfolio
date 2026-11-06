@@ -299,6 +299,11 @@ export function CameraRig() {
       tmp2.set(p.x, heightAt(p.x, p.z) + 1.6, p.z);
       ease = 1 - Math.pow(0.0005, dt);
     }
+    if (world.cut) {
+      // a cut: no glide from the last angle
+      world.cut = false;
+      ease = 1;
+    }
     pos.current.lerp(tmp, ease);
     look.current.lerp(tmp2, ease);
     camera.position.copy(pos.current);

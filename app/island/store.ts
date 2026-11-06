@@ -20,6 +20,7 @@ export const world = {
   rainTarget: 0,
   cloud: 0.3, // 0..1 cloud cover
   shot: null as null | { pos: [number, number, number]; look: [number, number, number] }, // story-mode camera
+  cut: false, // jump straight to the shot this frame (a film cut) instead of easing toward it
 };
 
 /** UI state shared between the canvas and the DOM overlay. */
