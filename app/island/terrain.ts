@@ -222,7 +222,9 @@ export function buildTerrain(seg = GRID.seg) {
       }
     }
     c.lerp(C.road, roadMask(x, z) * 0.95);
-    c.lerp(C.sand, ss(ISLAND_EDGE - 4, ISLAND_EDGE + 1, r));
+    // Palm Beach (Beach.tsx) gets a wide stretch of sand; elsewhere a thin strip at the waterline
+    const sandFrom = ISLAND_EDGE - 4 - onBeach(x, z) * 7;
+    c.lerp(C.sand, ss(sandFrom, sandFrom + 3 + onBeach(x, z) * 2, r));
     cols[i * 3] = c.r;
     cols[i * 3 + 1] = c.g;
     cols[i * 3 + 2] = c.b;
@@ -243,10 +245,19 @@ export function rng(seed: number) {
   };
 }
 
+/** Palm Beach on the west shore, below the lighthouse (Beach.tsx): 1 on the beach, fading to 0 at its ends. */
+export const BEACH = { from: 168, to: 196 };
+export function onBeach(x: number, z: number) {
+  let deg = (Math.atan2(z, x) * 180) / Math.PI;
+  if (deg < 0) deg += 360;
+  return ss(BEACH.from - 4, BEACH.from + 1, deg) * (1 - ss(BEACH.to - 1, BEACH.to + 4, deg));
+}
+
 /** True where trees/props may grow (not on roads, plazas, beach or the ridge path). */
 export function isFreeLand(x: number, z: number) {
   const r = Math.hypot(x, z);
   if (r > ISLAND_EDGE - 5 || r < PLAZA_R + 2.5) return false;
+  if (r > ISLAND_EDGE - 13 && onBeach(x, z) > 0.2) return false; // keep the sand clear
   if (roadMask(x, z) > 0.05) return false;
   for (const zz of zoneXZ) if (Math.hypot(x - zz.p[0], z - zz.p[1]) < zoneFlatR(zz.id) + 1.5) return false;
   if (Math.hypot(x - MARS_C[0], z - MARS_C[1]) < MARS_R + 3) return false;

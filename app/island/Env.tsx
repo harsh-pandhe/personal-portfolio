@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, ISLAND_EDGE, LIGHTHOUSE, rng, roadMask } from "./terrain";
+import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, ISLAND_EDGE, LIGHTHOUSE, onBeach, rng, roadMask } from "./terrain";
 import { getUI, world } from "./store";
 import { addCollider } from "./colliders";
 import { DEVICE } from "./device";
@@ -242,7 +242,7 @@ function natureSpots() {
     const d = ISLAND_EDGE - 3 + r() * 6,
       x = Math.cos(a) * d,
       z = Math.sin(a) * d;
-    if (Math.hypot(x - LIGHTHOUSE[0], z - LIGHTHOUSE[1]) < 9) continue;
+    if (Math.hypot(x - LIGHTHOUSE[0], z - LIGHTHOUSE[1]) < 9 || onBeach(x, z) > 0) continue;
     rock.push(at(x, z, 0.5 + r() * 1.1, 0.25));
   }
   return { bush, shrub, rock };
