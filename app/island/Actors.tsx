@@ -9,7 +9,7 @@ import { heightAt, ISLAND_EDGE, MARS_C, PLAZA_R, ridgeTop, ROAD_HALF, ROAD_R } f
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
 import { resolve } from "./colliders";
-import { REDUCED_MOTION } from "./device";
+import { DEVICE, REDUCED_MOTION } from "./device";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 
 const ROBOT = "/models/robot.glb";
@@ -463,7 +463,7 @@ function Bubble({ kind, z, text, onOpen }: { kind: "think" | "ask"; z: Zone; tex
         <button onClick={onOpen} className="pointer-events-auto rounded-full bg-neutral-900 px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-black">
           Show me ↗
         </button>
-        <span className="font-mono text-[10px] text-neutral-400">F to wave</span>
+        {!DEVICE.touch && <span className="font-mono text-[10px] text-neutral-400">F to wave</span>}
       </span>
       <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
     </div>
