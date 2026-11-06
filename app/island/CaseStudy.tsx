@@ -90,18 +90,65 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
+// EmailJS (the same service and template the old contact page used: from_name, from_email, message)
+const EMAILJS = {
+  service: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+  template: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+  key: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+};
+
 function ContactForm() {
   const intents = ["A full-time role", "An internship", "A research collaboration", "A project or hackathon", "Just saying hi"];
   const [intent, setIntent] = useState(intents[0]);
   const [msg, setMsg] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [trap, setTrap] = useState(""); // a field people never see; bots fill it in
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const href = `mailto:${profile.email}?subject=${encodeURIComponent(`${intent} — from ${name || "your portfolio"}`)}&body=${encodeURIComponent(msg)}`;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const ready = name.trim().length > 1 && emailOk && msg.trim().length > 9 && !!EMAILJS.service;
+  const send = async () => {
+    if (!ready || state === "sending") return;
+    if (trap) return setState("sent");
+    setState("sending");
+    try {
+      const r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: EMAILJS.service,
+          template_id: EMAILJS.template,
+          user_id: EMAILJS.key,
+          template_params: { from_name: name.trim(), from_email: email.trim(), message: `${intent}\n\n${msg.trim()}\n\n(sent from harshpandhe.com)` },
+        }),
+      });
+      setState(r.ok ? "sent" : "error");
+    } catch {
+      setState("error");
+    }
+  };
+  const field = "w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-[15px] text-white placeholder-white/35 outline-none focus:border-white/50";
+  if (state === "sent")
+    return (
+      <div className="rounded-[26px] border border-[#22d36b]/40 bg-[#22d36b]/10 p-7">
+        <Label>Message sent</Label>
+        <p className="mt-3 text-[17px] leading-relaxed text-white">Thanks{name ? `, ${name.trim().split(" ")[0]}` : ""}. It&apos;s in my inbox; I&apos;ll reply to {email || "you"} soon.</p>
+      </div>
+    );
   return (
-    <div className="rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02))] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,.2)]">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        send();
+      }}
+      className="rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.02))] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,.2)]"
+    >
       <Label>What brings you here?</Label>
       <div className="mt-3 flex flex-wrap gap-2">
         {intents.map((i) => (
           <button
+            type="button"
             key={i}
             onClick={() => setIntent(i)}
             className={`rounded-full border px-4 py-2 text-[14px] transition ${intent === i ? "border-white bg-white text-[#0b1020]" : "border-white/25 text-white/75 hover:border-white/60"}`}
@@ -110,26 +157,41 @@ function ContactForm() {
           </button>
         ))}
       </div>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Your name"
-        className="mt-5 w-full rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-[15px] text-white placeholder-white/35 outline-none focus:border-white/50"
-      />
-      <textarea
-        value={msg}
-        onChange={(e) => setMsg(e.target.value)}
-        rows={4}
-        placeholder="A line or two about it…"
-        className="mt-3 w-full resize-none rounded-2xl border border-white/15 bg-black/30 px-4 py-3 text-[15px] text-white placeholder-white/35 outline-none focus:border-white/50"
-      />
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <span className="text-[13px] text-white/45">Opens your email app with this filled in.</span>
-        <a href={href} className="rounded-full bg-[#22d36b] px-6 py-3 text-[14px] font-semibold text-[#06240f] transition hover:bg-[#2be277]">
-          Write to {profile.email} ↗
-        </a>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" required className={field} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email" type="email" autoComplete="email" required className={field} />
       </div>
-    </div>
+      <input value={trap} onChange={(e) => setTrap(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-0 w-0 opacity-0" name="website" />
+      <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={4} placeholder="A line or two about it…" required className={`mt-3 resize-none ${field}`} />
+      <div className="mt-4 flex flex-col-reverse items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[13px] text-white/45">
+          {state === "error" ? (
+            <>
+              Couldn&apos;t send just now.{" "}
+              <a href={href} className="underline">
+                Email me directly
+              </a>
+              .
+            </>
+          ) : (
+            <>
+              Goes straight to my inbox. Or{" "}
+              <a href={href} className="underline">
+                use your email app
+              </a>
+              .
+            </>
+          )}
+        </span>
+        <button
+          type="submit"
+          disabled={!ready || state === "sending"}
+          className="rounded-full bg-[#22d36b] px-6 py-3 text-[14px] font-semibold text-[#06240f] transition hover:bg-[#2be277] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {state === "sending" ? "Sending…" : "Send message →"}
+        </button>
+      </div>
+    </form>
   );
 }
 
