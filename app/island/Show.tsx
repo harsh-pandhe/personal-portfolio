@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getUI, world } from "./store";
-import { droneShape, globeShape, gridTextShape, rocketShape, ropewayShape, trophyShape } from "./shapes";
+import { cubesatFrom, cubesatShape, droneShape, flagShape, flagWheelFrom, globeShape, gridTextShape, matchFormations, rocketShape, ropewayShape, starShape, trophyShape } from "./shapes";
 import { sfx } from "./audio";
 
 const N = 1400;
@@ -14,9 +14,12 @@ export const GALA_STEPS: { key: string; caption: string; sub: string; color: str
   { key: "hp", caption: "Harsh Pandhe", sub: "Welcome to the gala on Mission Island", color: "#00d2ff" },
   { key: "trophy", caption: "SIH 2025 · National Winner", sub: "10,000+ teams · Team Algo Sapiens · Telhan Sathi", color: "#ffd23f" },
   { key: "drone", caption: "ISRO IRoC-U 2026 · Finalist", sub: "A drone that flies without GPS", color: "#ff7a45" },
+  { key: "cubesat", caption: "CubeSat 1U", sub: "Systems, flight software, electronics and a ground segment", color: "#9fdcff" },
   { key: "swarm", caption: "MARS · multi-robot swarms", sub: "Six papers on SSRN, written up honestly", color: "#12f0c0" },
+  { key: "star", caption: "Taramandal", sub: "His drone-show studio and ground control: formations like these", color: "#ffd23f" },
   { key: "ropeway", caption: "Ropeways at Doppelmayr", sub: "Two coordinates in, an alignment out", color: "#ff5a6e" },
   { key: "chart", caption: "AlgoTrade", sub: "The strategy that survived ten attempts to kill it", color: "#7dff8a" },
+  { key: "flag", caption: "Built in India", sub: "From Solapur and Lonavala to the world", color: "#ff9933" },
   { key: "globe", caption: "Next stop: Singapore", sub: "Singapore–India Hackathon Grand Finale · 15–17 Nov 2026", color: "#00d2ff" },
   { key: "hp", caption: "Thank you for visiting", sub: "Say hello: harshpandhehome@gmail.com", color: "#ffffff" },
 ];
@@ -38,11 +41,24 @@ const AMBIENT: { key: string; hold: number; pal: string[] }[] = [
   { key: "trophy", hold: 8, pal: ["#ffb300", "#ffd23f"] },
   { key: "rocket", hold: 8, pal: ["#ffffff", "#ff8a3d"] },
   { key: "swarm", hold: 9, pal: ["#12f0c0", "#2d5bff", "#ffd23f", "#ff7ac6", "#9b7bff", "#ff8a3d"] },
+  { key: "star", hold: 8, pal: ["#ffd23f", "#fff3d6"] },
+  { key: "cubesat", hold: 9, pal: ["#2d8bff", "#12f0c0"] },
   { key: "ropeway", hold: 8, pal: ["#ff5a6e", "#ffffff"] },
   { key: "chart", hold: 8, pal: ["#7dff8a", "#12f0c0"] },
+  { key: "flag", hold: 9, pal: ["#ff9933"] },
   { key: "globe", hold: 9, pal: ["#00d2ff", "#ff3b5c"] },
   { key: "hp", hold: 8, pal: ["#00d2ff", "#ffffff"] },
 ];
+
+/* Fixed colours for formations that are a picture, not a palette sweep. */
+const SAFFRON = new THREE.Color("#ff8a2b"),
+  WHITE = new THREE.Color("#ffffff"),
+  GREEN = new THREE.Color("#19c95c"),
+  NAVY = new THREE.Color("#4a63ff"),
+  OCEAN = new THREE.Color("#2d8bff"),
+  LAND = new THREE.Color("#3ddc84"),
+  GOLD = new THREE.Color("#ffd23f");
+const FLAG_H = 6; // flagShape(width 9) is 6 tall
 
 /** Drones parked in rows on the launch deck (local units: the holder is scaled 6x, 44 m up). */
 function gridShape(n: number) {
@@ -160,40 +176,44 @@ function risingChart(n: number) {
   return out;
 }
 
-function glowSprite() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 64;
-  const g = c.getContext("2d")!;
-  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gr.addColorStop(0, "rgba(255,255,255,1)");
-  gr.addColorStop(0.18, "rgba(255,255,255,.9)");
-  gr.addColorStop(0.45, "rgba(255,255,255,.25)");
-  gr.addColorStop(1, "rgba(255,255,255,0)");
-  g.fillStyle = gr;
-  g.fillRect(0, 0, 64, 64);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+/** An LED drone seen at night: a hot white-ish core and a soft coloured halo, sized by distance. */
+function ledMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    uniforms: { uSize: { value: 2.4 }, uScale: { value: 500 }, uOpacity: { value: 0 } },
+    vertexShader: `uniform float uSize; uniform float uScale; varying vec3 vC;
+      void main(){ vC = color; vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = max(uSize * uScale / -mv.z, 1.5); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float uOpacity; varying vec3 vC;
+      void main(){ float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0) discard;
+        float core = smoothstep(0.34, 0.0, r); float halo = exp(-r * r * 5.0) * 0.5;
+        vec3 c = vC * (core * 1.5 + halo) + vec3(core * 0.45);
+        gl_FragColor = vec4(c * uOpacity, 1.0); }`,
+  });
 }
 
 export function LightShow() {
   const geo = useRef<THREE.BufferGeometry>(null);
-  const mat = useRef<THREE.PointsMaterial>(null);
   const holder = useRef<THREE.Points>(null);
+  const mat = useMemo(ledMaterial, []);
   const shapes = useRef<Record<string, Float32Array> | null>(null);
   const pos = useMemo(() => new Float32Array(N * 3), []);
   const cols = useMemo(() => new Float32Array(N * 3), []);
   const from = useRef<Float32Array>(new Float32Array(N * 3));
+  const fromCol = useRef<Float32Array>(new Float32Array(N * 3));
   const to = useRef<Float32Array>(new Float32Array(N * 3));
-  const fromPal = useRef<THREE.Color[]>([new THREE.Color("#fff3d6")]);
+  // drone j flies to target point perm[j]; matched along a Hilbert curve so paths don't cross
+  const perm = useRef<Int32Array>(Int32Array.from({ length: N }, (_, i) => i));
   const toPal = useRef<THREE.Color[]>([new THREE.Color("#fff3d6")]);
   const tStart = useRef(0);
+  const galaStart = useRef(-1);
   const lastKey = useRef("");
   const prevKey = useRef("");
   const cycle = useRef({ i: 0, until: 0 });
-  const ca = useMemo(() => new THREE.Color(), []);
   const cb = useMemo(() => new THREE.Color(), []);
-  const sprite = useMemo(() => (typeof document === "undefined" ? null : glowSprite()), []);
 
   useEffect(() => {
     const build = () => {
@@ -207,6 +227,9 @@ export function LightShow() {
         ropeway: ropewayShape(N),
         chart: risingChart(N),
         globe: globeShape(N, 2.6),
+        star: starShape(N),
+        cubesat: cubesatShape(N),
+        flag: flagShape(N),
       };
       from.current.set(shapes.current.grid);
       to.current.set(shapes.current.grid);
@@ -216,17 +239,40 @@ export function LightShow() {
     else build();
   }, [pos]);
 
-  useFrame(({ clock }) => {
+  /** The colour a drone should show at its target point in the current formation. */
+  const target = (k: string, ti: number, B: Float32Array, j: number, t: number, P: THREE.Color[]) => {
+    const x = B[ti * 3],
+      y = B[ti * 3 + 1];
+    if (k === "flag") return ti >= flagWheelFrom(N) ? NAVY : y > FLAG_H / 6 ? SAFFRON : y < -FLAG_H / 6 ? GREEN : WHITE;
+    if (k === "cubesat") return ti >= cubesatFrom(N) ? (Math.abs(x) > 0.3 ? OCEAN : GOLD) : (ti * 2654435761) % 7 < 3 ? LAND : OCEAN;
+    if (k === "star") return ti < N * 0.45 ? GOLD : WHITE;
+    if (k === "swarm") return P[ti % P.length];
+    // everything else: a slow sweep across the palette from left to right
+    const sweep = (x * 0.12 + t * 0.25) % 1;
+    return P[Math.floor(Math.abs(sweep) * P.length) % P.length] ?? P[j % P.length];
+  };
+
+  useFrame(({ clock, size, gl }) => {
     const S = shapes.current;
-    if (!S || !geo.current || !mat.current || !holder.current) return;
+    if (!S || !geo.current || !holder.current) return;
     const galaIdx = getUI().gala;
     const gala = galaIdx !== null;
     const anchor = gala ? GALA_POS : AMBIENT_POS;
     holder.current.position.lerp(anchor, gala ? 0.05 : 1);
     holder.current.rotation.y = gala ? Math.atan2(-GALA_POS.x + GALA_CAM.pos[0], -GALA_POS.z + GALA_CAM.pos[2]) : 0;
-    mat.current.opacity = Math.min(1, Math.max(0, world.night * 1.3 - 0.25));
+    mat.uniforms.uOpacity.value = Math.min(1, Math.max(0, world.night * 1.3 - 0.25));
+    mat.uniforms.uScale.value = (size.height * gl.getPixelRatio()) / 2;
     if (world.night < 0.02) return;
     const t = clock.elapsedTime;
+    // the gala camera drifts in a slow arc in front of the show, like a broadcast crane
+    if (gala) {
+      if (galaStart.current < 0) galaStart.current = t;
+      const g = t - galaStart.current;
+      world.shot = {
+        pos: [GALA_CAM.pos[0] + Math.sin(g * 0.07) * 7, GALA_CAM.pos[1] + 1 + Math.sin(g * 0.11) * 2, GALA_CAM.pos[2] - 8],
+        look: [GALA_CAM.look[0], GALA_CAM.look[1] + 4, GALA_CAM.look[2]],
+      };
+    } else galaStart.current = -1;
     // pick the current formation
     let key: string, pal: string[];
     if (gala) {
@@ -242,8 +288,9 @@ export function LightShow() {
     }
     if (key !== lastKey.current) {
       from.current.set(pos);
-      fromPal.current = toPal.current;
+      fromCol.current.set(cols);
       to.current = S[key];
+      perm.current = matchFormations(pos, S[key]);
       toPal.current = pal.map((c) => new THREE.Color(c));
       tStart.current = t;
       prevKey.current = lastKey.current;
@@ -253,27 +300,34 @@ export function LightShow() {
     const span = key === "grid" || prevKey.current === "grid" ? 4.2 : 3;
     const f = Math.min((t - tStart.current) / span, 1);
     const A = from.current,
-      B = to.current;
+      B = to.current,
+      FC = fromCol.current,
+      M = perm.current;
     const k = lastKey.current;
     const spin = t * 0.5;
     const cs = Math.cos(spin),
       sn = Math.sin(spin);
+    const sat0 = cubesatFrom(N);
+    const orbit = t * 0.55;
     for (let j = 0; j < N; j++) {
       const ix = j * 3;
+      const ti = M[j];
+      const tx = ti * 3;
       // staggered: drones leave in waves across the formation, then ease in along an arc
-      const delay = ((j * 7919) % N) / N;
+      const delay = ((ti * 7919) % N) / N;
       const kk = Math.min(Math.max((f - delay * 0.35) / 0.65, 0), 1);
       const e = kk * kk * (3 - 2 * kk);
-      let bx = B[ix],
-        by = B[ix + 1],
-        bz = B[ix + 2];
-      // living formations: the globe turns, the swarm orbits, the rocket climbs, the drone banks
+      let bx = B[tx],
+        by = B[tx + 1],
+        bz = B[tx + 2];
+      // living formations: the globe turns, the swarm orbits, the rocket climbs, the drone banks,
+      // the flag ripples, the CubeSat orbits its planet, the constellation twinkles and turns
       if (k === "globe") {
         const x = bx * cs - bz * sn;
         bz = bx * sn + bz * cs;
         bx = x;
       } else if (k === "swarm") {
-        const c = j % 6,
+        const c = ti % 6,
           a = t * 0.45,
           cx = Math.cos((c / 6) * Math.PI * 2) * 3,
           cy = Math.sin((c / 6) * Math.PI * 2) * 3;
@@ -286,40 +340,58 @@ export function LightShow() {
         by += Math.min(f, 1) * Math.sin(t * 0.6) * 0.4;
         if (by < -1.6) by -= Math.random() * 0.6; // exhaust flicker
       } else if (k === "drone") {
-        // the quad is modelled flat; tip it toward the shore so its four rotors read, and let it bank
         const tip = 1.15 + Math.sin(t * 0.7) * 0.12;
         const y2 = by * Math.cos(tip) + bz * Math.sin(tip);
         bz = -by * Math.sin(tip) + bz * Math.cos(tip);
         by = y2 + Math.sin(t * 1.4) * 0.15;
+      } else if (k === "flag") {
+        // cloth: waves travel from the hoist (left) to the fly, growing toward the free edge
+        const u = (bx + 4.5) / 9;
+        bz += Math.sin(bx * 0.9 - t * 2.2) * 0.45 * u;
+        by += Math.sin(bx * 0.7 - t * 2.2 + 1) * 0.12 * u;
+      } else if (k === "cubesat" && ti >= sat0) {
+        // the satellite turns slowly as it rounds the planet on a tilted orbit
+        const rot = t * 0.4;
+        const lx = bx * Math.cos(rot) - bz * Math.sin(rot),
+          lz = bx * Math.sin(rot) + bz * Math.cos(rot);
+        bx = Math.cos(orbit) * 3.6 + lx;
+        by = Math.sin(orbit) * 1.1 + by;
+        bz = Math.sin(orbit) * 3.6 + lz;
+      } else if (k === "cubesat") {
+        const x = bx * cs - bz * sn;
+        bz = bx * sn + bz * cs;
+        bx = x;
+      } else if (k === "star") {
+        // the whole constellation turns slowly in its own plane
+        const a = t * 0.08;
+        const x = bx * Math.cos(a) - by * Math.sin(a);
+        by = bx * Math.sin(a) + by * Math.cos(a) + Math.sin(t * 0.8 + ti) * 0.02;
+        bx = x;
       }
       const lift = Math.sin(e * Math.PI) * 0.9;
       pos[ix] = A[ix] + (bx - A[ix]) * e;
       pos[ix + 1] = A[ix + 1] + (by - A[ix + 1]) * e + lift + Math.sin(t * 1.1 + j) * 0.012;
       pos[ix + 2] = A[ix + 2] + (bz - A[ix + 2]) * e;
-      // synced colour: a slow sweep across the palette from left to right
-      const P = toPal.current,
-        Q = fromPal.current;
-      const sweep = (pos[ix] * 0.12 + t * 0.25 + (k === "swarm" ? (j % 6) / 6 : 0)) % 1;
-      const pi = k === "swarm" ? j % P.length : Math.floor(Math.abs(sweep) * P.length) % P.length;
-      ca.copy(Q[j % Q.length]);
-      cb.copy(P[pi]);
-      ca.lerp(cb, e);
-      const tw = 0.62 + 0.12 * Math.sin(t * 5 + j * 0.37); // dim enough that additive overlap keeps its colour
-      cols[ix] = ca.r * tw;
-      cols[ix + 1] = ca.g * tw;
-      cols[ix + 2] = ca.b * tw;
+      // colour changes as a wave rolling out from the centre of the new formation
+      const r = Math.hypot(B[tx], B[tx + 1]);
+      const cw = Math.min(Math.max(f * 1.8 - r * 0.11, 0), 1);
+      cb.copy(target(k, ti, B, j, t, toPal.current));
+      // flag bands are spaced wider than other formations' points, so each LED burns brighter
+      const tw = (k === "flag" ? 1.25 : 1) * (0.62 + 0.1 * Math.sin(t * 5 + j * 0.37)) + (k === "star" && ti >= N * 0.75 ? 0.25 * Math.sin(t * 3 + ti) : 0);
+      cols[ix] = (FC[ix] + (cb.r * tw - FC[ix]) * cw);
+      cols[ix + 1] = (FC[ix + 1] + (cb.g * tw - FC[ix + 1]) * cw);
+      cols[ix + 2] = (FC[ix + 2] + (cb.b * tw - FC[ix + 2]) * cw);
     }
     geo.current.attributes.position.needsUpdate = true;
     geo.current.attributes.color.needsUpdate = true;
   });
 
   return (
-    <points ref={holder} scale={6} frustumCulled={false} renderOrder={10}>
+    <points ref={holder} scale={6} frustumCulled={false} renderOrder={10} material={mat}>
       <bufferGeometry ref={geo}>
         <bufferAttribute attach="attributes-position" args={[pos, 3]} />
         <bufferAttribute attach="attributes-color" args={[cols, 3]} />
       </bufferGeometry>
-      <pointsMaterial ref={mat} map={sprite} size={2.2} vertexColors transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }

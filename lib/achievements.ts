@@ -10,6 +10,8 @@ export const profile = {
     linkedin: "https://www.linkedin.com/in/harshpandhe/",
     x: "https://x.com/HarshPandhe",
     ssrn: "https://ssrn.com/author=12415688",
+    devto: "https://dev.to/harshpandhe",
+    zenodo: "https://doi.org/10.5281/zenodo.22758286",
   },
 };
 
@@ -150,7 +152,7 @@ export const projects: Project[] = [
     name: "RopeIQ",
     line: "Two coordinates in, permit-grade ropeway alignment out.",
     stack: "Python · GA / NSGA-II / PPO · FastAPI",
-    proof: "Eurocode-validated, checked against 12 real installations on 5 continents.",
+    proof: "Eurocode-validated against 19 real installations on 5 continents (Aiguille du Midi 0.6 %, Zugspitze 2.7 %).",
   },
   {
     name: "IRoC-U ASCEND",
@@ -160,9 +162,9 @@ export const projects: Project[] = [
   },
   {
     name: "Taramandal",
-    line: "Sovereign, centimetre-accurate drone light-show platform.",
-    stack: "FastAPI · WebGL · PX4 · STM32H7 · KiCad",
-    proof: "155+ tests, 100-drone regression, 5/5 custom PCBs DRC-clean.",
+    line: "Drone light-show studio and ground control, now public.",
+    stack: "FastAPI · MAVSDK · PX4 · React Three Fiber · CesiumJS",
+    proof: "Hungarian-assignment formations, signed trajectories, per-drone abort, 1,000-drone sim.",
     href: "https://github.com/harsh-pandhe/Taramandal-GCS",
   },
   {
@@ -230,7 +232,7 @@ export const experience: Role[] = [
     period: "Apr 2026 – Oct 2026",
     where: "Austrian ropeway & cable-car MNC",
     points: [
-      "Built RopeIQ, a ropeway alignment optimiser (GA, NSGA-II, PPO) validated against 12 real installations on 5 continents.",
+      "Built RopeIQ, a ropeway alignment optimiser (GA, NSGA-II, PPO) validated against 19 real installations on 5 continents.",
       "Shipped DoppelDash, an internal operations platform with a companion mobile app.",
       "Worked to ISO 9001 process and WCAG AA accessibility requirements.",
     ],

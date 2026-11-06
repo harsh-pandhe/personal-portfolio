@@ -167,7 +167,7 @@ export const ZONES: Zone[] = [
         kind: "list",
         title: "RopeIQ",
         items: [
-          { t: "Permit-grade alignment from two points", s: "GA, NSGA-II and PPO search; Eurocode checks; DXF / LandXML export; 3D twin; bill of materials. 157 tests, validated against 12 real installations on 5 continents.", meta: "Python · FastAPI" },
+          { t: "Permit-grade alignment from two points", s: "GA, NSGA-II and PPO search; Eurocode checks; DXF / LandXML export; 3D twin; bill of materials. 157 tests, validated against 19 real installations on 5 continents.", meta: "Python · FastAPI" },
           { t: "Pune ropeway pre-feasibility", s: "Corridor studies for LT Chowk–Sardar Patel Chowk and Mitramandal–Manapa Bhavan, plus a traffic decongestion strategy." },
         ],
       },
@@ -282,6 +282,7 @@ export const ZONES: Zone[] = [
           { t: "GitHub", href: profile.links.github },
           { t: "LinkedIn", href: profile.links.linkedin },
           { t: "SSRN", href: profile.links.ssrn },
+          { t: "dev.to", href: profile.links.devto },
           { t: "X", href: profile.links.x },
         ],
       },

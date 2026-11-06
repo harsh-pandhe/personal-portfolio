@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { buildTerrain, freeFast, heightAt, heightFast, isFreeLand, LIGHTHOUSE, rng } from "./terrain";
 import { getUI, world } from "./store";
 import { addCollider } from "./colliders";
+import { GALA_CAM } from "./Show";
 import { bakeStatic, Solid } from "./Props";
 
 /* ---------------- Sky dome (day ↔ night) ---------------- */
@@ -655,6 +656,8 @@ export function Ships() {
       s.position.set(Math.cos(L.ang) * L.off + dx * along, -0.3 + Math.sin(t * 0.9 + i) * 0.08, Math.sin(L.ang) * L.off + dz * along);
       s.rotation.y = Math.atan2(dx * Math.sign(L.speed), dz * Math.sign(L.speed));
       s.rotation.z = Math.sin(t * 0.8 + i) * (L.kind === "sail" ? 0.06 : 0.015);
+      // during the gala, ships that would sail right through the camera's view keep out of shot
+      s.visible = world.gala < 0.5 || Math.hypot(s.position.x - GALA_CAM.pos[0], s.position.z - GALA_CAM.pos[2]) > 105;
     });
   });
   return (

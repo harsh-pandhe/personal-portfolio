@@ -1,11 +1,12 @@
 import type { Config } from "tailwindcss";
 
-// Design tokens for Mission Island. Type: Inter Tight (sans), Instrument Serif (accent italics), DM Mono (labels).
+// Design tokens for Mission Island. Type: Bricolage Grotesque (display), Inter Tight (text), Instrument Serif (accent italics), DM Mono (labels).
 export default {
   content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./lib/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       fontFamily: {
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
         serif: ["var(--font-serif)", "Georgia", "serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],

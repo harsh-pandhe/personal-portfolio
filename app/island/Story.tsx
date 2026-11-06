@@ -66,7 +66,7 @@ export const CHAPTERS: Chapter[] = [
     zone: "ropeway",
     kicker: "Chapter 6",
     title: "On the ropes",
-    lines: ["Six months at Doppelmayr, the Austrian ropeway company.", "RopeIQ: two coordinates in, a permit-grade alignment out — checked against 12 real installations."],
+    lines: ["Six months at Doppelmayr, the Austrian ropeway company.", "RopeIQ: two coordinates in, a permit-grade alignment out — checked against 19 real installations."],
     clip: "ropeway-aerial",
     dist: 42,
     height: 12,
@@ -249,21 +249,21 @@ export function StoryOverlay() {
       <div className={`absolute inset-x-0 bottom-0 bg-black transition-[height] duration-1000 ${on ? "h-[17vh]" : "h-0"}`} />
       {on && (
         <>
-          <div key={`t${idx}`} className="absolute left-16 top-[16vh] animate-[rise_1s_cubic-bezier(.16,1,.3,1)_both] text-white [text-shadow:0_4px_30px_rgba(0,0,0,.45)]">
+          <div key={`t${idx}`} className="absolute left-4 right-4 top-[14vh] animate sm:left-16 sm:right-auto sm:top-[16vh]-[rise_1s_cubic-bezier(.16,1,.3,1)_both] text-white [text-shadow:0_4px_30px_rgba(0,0,0,.45)]">
             <div className="font-mono text-[12px] uppercase tracking-[0.3em] text-white/75">
               {c.kicker} · <span className="text-white/50">{SHOT_NAMES[shot]} shot</span>
             </div>
-            <div className="mt-2 text-[clamp(48px,6vw,96px)] font-semibold leading-[0.9] tracking-[-0.055em]">{c.title}</div>
+            <div className="mt-2 font-display text-[clamp(34px,6vw,96px)] font-semibold leading-[0.9] tracking-[-0.038em]">{c.title}</div>
           </div>
           {/* the chapter's film: a Google Flow clip, picture-in-picture */}
           {film && c.clip && (
-            <figure key={`f${idx}`} className="absolute bottom-[20vh] right-8 w-[min(30vw,420px)] animate-[rise_1s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden rounded-2xl border border-white/20 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8)]">
+            <figure key={`f${idx}`} className="absolute bottom-[21vh] right-3 w-[46vw] animate sm:right-8 sm:w-[min(30vw,420px)]-[rise_1s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden rounded-2xl border border-white/20 shadow-[0_30px_60px_-20px_rgba(0,0,0,.8)]">
               <video src={`/media/video/${c.clip}.mp4`} poster={`/media/video/${c.clip}.jpg`} autoPlay muted loop playsInline className="block aspect-video w-full object-cover" />
               <figcaption className="absolute bottom-2 left-3 font-mono text-[10px] uppercase tracking-wide text-white/75">Animated with Google Flow</figcaption>
             </figure>
           )}
           {captions && (
-            <div key={`s${idx}`} className="absolute inset-x-0 bottom-[3.5vh] mx-auto max-w-[920px] px-8 text-center text-[19px] leading-relaxed text-white/90">
+            <div key={`s${idx}`} className="absolute inset-x-0 bottom-[3vh] mx-auto max-w-[920px] px-4 text-center text-[14px] leading-snug text-white/90 sm:bottom-[3.5vh] sm:px-8 sm:text-[19px] sm:leading-relaxed">
               {c.lines.map((l, i) => (
                 <p key={i}>
                   <Typed text={l} delay={400 + i * 2600} />
@@ -271,8 +271,8 @@ export function StoryOverlay() {
               ))}
             </div>
           )}
-          <div className="pointer-events-auto absolute right-8 top-[3.2vh] flex items-center gap-2">
-            <span className="mr-2 font-mono text-[11px] uppercase tracking-wider text-white/60">
+          <div className="pointer-events-auto absolute left-2 right-2 top-[max(10px,2.6vh)] flex flex-wrap items-center justify-end gap-1.5 sm:left-auto sm:right-8 sm:top-[3.2vh] sm:gap-2">
+            <span className="mr-2 hidden font-mono text-[11px] uppercase tracking-wider text-white/60 sm:inline">
               {String((idx ?? 0) + 1).padStart(2, "0")} / {String(CHAPTERS.length).padStart(2, "0")}
             </span>
             <button onClick={prev} className={btn} title="Previous chapter (←)">
@@ -284,13 +284,13 @@ export function StoryOverlay() {
             <button onClick={next} className={btn} title="Next chapter (→)">
               →
             </button>
-            <button onClick={() => setSpeed((s) => (s >= 2 ? 0.5 : s + 0.5))} className={`${btn} font-mono`} title="Speed">
+            <button onClick={() => setSpeed((s) => (s >= 2 ? 0.5 : s + 0.5))} className={`${btn} hidden font-mono sm:inline-block`} title="Speed">
               {speed}×
             </button>
             <button onClick={() => setCaptions((v) => !v)} className={`${btn} ${captions ? "bg-white/15" : ""}`} title="Captions (C)">
               CC
             </button>
-            <button onClick={() => setFilm((v) => !v)} className={`${btn} ${film ? "bg-white/15" : ""}`} title="Film clips (F)">
+            <button onClick={() => setFilm((v) => !v)} className={`${btn} hidden sm:inline-block ${film ? "bg-white/15" : ""}`} title="Film clips (F)">
               Film
             </button>
             <button onClick={() => setList((v) => !v)} className={btn}>
@@ -304,7 +304,7 @@ export function StoryOverlay() {
             </button>
           </div>
           {list && (
-            <ol className="pointer-events-auto absolute right-8 top-[9.5vh] w-72 rounded-2xl border border-white/15 bg-black/70 p-2 backdrop-blur-xl">
+            <ol className="pointer-events-auto absolute right-2 top-[9.5vh] w-[min(18rem,calc(100vw-16px))] rounded-2xl sm:right-8 border border-white/15 bg-black/70 p-2 backdrop-blur-xl">
               {CHAPTERS.map((ch, i) => (
                 <li key={ch.title}>
                   <button
@@ -355,12 +355,12 @@ export function GalaOverlay() {
         <>
           <div key={idx} className="absolute inset-x-0 bottom-[7vh] animate-[rise_1.2s_cubic-bezier(.16,1,.3,1)_both] text-center text-white">
             <div className="font-mono text-[12px] uppercase tracking-[0.35em] text-white/60">Gala night · formation {String((idx ?? 0) + 1).padStart(2, "0")}</div>
-            <div className="mt-3 text-[clamp(40px,5vw,84px)] font-semibold leading-none tracking-[-0.05em]" style={{ textShadow: `0 0 40px ${s.color}88` }}>
+            <div className="mt-3 px-4 font-display text-[clamp(32px,5vw,84px)] font-semibold leading-none tracking-[-0.035em]" style={{ textShadow: `0 0 40px ${s.color}88` }}>
               {s.caption}
             </div>
-            <div className="mt-3 text-[17px] text-white/75">{s.sub}</div>
+            <div className="mt-3 px-4 text-[14px] text-white/75 sm:text-[17px]">{s.sub}</div>
           </div>
-          <div className="pointer-events-auto absolute right-8 top-8 flex gap-2">
+          <div className="pointer-events-auto absolute right-3 top-[max(12px,env(safe-area-inset-top))] flex gap-2 sm:right-8 sm:top-8">
             <button onClick={endGala} className="rounded-full border border-white/30 bg-black/30 px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-white/80 backdrop-blur hover:bg-white/10">
               End show · Esc
             </button>

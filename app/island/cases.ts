@@ -196,7 +196,8 @@ export const CASES: Record<ZoneId, Case> = {
         label: "Flight hardware",
         items: [
           { t: "Sovereign-X", s: "Indigenous 4-layer avionics: STM32H7 flight controller with dual isolated IMUs, 4-in-1 DroneCAN ESC, power board, RTK GNSS + mesh telemetry, swarm LED ring. KiCad API scripts got the FC to 0 DRC errors on 4-layer FR4.", meta: "Hardware · 2026" },
-          { t: "Taramandal GCS", s: "A 4-day sprint: PX4 + Gazebo SITL, FastAPI + MAVSDK backend streaming at 5 Hz, React Three Fiber path preview. Drones within 2.0 m trigger a global return-to-launch.", meta: "Swarm ground control", href: "https://github.com/harsh-pandhe/Taramandal-GCS" },
+          { t: "Taramandal GCS + Studio", s: "Started as a 4-day sprint (PX4 + Gazebo SITL, FastAPI + MAVSDK at 5 Hz); now public with a contributor team. Hungarian-assignment formation morphing with guaranteed spacing, 2.0 m separation rings and RTL, a 30 m geofence, pre-arm interlocks, per-drone abort, Ed25519-signed trajectories and a 1,000-drone night-sky viewport. The island's gala show is choreographed the same way.", meta: "Drone-show ground control", href: "https://github.com/harsh-pandhe/Taramandal-GCS" },
+          { t: "CubeSat 1U", s: "A new satellite track: the first sprint splits systems, flight software, electronics, mechanical and ground segment, aiming at an end-to-end telemetry slice from sensor to ground dashboard.", meta: "Space · 2026", href: "https://github.com/harsh-pandhe/cubesat-1u" },
         ],
       },
     ],
@@ -234,7 +235,7 @@ export const CASES: Record<ZoneId, Case> = {
       },
       { type: "chips", label: "Built with", items: ["ROS 2 Jazzy", "Gazebo", "MAPPO", "Control Barrier Functions", "TurtleBot3", "Python", "Teensy 4.1"] },
     ],
-    end: [{ title: "Code", items: [["MARS on GitHub", "https://github.com/harsh-pandhe/MARS"]] }],
+    end: [{ title: "Code and data", items: [["MARS on GitHub", "https://github.com/harsh-pandhe/MARS"], ["MARS v1.0.0 on Zenodo (DOI 10.5281/zenodo.22758286)", "https://doi.org/10.5281/zenodo.22758286"]] }],
   },
 
   ropeway: {
@@ -250,7 +251,7 @@ export const CASES: Record<ZoneId, Case> = {
       parts: [
         ["The problem", "Laying out a ropeway means trading terrain, tower placement, clearances and design codes against each other."],
         ["The approach", "RopeIQ searches alignments with a genetic algorithm, NSGA-II and PPO, then checks them against Eurocode rules."],
-        ["The proof", "Validated against 12 real installations on five continents, with DXF / LandXML export, a 3D twin and a bill of materials. 157 tests."],
+        ["The proof", "Validated against 19 real installations on five continents (Aiguille du Midi 0.6 %, Zugspitze 2.7 %, Whistler Peak2Peak 7.2 %), with DXF / LandXML export, a 3D twin and a bill of materials. 157 tests."],
       ],
     },
     metrics: [

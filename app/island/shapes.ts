@@ -397,3 +397,151 @@ export function gridTextShape(n: number, lines: string[], width = 10): Float32Ar
   }
   return out;
 }
+
+/** A 3:2 flag of points in three equal bands with a 24-spoke wheel at the centre. The LightShow
+ *  colours it by band (saffron, white, green, navy wheel) and ripples it like cloth. */
+export function flagShape(n: number, width = 9): Float32Array {
+  const out = new Float32Array(n * 3);
+  const H = (width * 2) / 3;
+  const R = (H / 3) * 0.42;
+  const wheel = Math.floor(n * 0.14);
+  const cols = Math.round(Math.sqrt(((n - wheel) * 3) / 2)),
+    rows = Math.ceil((n - wheel) / cols);
+  let i = 0;
+  for (let r = 0; r < rows && i < n - wheel; r++)
+    for (let c = 0; c < cols && i < n - wheel; c++, i++) {
+      out[i * 3] = (c / (cols - 1) - 0.5) * width;
+      out[i * 3 + 1] = (0.5 - r / (rows - 1)) * H;
+      out[i * 3 + 2] = 0;
+    }
+  // the wheel: a rim and 24 spokes, a hair in front of the cloth
+  for (let k = 0; i < n; i++, k++) {
+    const onRim = k % 3 === 0;
+    const a = onRim ? (k / wheel) * Math.PI * 2 : (Math.floor(k / 3) % 24) * ((Math.PI * 2) / 24);
+    const d = onRim ? R : R * (0.15 + ((k * 0.37) % 0.85));
+    out[i * 3] = Math.cos(a) * d;
+    out[i * 3 + 1] = Math.sin(a) * d;
+    out[i * 3 + 2] = 0.05;
+  }
+  return out;
+}
+/** Index from which flagShape's points belong to the wheel. */
+export const flagWheelFrom = (n: number) => n - Math.floor(n * 0.14);
+
+/** Taramandal ("constellation"): a five-pointed star outline inside an orbit ring, with a field of
+ *  smaller stars around it. */
+export function starShape(n: number): Float32Array {
+  const out = new Float32Array(n * 3);
+  const r = rand(21);
+  const outline = Math.floor(n * 0.45),
+    ring = Math.floor(n * 0.3);
+  const P: [number, number][] = Array.from({ length: 10 }, (_, k) => {
+    const a = Math.PI / 2 + (k * Math.PI) / 5;
+    const d = k % 2 ? 1.25 : 3.1;
+    return [Math.cos(a) * d, Math.sin(a) * d];
+  });
+  for (let i = 0; i < n; i++) {
+    let x: number, y: number;
+    if (i < outline) {
+      const u = (i / outline) * 10,
+        k = Math.floor(u),
+        f = u - k;
+      const A = P[k],
+        B = P[(k + 1) % 10];
+      x = A[0] + (B[0] - A[0]) * f;
+      y = A[1] + (B[1] - A[1]) * f;
+    } else if (i < outline + ring) {
+      const a = ((i - outline) / ring) * Math.PI * 2;
+      x = Math.cos(a) * 4.2;
+      y = Math.sin(a) * 4.2 * 0.92;
+    } else {
+      const a = r() * Math.PI * 2,
+        d = 4.8 + r() * 1.6;
+      x = Math.cos(a) * d * 1.25;
+      y = Math.sin(a) * d * 0.75;
+    }
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = (r() - 0.5) * 0.25;
+  }
+  return out;
+}
+
+/** A small Earth with a 1U CubeSat (a cube with two solar wings) on an orbit around it. The first
+ *  `cubesatFrom(n)` points are the planet; the rest are the satellite, orbited in the frame loop. */
+export function cubesatShape(n: number): Float32Array {
+  const earth = cubesatFrom(n);
+  const out = new Float32Array(n * 3);
+  out.set(globeShape(earth, 2.2));
+  const r = rand(33);
+  for (let i = earth; i < n; i++) {
+    const k = r();
+    let x: number, y: number, z: number;
+    if (k < 0.45) {
+      // the cube body: points on its faces
+      const f = Math.floor(r() * 6),
+        u = r() - 0.5,
+        v = r() - 0.5;
+      const s = 0.42;
+      [x, y, z] = f < 2 ? [f ? s / 2 : -s / 2, u * s, v * s] : f < 4 ? [u * s, f === 3 ? s / 2 : -s / 2, v * s] : [u * s, v * s, f === 5 ? s / 2 : -s / 2];
+    } else {
+      // two solar wings either side
+      const side = r() < 0.5 ? -1 : 1;
+      x = side * (0.3 + r() * 1.1);
+      y = (r() - 0.5) * 0.36;
+      z = 0;
+    }
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = z;
+  }
+  return out;
+}
+export const cubesatFrom = (n: number) => Math.floor(n * 0.72);
+
+/** Order points along a Hilbert curve over their shared bounding box, so that matching two
+ *  formations by rank sends each drone a short way and paths rarely cross (a fast stand-in for
+ *  the Hungarian assignment Taramandal uses between formations). Returns perm: drone j flies to
+ *  target point perm[j]. */
+export function matchFormations(A: Float32Array, B: Float32Array): Int32Array {
+  const n = A.length / 3;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const P of [A, B])
+    for (let i = 0; i < n; i++) {
+      minX = Math.min(minX, P[i * 3]);
+      maxX = Math.max(maxX, P[i * 3]);
+      minY = Math.min(minY, P[i * 3 + 1]);
+      maxY = Math.max(maxY, P[i * 3 + 1]);
+    }
+  const S = 1024,
+    sx = (S - 1) / (maxX - minX || 1),
+    sy = (S - 1) / (maxY - minY || 1);
+  const hilbert = (x: number, y: number) => {
+    let d = 0;
+    for (let s = S / 2; s > 0; s = Math.floor(s / 2)) {
+      const rx = (x & s) > 0 ? 1 : 0,
+        ry = (y & s) > 0 ? 1 : 0;
+      d += s * s * ((3 * rx) ^ ry);
+      if (ry === 0) {
+        if (rx === 1) (x = S - 1 - x), (y = S - 1 - y);
+        [x, y] = [y, x];
+      }
+    }
+    return d;
+  };
+  const key = (P: Float32Array) => {
+    const k = new Float64Array(n);
+    for (let i = 0; i < n; i++) k[i] = hilbert(Math.round((P[i * 3] - minX) * sx), Math.round((P[i * 3 + 1] - minY) * sy));
+    return k;
+  };
+  const ka = key(A),
+    kb = key(B);
+  const ia = Array.from({ length: n }, (_, i) => i).sort((p, q) => ka[p] - ka[q]);
+  const ib = Array.from({ length: n }, (_, i) => i).sort((p, q) => kb[p] - kb[q]);
+  const perm = new Int32Array(n);
+  for (let r = 0; r < n; r++) perm[ia[r]] = ib[r];
+  return perm;
+}

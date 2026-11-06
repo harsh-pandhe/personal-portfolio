@@ -9,6 +9,7 @@ import { heightAt, ISLAND_EDGE, MARS_C, PLAZA_R, ridgeTop, ROAD_HALF, ROAD_R } f
 import { getUI, setUI, toast, TOUR, useUI, world } from "./store";
 import { AMBIENT_POS } from "./Show";
 import { resolve } from "./colliders";
+import { REDUCED_MOTION } from "./device";
 import { zoneById, zonePos, ZONES, type Zone, type ZoneId } from "./zones";
 
 const ROBOT = "/models/robot.glb";
@@ -65,6 +66,11 @@ export function Player() {
     let fx = 0,
       fz = 0;
     if (ui.mode === "explore" && !ui.open) {
+      // the touch joystick acts like a smooth WASD
+      if (Math.hypot(world.joy.x, world.joy.y) > 0.12) {
+        fx = world.joy.x;
+        fz = world.joy.y;
+      }
       if (k.has("w") || k.has("arrowup")) fz -= 1;
       if (k.has("s") || k.has("arrowdown")) fz += 1;
       if (k.has("a") || k.has("arrowleft")) fx -= 1;
@@ -72,7 +78,7 @@ export function Player() {
     }
     let dx = 0,
       dz = 0;
-    let run = k.has("shift");
+    let run = k.has("shift") || Math.hypot(world.joy.x, world.joy.y) > 0.9;
     if (fx !== 0 || fz !== 0) {
       // keys win over click-to-walk; move relative to the camera's heading
       world.target = null;
@@ -151,17 +157,35 @@ export function CameraRig() {
 
   useEffect(() => {
     const el = gl.domElement;
+    el.style.touchAction = "none"; // the page must not scroll or zoom under a finger on the island
     let lx = 0,
       ly = 0,
       down = false,
       moved = 0;
+    // two fingers on the island: pinch to zoom instead of turning
+    const touches = new Map<number, { x: number; y: number }>();
+    let pinch = 0;
     const pd = (e: PointerEvent) => {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2) {
+        const [a, b] = [...touches.values()];
+        pinch = Math.hypot(a.x - b.x, a.y - b.y);
+      }
       down = true;
       moved = 0;
       lx = e.clientX;
       ly = e.clientY;
     };
     const pm = (e: PointerEvent) => {
+      if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2 && getUI().mode === "explore") {
+        const [a, b] = [...touches.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        world.camDist = Math.min(Math.max(world.camDist - (d - pinch) * 0.04, 5), 26);
+        pinch = d;
+        world.dragging = true;
+        return;
+      }
       if (!down || getUI().mode !== "explore") return;
       const dx = e.clientX - lx,
         dy = e.clientY - ly;
@@ -172,7 +196,9 @@ export function CameraRig() {
       world.camPitch = Math.min(Math.max(world.camPitch + dy * 0.003, 0.12), 1.2);
       world.dragging = moved > 4;
     };
-    const pu = () => {
+    const pu = (e: PointerEvent) => {
+      touches.delete(e.pointerId);
+      if (touches.size) return;
       down = false;
       setTimeout(() => (world.dragging = false), 0);
     };
@@ -183,18 +209,28 @@ export function CameraRig() {
     el.addEventListener("pointerdown", pd);
     addEventListener("pointermove", pm);
     addEventListener("pointerup", pu);
+    addEventListener("pointercancel", pu);
     el.addEventListener("wheel", wh, { passive: true });
     return () => {
       el.removeEventListener("pointerdown", pd);
       removeEventListener("pointermove", pm);
       removeEventListener("pointerup", pu);
+      removeEventListener("pointercancel", pu);
       el.removeEventListener("wheel", wh);
     };
   }, [gl]);
 
-  useFrame(({ clock }, dt) => {
+  useFrame(({ clock, size }, dt) => {
     const ui = getUI();
     const t = clock.elapsedTime;
+    // portrait screens see less sideways: widen the lens so the island and zones still fit
+    const fov = size.width < size.height ? 58 : size.width < 900 ? 48 : 40;
+    const pc = camera as THREE.PerspectiveCamera;
+    if (pc.fov !== fov) {
+      pc.fov = fov;
+      pc.updateProjectionMatrix();
+    }
+    const portrait = size.width < size.height;
     let ease = 1 - Math.pow(0.04, dt);
     if (world.shot) {
       // story chapters and the gala drive the camera directly
@@ -209,10 +245,12 @@ export function CameraRig() {
         tmp.set(Math.sin(a) * 150, 50, Math.cos(a) * 150);
         tmp2.set(AMBIENT_POS.x * 0.15, 24, AMBIENT_POS.z * 0.6);
       } else {
-        const a = t * 0.035 + 0.6;
+        const a = (REDUCED_MOTION ? 0 : t * 0.035) + 0.6;
         tmp.set(Math.sin(a) * 172, 92, Math.cos(a) * 172);
-        // aim past the centre so the island sits in the upper right, clear of the panel and headline
-        tmp2.set(Math.sin(a - 0.5) * -14, -19, Math.cos(a - 0.5) * -14);
+        // aim past the centre so the island sits in the upper right, clear of the panel and headline;
+        // on a portrait phone the headline is under the island, so lift the aim instead
+        if (portrait) tmp2.set(0, -38, 0);
+        else tmp2.set(Math.sin(a - 0.5) * -14, -19, Math.cos(a - 0.5) * -14);
       }
       ease = 1 - Math.pow(0.3, dt);
     } else if (ui.mode === "tour" || ui.open) {
@@ -363,7 +401,7 @@ const VILLAGERS: Villager[] = [
   },
   {
     key: "rope", zone: "ropeway", role: "Ropeway engineer", tint: "#e5322d", anim: "Wave", side: 1,
-    thoughts: ["Two points in, an alignment out.", "Checked against 12 real lines.", "Eurocode says the sag is fine.", "Cabin 3 is running a bit warm."],
+    thoughts: ["Two points in, an alignment out.", "Checked against 19 real lines.", "Eurocode says the sag is fine.", "Cabin 3 is running a bit warm."],
     ask: "Ask me what Harsh built at Doppelmayr?",
   },
   {

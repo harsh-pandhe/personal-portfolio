@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { setUI, useUI, world } from "./store";
+import { useDevice } from "./device";
 import { setMusic, setSound, sfx } from "./audio";
 import { zonePos, ZONES } from "./zones";
 import { MEDALS } from "./Actors";
@@ -29,7 +30,7 @@ export function Minimap() {
   }, []);
   return (
     <div
-      className={`fixed right-[18px] top-[72px] z-20 rounded-full border border-white/50 bg-white/70 p-1 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-500 ${
+      className={`fixed left-1 top-[6px] z-20 origin-top-left scale-[0.6] rounded-full sm:left-auto sm:right-[18px] sm:top-[72px] sm:origin-top-right sm:scale-100 border border-white/50 bg-white/70 p-1 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-500 ${
         on ? "opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
       }`}
     >
@@ -85,12 +86,12 @@ export function Toast() {
   }, [t]);
   return (
     <div
-      className={`pointer-events-none fixed left-[calc(50%+170px)] top-[26px] z-50 -translate-x-1/2 transition-all duration-500 ${
+      className={`pointer-events-none fixed left-1/2 top-[64px] z-50 w-max max-w-[calc(100vw-24px)] -translate-x-1/2 transition-all duration-500 sm:left-[calc(50%+170px)] sm:top-[26px] ${
         t ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex items-center gap-3 rounded-full bg-[#121417]/95 py-2 pl-2 pr-6 text-white shadow-2xl backdrop-blur">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-[#f5b301] text-[18px]">★</span>
+      <div className="flex items-center gap-3 rounded-[22px] bg-[#121417]/95 py-2 pl-2 pr-5 text-white shadow-2xl backdrop-blur sm:rounded-full sm:pr-6">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f5b301] text-[18px]">★</span>
         <span>
           <span className="block text-[14px] font-semibold tracking-[-0.01em]">{t?.title}</span>
           {t?.body && <span className="block text-[12.5px] text-white/60">{t.body}</span>}
@@ -100,6 +101,14 @@ export function Toast() {
   );
 }
 
+const TOUCH: [string, string][] = [
+  ["Left thumb", "Walk with the joystick"],
+  ["Drag", "Look around"],
+  ["Pinch", "Zoom"],
+  ["Tap the ground", "Walk to that spot"],
+  ["Tap a billboard", "Open that place"],
+  ["Menu", "Tour, story, gala, fast travel"],
+];
 const KEYS: [string, string][] = [
   ["W A S D", "Walk (arrow keys work too)"],
   ["Shift", "Run"],
@@ -119,14 +128,15 @@ const KEYS: [string, string][] = [
 
 export function Help() {
   const ui = useUI();
+  const { touch } = useDevice();
   return (
     <div
       onClick={() => setUI({ help: false })}
       className={`fixed inset-0 z-[60] grid place-items-center bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${ui.help ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
-      <div onClick={(e) => e.stopPropagation()} className={`w-[560px] rounded-[30px] bg-white p-8 text-neutral-900 shadow-2xl transition-transform duration-500 ${ui.help ? "scale-100" : "scale-95"}`}>
+      <div onClick={(e) => e.stopPropagation()} className={`mx-3 max-h-[90dvh] w-full max-w-[560px] overflow-y-auto rounded-[30px] bg-white p-6 sm:p-8 text-neutral-900 shadow-2xl transition-transform duration-500 ${ui.help ? "scale-100" : "scale-95"}`}>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-[36px] font-semibold tracking-[-0.05em]">How to get around</h2>
+          <h2 className="text-[28px] font-semibold tracking-[-0.05em] sm:text-[36px]">How to get around</h2>
           <button onClick={() => setUI({ help: false })} className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 hover:text-black">
             Esc
           </button>
@@ -135,7 +145,7 @@ export function Help() {
           Five gold medals are hidden around the island. Walk into one to collect it. One is on top of the ridge.
         </p>
         <ul className="mt-6 grid grid-cols-1 divide-y divide-neutral-200 border-y border-neutral-200">
-          {KEYS.map(([k, v]) => (
+          {(touch ? TOUCH : KEYS).map(([k, v]) => (
             <li key={k} className="flex items-center justify-between py-2.5 text-[14px]">
               <span className="text-neutral-600">{v}</span>
               <kbd className="rounded-lg border border-neutral-300 bg-neutral-50 px-2 py-0.5 font-mono text-[12px]">{k}</kbd>
@@ -187,7 +197,7 @@ export function Settings() {
       onClick={() => setUI({ settings: false })}
       className={`fixed inset-0 z-[60] grid place-items-center bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${ui.settings ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
-      <div onClick={(e) => e.stopPropagation()} className={`w-[520px] rounded-[30px] bg-white p-8 text-neutral-900 shadow-2xl transition-transform duration-500 ${ui.settings ? "scale-100" : "scale-95"}`}>
+      <div onClick={(e) => e.stopPropagation()} className={`mx-3 max-h-[90dvh] w-full max-w-[520px] overflow-y-auto rounded-[30px] bg-white p-6 text-neutral-900 shadow-2xl transition-transform duration-500 sm:p-8 ${ui.settings ? "scale-100" : "scale-95"}`}>
         <div className="flex items-baseline justify-between">
           <h2 className="text-[36px] font-semibold tracking-[-0.05em]">Settings</h2>
           <button onClick={() => setUI({ settings: false })} className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 hover:text-black">

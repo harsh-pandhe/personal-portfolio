@@ -9,6 +9,7 @@ export const world = {
   nightTarget: 0,
   player: { x: 0, z: 23, yaw: Math.PI, speed: 0 },
   keys: new Set<string>(),
+  joy: { x: 0, y: 0 }, // on-screen joystick, -1..1 (y down = backward)
   camYaw: 0,
   camPitch: 0.42,
   camDist: 11,

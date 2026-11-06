@@ -83,7 +83,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[0.7fr_1.3fr] gap-8 border-t border-white/12 pt-5">
+    <div className="grid grid-cols-1 gap-3 border-t md:grid-cols-[0.7fr_1.3fr] md:gap-8 border-white/12 pt-5">
       <Label>{label}</Label>
       <div>{children}</div>
     </div>
@@ -136,7 +136,7 @@ function ContactForm() {
 function PaperCards({ area, accent }: { area?: "Quant" | "Robotics"; accent: string }) {
   const list = papers.filter((p) => !area || p.area === area);
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {list.map((p, i) => {
         const n = PAPER_NOTES[p.id];
         return (
@@ -185,11 +185,11 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "board":
       return <ProjectBoard />;
     case "statement":
-      return <p className="max-w-[19ch] text-[clamp(40px,5vw,84px)] font-semibold leading-[1.02] tracking-[-0.045em]">{s.text}</p>;
+      return <p className="max-w-[19ch] font-display text-[clamp(30px,5vw,84px)] font-semibold leading-[1.02] tracking-[-0.03em]">{s.text}</p>;
     case "quote":
       return (
         <figure>
-          <blockquote className="font-serif text-[clamp(40px,4.6vw,76px)] italic leading-[1.05] tracking-[-0.02em]" style={{ color: accent }}>
+          <blockquote className="font-serif text-[clamp(28px,4.6vw,76px)] italic leading-[1.05] tracking-[-0.02em]" style={{ color: accent }}>
             “{s.text}”
           </blockquote>
           <figcaption className="mt-4 font-mono text-[12px] uppercase tracking-wide text-white/45">— {s.who}</figcaption>
@@ -198,7 +198,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "text":
       return (
         <Row label={s.label}>
-          {s.title && <h3 className="mb-5 max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}
+          {s.title && <h3 className="mb-5 max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}
           <p className="max-w-[60ch] text-[17px] leading-relaxed text-white/80">{s.body}</p>
         </Row>
       );
@@ -217,11 +217,11 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
     case "steps":
       return (
         <div>
-          <Row label={s.label}>{s.title && <h3 className="max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}</Row>
+          <Row label={s.label}>{s.title && <h3 className="max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">{s.title}</h3>}</Row>
           <div className="mt-8 grid grid-cols-1">
             {s.items.map((it, i) => (
               <Reveal key={it.title} delay={i * 50}>
-                <div className="group grid grid-cols-[0.7fr_1.3fr] gap-8 border-t border-white/10 py-6 transition-colors hover:bg-white/[0.025]">
+                <div className="group grid grid-cols-1 gap-2 border-t md:grid-cols-[0.7fr_1.3fr] md:gap-8 border-white/10 py-6 transition-colors hover:bg-white/[0.025]">
                   <div className="flex items-baseline gap-4">
                     <span className="font-mono text-[12px]" style={{ color: accent }}>
                       {String(i + 1).padStart(2, "0")}
@@ -246,7 +246,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
             <Label>{s.label}</Label>
             <span className="h-px flex-1 bg-white/10" />
           </div>
-          <ul className={`grid gap-3 ${s.items.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+          <ul className={`grid gap-3 grid-cols-1 ${s.items.length > 1 ? "sm:grid-cols-2" : ""}`}>
             {s.items.map((it) => {
               const body = (
                 <div className="group relative h-full overflow-hidden rounded-[18px] border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015))] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/25">
@@ -280,7 +280,7 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
       return (
         <div>
           <Row label={s.label}>
-            <h3 className="max-w-[24ch] text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">What each paper found.</h3>
+            <h3 className="max-w-[24ch] font-display text-[clamp(26px,2.6vw,42px)] font-semibold leading-[1.05] tracking-[-0.04em]">What each paper found.</h3>
           </Row>
           <div className="mt-8">
             <PaperCards area={s.area} accent={accent} />
@@ -293,17 +293,18 @@ function SectionView({ s, accent }: { s: Section; accent: string }) {
 }
 
 /** The long-form case study for one place; used by the island overlay and by /read. */
-export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) => void }) {
+export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: (next: ZoneId) => void; heading?: "h1" | "h2" }) {
+  const Title = heading;
   const z = zoneById[id];
   const c = CASES[id];
   const idx = ZONES.findIndex((q) => q.id === id);
   const next = ZONES[(idx + 1) % ZONES.length];
   return (
-    <article className="pb-10">
+    <article className="overflow-x-clip pb-10">
           {/* hero */}
-          <section className="px-10 pt-14">
-            <div className="grid grid-cols-[1fr_minmax(220px,30%)] items-end gap-10">
-              <h1 className="text-[clamp(64px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.065em]">
+          <section className="px-4 pt-8 sm:px-10 sm:pt-14">
+            <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-[1fr_minmax(220px,30%)] md:gap-10">
+              <Title className="font-display text-[clamp(44px,9vw,160px)] font-bold uppercase leading-[0.84] tracking-[-0.03em]">
                 {c.titleLines.map((l, i) => (
                   <span
                     key={l}
@@ -313,16 +314,16 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
                     {l}
                   </span>
                 ))}
-              </h1>
+              </Title>
               {/* the zone's one-liner fills the space beside the title */}
               <aside className="mb-3 animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] border-l-2 pl-5 [animation-delay:250ms]" style={{ borderColor: z.accent }}>
                 <span className="font-mono text-[11px] uppercase tracking-wide" style={{ color: z.accent }}>
                   {z.team}
                 </span>
-                <p className="mt-2 text-[clamp(18px,1.6vw,26px)] font-semibold leading-snug tracking-[-0.02em] text-white">{z.headline}</p>
+                <p className="mt-2 font-display text-[clamp(18px,1.6vw,26px)] font-semibold leading-snug tracking-[-0.02em] text-white">{z.headline}</p>
               </aside>
             </div>
-            <div className="mb-10 mt-12 grid grid-cols-4 gap-2.5 font-mono text-[12.5px] uppercase leading-snug">
+            <div className="mb-8 mt-8 grid grid-cols-2 gap-2 sm:mb-10 sm:mt-12 lg:grid-cols-4 lg:gap-2.5 font-mono text-[12.5px] uppercase leading-snug">
               {c.meta.map(([k, v], i) => (
                 <div
                   key={k}
@@ -337,13 +338,13 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           </section>
 
           {/* animated cover */}
-          <div className="mx-10 overflow-hidden rounded-[22px] shadow-[0_60px_120px_-40px_rgba(0,0,0,.9),0_0_0_1px_rgba(255,255,255,.12)] transition-transform duration-700 [transform:perspective(1800px)_rotateX(7deg)] [transform-origin:50%_0] hover:[transform:perspective(1800px)_rotateX(0deg)]">
+          <div className="mx-4 overflow-hidden rounded-[18px] sm:mx-10 sm:rounded-[22px] shadow-[0_60px_120px_-40px_rgba(0,0,0,.9),0_0_0_1px_rgba(255,255,255,.12)] transition-transform duration-700 [transform:perspective(1800px)_rotateX(7deg)] [transform-origin:50%_0] hover:[transform:perspective(1800px)_rotateX(0deg)]">
             <MediaHero id={id} accent={z.accent} />
           </div>
 
           <Reveal>
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(220px,32%)] items-end gap-10 px-10 pb-16 pt-28">
-              <p className="max-w-[22ch] text-[clamp(36px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.045em]">{c.hook}</p>
+            <div className="grid grid-cols-1 items-end gap-6 px-4 pb-10 pt-16 sm:px-10 sm:pb-16 sm:pt-28 md:grid-cols-[minmax(0,1fr)_minmax(220px,32%)] md:gap-10">
+              <p className="max-w-[22ch] font-display text-[clamp(28px,4.4vw,76px)] font-semibold leading-[1.02] tracking-[-0.03em]">{c.hook}</p>
               <p className="mb-2 border-t border-white/15 pt-4 text-[16px] leading-relaxed text-white/65">{z.blurb}</p>
             </div>
           </Reveal>
@@ -351,13 +352,13 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           <Gallery id={id} accent={z.accent} />
 
           {c.cracked && (
-            <Reveal className="mx-10">
+            <Reveal className="mx-4 sm:mx-10">
               <section className="rounded-[26px] border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.01))] p-8">
                 <div className="flex items-center justify-between">
                   <Label>{c.cracked.label ?? "How it came together"}</Label>
                   <span className="h-2 w-2 rounded-full" style={{ background: z.accent, boxShadow: `0 0 14px ${z.accent}` }} />
                 </div>
-                <div className="mt-6 grid grid-cols-3 gap-6">
+                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
                   {c.cracked.parts.map(([k, v], i) => (
                     <div key={k} className="relative pl-5">
                       <span className="absolute left-0 top-1 h-[calc(100%-4px)] w-[2px] rounded-full" style={{ background: `linear-gradient(${z.accent}, transparent)` }} />
@@ -373,12 +374,12 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           )}
 
           {c.metrics && (
-            <div className="mx-10 mt-6 grid grid-cols-4 gap-3">
+            <div className="mx-4 mt-6 grid grid-cols-2 gap-2 sm:mx-10 sm:gap-3 lg:grid-cols-4">
               {c.metrics.map((m, i) => (
                 <Reveal key={m.label} delay={i * 70}>
                   <div className="h-full rounded-[20px] border border-white/14 bg-[linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.02))] px-5 pb-6 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_30px_50px_-30px_rgba(0,0,0,.8)] transition-transform duration-500 hover:[transform:perspective(800px)_translateY(-6px)_rotateX(8deg)]">
                     <b
-                      className="block bg-clip-text text-[clamp(40px,4.4vw,72px)] font-semibold leading-[0.92] tracking-[-0.06em] text-transparent"
+                      className="block bg-clip-text font-display text-[clamp(32px,4.4vw,72px)] font-semibold leading-[0.92] tracking-[-0.04em] text-transparent"
                       style={{ backgroundImage: `linear-gradient(180deg,#fff, color-mix(in srgb, ${z.accent} 70%, #fff))` }}
                     >
                       <CountUp value={m.value} />
@@ -390,7 +391,7 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
             </div>
           )}
 
-          <div className="mt-24 flex flex-col gap-24 px-10">
+          <div className="mt-16 flex flex-col gap-16 px-4 sm:mt-24 sm:gap-24 sm:px-10">
             {c.sections.map((s, i) => (
               <Reveal key={i}>
                 <SectionView s={s} accent={z.accent} />
@@ -399,7 +400,7 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           </div>
 
           {c.end && (
-            <section className="mx-10 mt-24 grid grid-cols-3 gap-8 border-t border-white/12 pt-6">
+            <section className="mx-4 mt-16 grid grid-cols-1 gap-8 border-t sm:mx-10 sm:mt-24 sm:grid-cols-3 border-white/12 pt-6">
               {c.end.map((g) => (
                 <div key={g.title}>
                   <Label>{g.title}</Label>
@@ -425,11 +426,11 @@ export function CaseBody({ id, onNext }: { id: ZoneId; onNext?: (next: ZoneId) =
           {/* next place */}
           <button
             onClick={() => onNext?.(next.id)}
-            className="group mx-10 mt-24 flex w-[calc(100%-80px)] items-end justify-between border-t border-white/15 pt-8 text-left"
+            className="group mx-4 mt-16 flex w-[calc(100%-32px)] sm:mx-10 sm:mt-24 sm:w-[calc(100%-80px)] items-end justify-between border-t border-white/15 pt-8 text-left"
           >
             <span>
               <span className="block font-mono text-[12px] uppercase text-white/45">Next place</span>
-              <b className="mt-2 block text-[clamp(48px,6vw,104px)] font-semibold leading-[0.9] tracking-[-0.06em] transition-colors duration-500 group-hover:text-[var(--accent)]" style={{ ["--accent" as string]: next.accent }}>
+              <b className="mt-2 block font-display text-[clamp(36px,6vw,104px)] font-semibold leading-[0.9] tracking-[-0.04em] transition-colors duration-500 group-hover:text-[var(--accent)]" style={{ ["--accent" as string]: next.accent }}>
                 {next.name}
               </b>
             </span>
@@ -470,23 +471,23 @@ export default function CaseStudy() {
         ref={scroller}
         data-case-scroll
         style={{ ["--accent" as string]: z.accent }}
-        className={`fixed bottom-[18px] left-[var(--pl,376px)] right-[18px] top-[18px] z-40 overflow-y-auto overflow-x-hidden rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
+        className={`fixed inset-0 z-40 overflow-y-auto overflow-x-hidden overscroll-contain sm:bottom-[18px] sm:left-[var(--pl,376px)] sm:right-[18px] sm:top-[18px] sm:rounded-[30px] border border-white/10 bg-[#0a0f1d]/[0.94] text-white shadow-[0_40px_120px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-all [transition-duration:700ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] [scrollbar-width:thin] ${
           on ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[6%] opacity-0"
         }`}
       >
         {/* sticky bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#070b17]/60 px-10 py-3.5 font-mono text-[12px] uppercase backdrop-blur-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#070b17]/60 px-4 py-3.5 sm:px-10 font-mono text-[12px] uppercase backdrop-blur-xl">
           <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: `linear-gradient(100deg, ${z.accent}, #00d2ff 60%, #12f0c0)` }} />
           <span className="flex items-center gap-2.5 text-white/55">
             <i className="h-2.5 w-2.5 rounded-[3px]" style={{ background: z.accent }} />
-            {z.name} · {z.team}
+            {z.name}<span className="hidden sm:inline"> · {z.team}</span>
           </span>
           <span className="flex items-center gap-2">
           <button onClick={() => travel(id)} className="rounded-full bg-[#22d36b] px-3.5 py-1.5 font-semibold text-[#06240f] transition hover:bg-[#2be277]">
             Walk there →
           </button>
           <button onClick={() => setUI({ open: null })} className="flex items-center gap-2 rounded-full border border-white/30 bg-white/[0.08] px-3.5 py-1.5 text-white transition hover:bg-white hover:text-[#0b1020]">
-            Close <kbd className="rounded border border-current px-1 text-[10px]">Esc</kbd>
+            Close <kbd className="hidden rounded border border-current px-1 text-[10px] sm:inline">Esc</kbd>
           </button>
           </span>
         </div>
