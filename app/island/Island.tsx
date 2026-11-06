@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { AdaptiveDpr, Environment, Lightformer, PerformanceMonitor, useProgress } from "@react-three/drei";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import HillSign from "./HillSign";
+import Statue from "./Statue";
 import PalmBeach, { Surf } from "./Beach";
 import { Birds, Clouds, Flowers, Grass, Lights, Mountains, Nature, Sea, Ships, Shore, SkyDome, Terrain, Trees } from "./Env";
 import Landmarks from "./Landmarks";
@@ -156,6 +157,7 @@ function Scene() {
         <LightShow />
         <LaunchDeck />
         <JourneyPlaza />
+        <Statue />
         <FirstScreenReady />
       </Suspense>
       {/* everything decorative mounts after the hero has painted, a piece at a time, so the
