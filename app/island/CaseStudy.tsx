@@ -327,7 +327,7 @@ export function CaseBody({ id, onNext, heading = "h1" }: { id: ZoneId; onNext?: 
               {c.meta.map(([k, v], i) => (
                 <div
                   key={k}
-                  className="animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] rounded-2xl border border-white/14 bg-[linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03))] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+                  className="animate-[rise_.9s_cubic-bezier(.16,1,.3,1)_both] min-w-0 rounded-2xl border border-white/14 bg-[linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03))] px-4 py-3.5 [overflow-wrap:anywhere] shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
                   style={{ animationDelay: `${200 + i * 70}ms` }}
                 >
                   <span className="mb-1.5 block text-white/45">{k}</span>
