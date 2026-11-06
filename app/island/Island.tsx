@@ -639,9 +639,16 @@ function Corner() {
           {ui.sound ? <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}
         </svg>
       </button>
-      <a href={`mailto:${profile.email}`} className="rounded-full bg-[#121417] px-4 py-2 text-[13px] font-semibold text-white shadow-lg hover:bg-black">
+      <button
+        onClick={() => {
+          // open Home and bring the message form into view
+          setUI({ open: "home" });
+          setTimeout(() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "center" }), 900);
+        }}
+        className="rounded-full bg-[#121417] px-4 py-2 text-[13px] font-semibold text-white shadow-lg hover:bg-black"
+      >
         Say hello
-      </a>
+      </button>
     </div>
   );
 }

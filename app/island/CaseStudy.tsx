@@ -138,6 +138,7 @@ function ContactForm() {
     );
   return (
     <form
+      id="contact"
       onSubmit={(e) => {
         e.preventDefault();
         send();
