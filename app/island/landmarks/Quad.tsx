@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
+import { Static } from "../Props";
 
 const QMAT = {
   frame: new THREE.MeshStandardMaterial({ color: "#20242b", roughness: 0.55, metalness: 0.3 }),
@@ -24,7 +25,10 @@ export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number 
   const k = scale / 5.5;
   const arm = 0.82;
   return (
+    // the root stays out of any outer merge (it flies); inside, the frame merges into a few meshes and
+    // only the propellers stay separate to spin
     <group scale={k} userData={{ dynamic: true }}>
+      <Static>
       {/* body: bottom plate, top plate, battery, flight controller */}
       <mesh position={[0, 0.2, 0]} material={QMAT.frame} castShadow>
         <boxGeometry args={[0.55, 0.05, 0.55]} />
@@ -64,7 +68,7 @@ export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number 
             <mesh position={[x * 1.03, 0.22, z * 1.03]} material={i === 0 || i === 1 ? QMAT.ledF : QMAT.ledB}>
               <sphereGeometry args={[0.03, 8, 6]} />
             </mesh>
-            <group position={[x, 0.41, z]} ref={(el) => void (props.current[i] = el!)}>
+            <group position={[x, 0.41, z]} ref={(el) => void (props.current[i] = el!)} userData={{ dynamic: true }}>
               <mesh material={QMAT.prop} castShadow>
                 <boxGeometry args={[0.6, 0.012, 0.055]} />
               </mesh>
@@ -75,6 +79,7 @@ export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number 
           </group>
         );
       })}
+      </Static>
     </group>
   );
 }

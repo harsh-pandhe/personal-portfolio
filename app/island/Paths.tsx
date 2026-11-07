@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { heightAt, KERB_W, LANE_W, PLAZA_R, ridgeTop, rng, ROAD_HALF, ROAD_R, zoneFlatR } from "./terrain";
 import { zonePos, ZONES } from "./zones";
 import { MEDALS } from "./Actors";
@@ -246,7 +247,13 @@ function Roads() {
         xb = ROAD_R + ROAD_HALF;
       out.push({ g: slab(line(u.x * xa, u.y * xa, u.x * xb, u.y * xb, 0.5), -2.6, 2.6, 0.1), m: M.concrete });
     }
-    return out;
+    // one mesh per material: ~100 kerb, sidewalk and paving slabs become a handful of draw calls
+    const byMat = new Map<THREE.Material, THREE.BufferGeometry[]>();
+    for (const q of out) byMat.set(q.m, [...(byMat.get(q.m) ?? []), q.g]);
+    return [...byMat].flatMap(([m, gs]) => {
+      const merged = mergeGeometries(gs, false);
+      return merged ? [{ g: merged, m }] : gs.map((g) => ({ g, m }));
+    });
   }, [M]);
   return (
     <>

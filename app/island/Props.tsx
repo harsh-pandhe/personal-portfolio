@@ -234,6 +234,19 @@ export function Solid({ w, d, r, position }: { w?: number; d?: number; r?: numbe
  *  own frame, and drop the originals. Turns a few hundred small boxes into a handful of draw calls.
  *  Skips instanced and skinned meshes, multi-material meshes, anything with pointer handlers and
  *  anything flagged `userData.dynamic`. */
+/** Bucket key for a material. Materials written inline in JSX (<meshStandardMaterial color=… />) are a
+ *  new object per mesh, so identical-looking ones are keyed by their look and merge together; materials
+ *  passed in as objects (shared, possibly animated by code) keep their own identity. */
+function materialKey(mat: THREE.Material) {
+  if (!(mat as unknown as { __r3f?: unknown }).__r3f || !(mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) return mat.uuid;
+  const s = mat as THREE.MeshStandardMaterial;
+  return [
+    s.type, s.color.getHexString(), s.emissive.getHexString(), s.emissiveIntensity, s.roughness, s.metalness,
+    s.map?.uuid, s.emissiveMap?.uuid, s.transparent, s.opacity, s.side, s.flatShading, s.vertexColors, s.toneMapped,
+    s.polygonOffset, s.depthWrite,
+  ].join("/");
+}
+
 export function bakeStatic(root: THREE.Object3D) {
   root.updateWorldMatrix(true, true);
   const inv = root.matrixWorld.clone().invert();
@@ -253,7 +266,7 @@ export function bakeStatic(root: THREE.Object3D) {
     const keep = new THREE.BufferGeometry();
     for (const k of ["position", "normal", "uv"]) keep.setAttribute(k, g.attributes[k]);
     g = keep;
-    const key = `${m.material.uuid}|${m.castShadow}|${m.receiveShadow}`;
+    const key = `${materialKey(m.material)}|${m.castShadow}|${m.receiveShadow}`;
     const b = buckets.get(key) ?? { mat: m.material, cast: m.castShadow, recv: m.receiveShadow, geos: [] };
     b.geos.push(g);
     buckets.set(key, b);

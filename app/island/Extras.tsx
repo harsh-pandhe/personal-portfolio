@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { heightAt, rng } from "./terrain";
 import { zoneById, zonePos, type ZoneId } from "./zones";
 import { world } from "./store";
+import { Static } from "./Props";
 
 /** Same placement rule as the landmarks: +z of the group points at HQ. */
 function At({ id, children }: { id: ZoneId; children: React.ReactNode }) {
@@ -98,7 +99,7 @@ function Bull() {
           <boxGeometry args={[3.4, 0.4, 2]} />
           <meshStandardMaterial color="#1d2128" roughness={0.6} />
         </mesh>
-        <group ref={g} position={[0, 0.4, 0]}>
+        <group ref={g} position={[0, 0.4, 0]} userData={{ dynamic: true }}>
           {parts.map((p, i) => (
             <mesh key={i} position={[p[0], p[1], p[2]]} material={gold} castShadow>
               <boxGeometry args={[p[3], p[4], p[5]]} />
@@ -151,7 +152,7 @@ function WorkshopLife() {
             <meshStandardMaterial color="#9aa3ad" metalness={0.6} roughness={0.3} />
           </mesh>
         ))}
-        <group ref={boxes}>
+        <group ref={boxes} userData={{ dynamic: true }}>
           {Array.from({ length: 6 }, (_, i) => (
             <mesh key={i} castShadow>
               <boxGeometry args={[0.6, 0.5, 0.6]} />
@@ -181,11 +182,11 @@ function WorkshopLife() {
           <boxGeometry args={[1.6, 0.08, 1.6]} />
           <meshStandardMaterial color="#2a2f36" />
         </mesh>
-        <mesh ref={head} position={[0, 1.35, 0]}>
+        <mesh ref={head} position={[0, 1.35, 0]} userData={{ dynamic: true }}>
           <boxGeometry args={[0.28, 0.22, 0.28]} />
           <meshStandardMaterial color="#7a4dff" emissive="#7a4dff" emissiveIntensity={0.5} />
         </mesh>
-        <mesh ref={part} position={[0, 0.6, 0]}>
+        <mesh ref={part} position={[0, 0.6, 0]} userData={{ dynamic: true }}>
           <cylinderGeometry args={[0.3, 0.3, 0.6, 16]} />
           <meshStandardMaterial color="#12f0c0" roughness={0.4} />
         </mesh>
@@ -226,7 +227,7 @@ function Pages() {
   });
   return (
     <At id="library">
-      <group ref={g}>
+      <group ref={g} userData={{ dynamic: true }}>
         {pages.map((q, i) => (
           <mesh key={i} scale={q.s}>
             <planeGeometry args={[1, 1.33]} />
@@ -279,7 +280,7 @@ function HomeLife() {
         </mesh>
       ))}
       {/* the cat, asleep on the porch */}
-      <group ref={cat} position={[1.4, 0.05, 0.2]} rotation-y={0.6}>
+      <group ref={cat} position={[1.4, 0.05, 0.2]} rotation-y={0.6} userData={{ dynamic: true }}>
         <mesh position={[0, 0.18, 0]} scale={[0.42, 0.22, 0.28]} material={fur}>
           <sphereGeometry args={[1, 16, 12]} />
         </mesh>
@@ -291,7 +292,7 @@ function HomeLife() {
             <coneGeometry args={[0.05, 0.1, 4]} />
           </mesh>
         ))}
-        <mesh ref={tail} position={[-0.38, 0.1, 0]} material={fur}>
+        <mesh ref={tail} position={[-0.38, 0.1, 0]} material={fur} userData={{ dynamic: true }}>
           <torusGeometry args={[0.18, 0.04, 6, 12, Math.PI]} />
         </mesh>
       </group>
@@ -301,12 +302,13 @@ function HomeLife() {
 
 export default function Extras() {
   return (
-    <>
+    // static props merge per material; the bull, workshop boxes and arm, pages and the cat keep moving
+    <Static>
       <ArenaLife />
       <Bull />
       <WorkshopLife />
       <Pages />
       <HomeLife />
-    </>
+    </Static>
   );
 }
