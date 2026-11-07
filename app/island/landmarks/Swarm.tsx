@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { world } from "../store";
-import { Solid } from "../Props";
+import { Solid, Static } from "../Props";
 import { M, fontFamily, Billboard, ZoneGroup } from "./common";
 
 /* Swarm Field: six TurtleBot-style robots covering a 16x16 grid with frontier targets, a separation
@@ -164,6 +164,8 @@ export function Swarm() {
   const botMats = useMemo(() => SW_COLS.map((col) => new THREE.MeshStandardMaterial({ color: "#f2f4f7", emissive: col, emissiveIntensity: 0.3, roughness: 0.5 })), []);
   return (
     <ZoneGroup id="swarm">
+      {/* static parts merged per material after mount; moving parts are marked dynamic */}
+      <Static>
       <mesh position={[0, 0.03, 0]} material={M.dark} receiveShadow>
         <boxGeometry args={[SW_G * SW_S + 0.8, 0.06, SW_G * SW_S + 0.8]} />
       </mesh>
@@ -174,7 +176,7 @@ export function Swarm() {
       <lineSegments ref={links} geometry={linkGeo} frustumCulled={false}>
         <lineBasicMaterial color="#7ff7dc" transparent opacity={0.7} />
       </lineSegments>
-      <group ref={bots}>
+      <group ref={bots} userData={{ dynamic: true }}>
         {SW_COLS.map((col, i) => (
           <group key={i}>
             {/* TurtleBot3-style stack: base, two decks on standoffs, a spinning LiDAR */}
@@ -220,6 +222,7 @@ export function Swarm() {
       </group>
       <SwarmFence half={half + 1.1} />
       <Billboard id="swarm" pos={[7, 0, half + 3]} rotY={-0.4} />
+      </Static>
     </ZoneGroup>
   );
 }

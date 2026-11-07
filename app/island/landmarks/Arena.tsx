@@ -9,6 +9,7 @@ import { heightAt, rng } from "../terrain";
 import { zoneById, zonePos } from "../zones";
 import { world } from "../store";
 import { M, Billboard, ZoneGroup, fontFamily } from "./common";
+import { Static } from "../Props";
 
 /* The SIH trophy: a two-handled cup with a lip, a knotted stem and a stepped ebony base with a
    gold plaque, standing on a stone plinth in the centre circle. */
@@ -64,7 +65,7 @@ function Trophy() {
       <mesh position={[0, 1.23, 0]} material={M.metal}>
         <cylinderGeometry args={[1.3, 1.3, 0.06, 32]} />
       </mesh>
-      <group ref={g} position={[0, 1.26, 0]} scale={1.15}>
+      <group ref={g} position={[0, 1.26, 0]} scale={1.15} userData={{ dynamic: true }}>
         {/* stepped base */}
         <mesh position={[0, 0.16, 0]} material={ebony} castShadow>
           <boxGeometry args={[1.3, 0.32, 1.3]} />
@@ -246,6 +247,8 @@ export function Arena() {
   const cols = useMemo(() => Array.from({ length: 14 }, (_, i) => ARENA.gapHalf + 0.1 + (i / 13) * (Math.PI * 2 - ARENA.gapHalf * 2 - 0.2)), []);
   return (
     <ZoneGroup id="arena">
+      {/* static parts merged per material after mount; moving parts are marked dynamic */}
+      <Static>
       {/* pitch with mowing stripes and a running track */}
       <mesh position={[0, 0.05, 0]} rotation-x={-Math.PI / 2} receiveShadow>
         <circleGeometry args={[ARENA.r0, 64]} />
@@ -279,6 +282,7 @@ export function Arena() {
       <Trophy />
       {/* on the plot's front lawn, clear of the stands and of the ring road's sidewalk */}
       <Billboard id="arena" pos={[-11.5, 0, 12.5]} rotY={0.7} />
+      </Static>
     </ZoneGroup>
   );
 }

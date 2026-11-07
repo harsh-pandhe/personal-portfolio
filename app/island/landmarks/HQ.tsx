@@ -7,6 +7,7 @@ import { ZONES } from "../zones";
 import { world } from "../store";
 import { papers } from "@/lib/achievements";
 import { M, useGlow, fontFamily, Billboard, ZoneGroup } from "./common";
+import { Static } from "../Props";
 
 /* ================= ZONES ================= */
 
@@ -115,7 +116,7 @@ function ControlRing() {
     });
   });
   return (
-    <group ref={g} position={[0, 9.6, 0]}>
+    <group ref={g} position={[0, 9.6, 0]} userData={{ dynamic: true }}>
       {panels.map((p, i) => {
         const a = (i / 4) * Math.PI * 2;
         return (
@@ -144,6 +145,8 @@ export function HQ() {
   });
   return (
     <ZoneGroup id="hq">
+      {/* static parts merged per material after mount; moving parts are marked dynamic */}
+      <Static>
       {/* the tower rises from the stone island in the middle of the fountain (Plaza.tsx) */}
       <mesh position={[0, 7, 0]} material={M.metal} castShadow>
         <cylinderGeometry args={[0.9, 1.4, 14, 24]} />
@@ -156,7 +159,7 @@ export function HQ() {
       <mesh position={[0, 14.4, 0]} material={M.glass}>
         <sphereGeometry args={[1.3, 24, 16]} />
       </mesh>
-      <group ref={dish} position={[0, 15.8, 0]}>
+      <group ref={dish} position={[0, 15.8, 0]} userData={{ dynamic: true }}>
         <mesh material={M.metal}>
           <cylinderGeometry args={[0.06, 0.06, 1.2, 8]} />
         </mesh>
@@ -166,6 +169,7 @@ export function HQ() {
       </group>
       <ControlRing />
       <Billboard id="hq" pos={[3.5, 0, 15.6]} rotY={0.12} scale={0.9} />
+      </Static>
     </ZoneGroup>
   );
 }

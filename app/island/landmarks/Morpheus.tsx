@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { world } from "../store";
-import { Solid } from "../Props";
+import { Solid, Static } from "../Props";
 import { M, useGlow, Billboard, ZoneGroup } from "./common";
 
 function rainTexture() {
@@ -241,7 +241,7 @@ function PillPlinth({ color, label, x }: { color: string; label: string; x: numb
           <planeGeometry args={[1.5, 0.38]} />
         </mesh>
       ))}
-      <group ref={pill}>
+      <group ref={pill} userData={{ dynamic: true }}>
         <mesh rotation-z={Math.PI / 2.6} castShadow>
           <capsuleGeometry args={[0.42, 1.0, 10, 20]} />
           <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.45} roughness={0.2} metalness={0.1} />
@@ -301,6 +301,8 @@ export function Morpheus() {
   const R = 4.8;
   return (
     <ZoneGroup id="morpheus">
+      {/* static parts merged per material after mount; moving parts are marked dynamic */}
+      <Static>
       {/* the gate's floor: a dark glass disc with a green grid */}
       <mesh position={[0, 0.04, -2]} rotation-x={-Math.PI / 2} material={floor} receiveShadow>
         <circleGeometry args={[11.5, 64]} />
@@ -342,6 +344,7 @@ export function Morpheus() {
       <PillPlinth color="#2b6bff" label="BLUE PILL · SLEEP" x={4.2} />
       <MorpheusSigns />
       <Billboard id="morpheus" pos={[-9.5, 0, 8.5]} rotY={0.6} scale={0.85} />
+      </Static>
     </ZoneGroup>
   );
 }

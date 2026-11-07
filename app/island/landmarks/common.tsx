@@ -160,7 +160,7 @@ export function Billboard({ id, pos, rotY, scale = 1 }: { id: ZoneId; pos: [numb
   // sit on the ground under the board itself, not the zone centre's height
   const y = useMemo(() => pos[1] + groundOffset(id, pos[0], pos[2]), [id, pos]);
   return (
-    <group ref={g} position={[pos[0], y, pos[2]]} rotation-y={rotY} scale={scale}>
+    <group ref={g} position={[pos[0], y, pos[2]]} rotation-y={rotY} scale={scale} userData={{ dynamic: true }}>
       {[-2.2, 2.2].map((x) => (
         // posts run 1 m into the ground so they stay planted on a slope
         <mesh key={x} position={[x, 0.9, -0.32]} material={M.metal} castShadow>

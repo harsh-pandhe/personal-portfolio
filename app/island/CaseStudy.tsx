@@ -90,7 +90,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-// EmailJS (the same service and template the old contact page used: from_name, from_email, message)
+// EmailJS (the same service and template the old contact page used: to_name, from_name, from_email, message;
+// the template replies to from_email)
 const EMAILJS = {
   service: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
   template: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
@@ -120,7 +121,7 @@ function ContactForm() {
           service_id: EMAILJS.service,
           template_id: EMAILJS.template,
           user_id: EMAILJS.key,
-          template_params: { from_name: name.trim(), from_email: email.trim(), message: `${intent}\n\n${msg.trim()}\n\n(sent from harshpandhe.com)` },
+          template_params: { to_name: "Harsh", from_name: name.trim(), from_email: email.trim(), message: `${intent}\n\n${msg.trim()}\n\n(sent from harshpandhe.com)` },
         }),
       });
       setState(r.ok ? "sent" : "error");
