@@ -299,9 +299,10 @@ export function Nature() {
 }
 
 /* ---------------- Flower meadows (lavender + marigold) ---------------- */
+const FLOWERS = DEVICE.low ? 2000 : 4200; // phones: about half, they are specks from the overview
 export function Flowers() {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const N = DEVICE.low ? 2000 : 4200; // phones: about half, they are specks from the overview
+  const N = FLOWERS;
   useEffect(() => {
     const r = rng(7);
     const m = new THREE.Matrix4();
