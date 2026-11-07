@@ -103,6 +103,13 @@ const LITE = typeof window !== "undefined" && new URLSearchParams(window.locatio
 const LOW = !LITE && DEVICE.low;
 const DPR_MAX = LITE ? 0.75 : LOW ? 1.5 : 1.75;
 
+/** On phones the intro looks down on the whole island, where walkers, robots and cars are a few
+ *  pixels tall but cost hundreds of draw calls; they appear once the visitor starts exploring. */
+function IntroHidden({ children }: { children: React.ReactNode }) {
+  const mode = useUI().mode;
+  return <group visible={!(LOW && mode === "intro")}>{children}</group>;
+}
+
 function Scene() {
   // start crisp, step down if the frame rate drops
   const [dpr, setDpr] = useState(LITE ? 0.75 : LOW ? 1.25 : 1.5);
@@ -152,7 +159,9 @@ function Scene() {
         <HillSign />
         <Decor />
         <Paths />
-        <Teammates />
+        <IntroHidden>
+          <Teammates />
+        </IntroHidden>
         <Medals />
         <Player />
         <TargetMarker />
@@ -176,10 +185,14 @@ function Scene() {
         <Dust />
       </Deferred>
       <Deferred step={4}>
-        <People />
+        <IntroHidden>
+          <People />
+        </IntroHidden>
       </Deferred>
       <Deferred step={5}>
-        <Traffic />
+        <IntroHidden>
+          <Traffic />
+        </IntroHidden>
         <Ships />
       </Deferred>
       <Deferred step={6}>

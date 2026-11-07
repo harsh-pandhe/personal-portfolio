@@ -77,7 +77,10 @@ const at = (deg: number, r: number): [number, number, number] => {
 /** Facing out to sea at this bearing. */
 const seaward = (deg: number) => Math.PI / 2 - (deg * Math.PI) / 180;
 
+const STRIPES = new Map<string, THREE.CanvasTexture>(); // one texture per colour pair, so umbrellas can merge
 function stripes(a: string, b: string) {
+  const hit = STRIPES.get(a + b);
+  if (hit) return hit;
   const c = document.createElement("canvas");
   c.width = 256;
   c.height = 8;
@@ -88,6 +91,7 @@ function stripes(a: string, b: string) {
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  STRIPES.set(a + b, t);
   return t;
 }
 

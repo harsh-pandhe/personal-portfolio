@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { heightAt, LANE_W, ROAD_R, rng } from "./terrain";
 import { world } from "./store";
+import { Static } from "./Props";
 
 // KayKit City Builder Bits (CC0): cars on the ring road and the Navi Mumbai skyline across the water.
 const CARS = ["car_taxi", "car_sedan", "car_taxi", "car_hatchback", "car_police"] as const;
@@ -100,22 +101,30 @@ export function Skyline() {
     }
     return out;
   }, []);
-  const clones = useMemo(
-    () =>
-      items.map((it) => {
-        const c = gltfs[it.k].scene.clone(true);
-        c.traverse((o) => {
-          const m = o as THREE.Mesh;
-          if (!m.isMesh) return;
-          const mat = (m.material as THREE.MeshStandardMaterial).clone();
+  const clones = useMemo(() => {
+    // one night-glow copy per source material, shared by every building that uses it (so <Static> can
+    // merge the whole skyline into a few draw calls)
+    const shared = new Map<string, THREE.MeshStandardMaterial>();
+    return items.map((it) => {
+      const c = gltfs[it.k].scene.clone(true);
+      c.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh) return;
+        const src = m.material as THREE.MeshStandardMaterial;
+        let mat = shared.get(src.uuid);
+        if (!mat) {
+          mat = src.clone();
           mat.emissive = night.clone();
           mat.emissiveMap = mat.map;
           mat.emissiveIntensity = 0;
-          m.material = mat;
+          shared.set(src.uuid, mat);
           mats.current.push(mat);
-        });
-        return c;
-      }),
+        }
+        m.material = mat;
+      });
+      return c;
+    });
+  },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [items]
   );
@@ -169,9 +178,11 @@ export function Skyline() {
           </mesh>
         </group>
       ))}
-      {items.map((it, i) => (
-        <primitive key={i} object={clones[i]} position={[it.x, 0.6, it.z]} scale={it.s} rotation-y={it.rot} />
-      ))}
+      <Static>
+        {items.map((it, i) => (
+          <primitive key={i} object={clones[i]} position={[it.x, 0.6, it.z]} scale={it.s} rotation-y={it.rot} />
+        ))}
+      </Static>
       {/* a creek bridge on concrete piers */}
       <group position={[160, 0, 52]} rotation-y={-0.9}>
         <mesh position={[0, 3.2, 0]}>

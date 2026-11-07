@@ -6,7 +6,7 @@ import { useGLTF } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import { heightAt, ridgeTop, ROPE_PEAKS } from "../terrain";
 import { zoneById, zonePos } from "../zones";
-import { Solid, Static } from "../Props";
+import { bakeStatic, Solid, Static } from "../Props";
 import { M, Billboard, ZoneGroup } from "./common";
 
 /* Ropeway Ridge: a multi-span gondola from the valley station over three coastal peaks. */
@@ -119,6 +119,7 @@ export function Ropeway() {
       return o;
     };
     const cabin = get("RwCabin");
+    bakeStatic(cabin); // a cabin moves as one piece: merge its parts once, every clone shares the result
     const station = rsScene.clone(true);
     station.traverse((m) => ((m as THREE.Mesh).isMesh ? (m.castShadow = m.receiveShadow = true) : null));
     // clone once: a fresh clone per render would add a new, unmerged copy every time the island re-renders
