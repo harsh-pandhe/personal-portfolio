@@ -24,7 +24,7 @@ export function Quad({ scale = 5.5, spin = 1 }: { scale?: number; spin?: number 
   const k = scale / 5.5;
   const arm = 0.82;
   return (
-    <group scale={k}>
+    <group scale={k} userData={{ dynamic: true }}>
       {/* body: bottom plate, top plate, battery, flight controller */}
       <mesh position={[0, 0.2, 0]} material={QMAT.frame} castShadow>
         <boxGeometry args={[0.55, 0.05, 0.55]} />

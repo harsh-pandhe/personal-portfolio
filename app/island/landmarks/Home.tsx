@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { world } from "../store";
 import { M, useGlow, Billboard, ZoneGroup, boxMetres, facadeMaterial } from "./common";
+import { Static } from "../Props";
 
 /* Home: a modern two-storey Navi Mumbai house with a lit glazed ground floor, a cantilevered
    upper floor and balcony, solar panels and the black water tank on the roof, and coconut palms. */
@@ -53,6 +54,8 @@ export function Home() {
   const leaf = useMemo(() => new THREE.MeshStandardMaterial({ color: "#3b9a4a", roughness: 0.8, flatShading: true }), []);
   return (
     <ZoneGroup id="home">
+      {/* nothing here moves: merged per material after mount (Props.tsx bakeStatic) */}
+      <Static>
       {/* front lawn and a stone path to the door */}
       <mesh position={[0, 0.03, -0.2]} rotation-x={-Math.PI / 2} material={lawn} receiveShadow>
         <planeGeometry args={[12, 3]} />
@@ -161,6 +164,7 @@ export function Home() {
         <cylinderGeometry args={[0.05, 0.05, 0.8, 6]} />
       </mesh>
       <Billboard id="home" pos={[6.5, 0, 5.6]} rotY={-0.35} scale={0.85} />
+      </Static>
     </ZoneGroup>
   );
 }

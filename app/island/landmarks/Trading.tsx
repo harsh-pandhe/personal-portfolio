@@ -6,6 +6,7 @@ import { useMemo, useRef } from "react";
 import { world } from "../store";
 import { papers } from "@/lib/achievements";
 import { M, fontFamily, Billboard, ZoneGroup, hoverHandlers, boxMetres, facadeMaterial } from "./common";
+import { Static } from "../Props";
 
 /* A walk-street trading wall: four instruments, AlgoTrade's real P&L, an equity curve and a ticker.
    The instrument prices are a simulated feed (clearly labelled); the AlgoTrade figures are from the
@@ -177,6 +178,8 @@ export function Trading() {
   });
   return (
     <ZoneGroup id="trading">
+      {/* static parts merged per material after mount; moving parts are marked dynamic */}
+      <Static>
       {/* the exchange tower: a glass curtain wall on every side, lit floor by floor at night */}
       <mesh position={[0, 8.5, -7]} geometry={towerGeo} material={glass} castShadow receiveShadow />
       <mesh position={[0, 17.2, -7]} material={M.metal}>
@@ -202,6 +205,7 @@ export function Trading() {
         <boxGeometry args={[17.6, 0.4, 1.4]} />
       </mesh>
       <Billboard id="trading" pos={[9.5, 0, 4.5]} rotY={-0.55} scale={0.85} />
+      </Static>
     </ZoneGroup>
   );
 }
