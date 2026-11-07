@@ -302,7 +302,6 @@ export function Nature() {
 const FLOWERS = DEVICE.low ? 2000 : 4200; // phones: about half, they are specks from the overview
 export function Flowers() {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const N = FLOWERS;
   useEffect(() => {
     const r = rng(7);
     const m = new THREE.Matrix4();
@@ -310,7 +309,7 @@ export function Flowers() {
     const pal = ["#9b7bff", "#b69cff", "#ffd23f", "#ff8fb1", "#ffffff"];
     let i = 0,
       guard = 0;
-    while (i < N && guard++ < 60000) {
+    while (i < FLOWERS && guard++ < 60000) {
       // clustered patches
       const pa = Math.floor(r() * 44);
       const pr = rng(pa * 97 + 3);
@@ -330,7 +329,7 @@ export function Flowers() {
     if (ref.current!.instanceColor) ref.current!.instanceColor.needsUpdate = true;
   }, []);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, N]}>
+    <instancedMesh ref={ref} args={[undefined, undefined, FLOWERS]}>
       <icosahedronGeometry args={[1, 0]} />
       <meshStandardMaterial roughness={0.7} />
     </instancedMesh>
